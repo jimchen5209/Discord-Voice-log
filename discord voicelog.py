@@ -69,8 +69,8 @@ def write_voice_log_data(data):
 
 @discord_client.event
 async def on_ready():
-    print('Logged in as {0} {1}'.format(discord_client.user.name,discord_client.user.id))
-    print('------')
+    clog('Logged in as {0} {1}'.format(discord_client.user.name,discord_client.user.id))
+    clog('------')
 
 
 @discord_client.event
@@ -82,17 +82,17 @@ async def on_voice_state_update(before,after):
     serlang = cur['lang']
     if before.voice.voice_channel == None:
         msg = lang[serlang]["display"]['voice_log']["joined"].format("`" + after.display_name + "`","`" + str(after.voice.voice_channel)+ "`")
-        print(msg)
+        #clog(msg)
         await discord_client.send_message(discord.Object(id=cur['channel']),msg)
     elif after.voice.voice_channel == None:
         msg = lang[serlang]["display"]['voice_log']["left"].format("`" + after.display_name + "`","`" + str(before.voice.voice_channel) + "`")
-        print(msg)
+        #clog(msg)
         await discord_client.send_message(discord.Object(id=cur['channel']),msg)
     elif before.voice.voice_channel == after.voice.voice_channel:
         time.sleep(0)
     else:
         msg = lang[serlang]["display"]['voice_log']["changed"].format("`" + after.display_name + "`","`" + str(before.voice.voice_channel) + "`","`" +str(after.voice.voice_channel) +"`")
-        print(msg)
+        #clog(msg)
         await discord_client.send_message(discord.Object(id=cur['channel']),msg)
         
 
@@ -104,7 +104,7 @@ async def on_message(message):
         dislog = dislog + ' ' + message.author.display_name + '@' + message.author.name+' in '+message.channel.name +" ("+message.channel.id+') : '+ message.content
     except TypeError:
         dislog = dislog + ' ' + message.author.display_name + '@' + message.author.name+' : '+ message.content
-    print(dislog)
+    clog(dislog)
     if message.content.startswith('!setvlog'):
         cmd = message.content.split()
         if message.server == None:
