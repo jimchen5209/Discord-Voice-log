@@ -11,17 +11,18 @@ import logging
 
 if os.path.isdir("./logs") == False:
     os.mkdir("./logs")
-logpath = "./logs/"+time.strftime("%Y-%m-%d-%H-%M-%S").replace("'","")
+logpath = "./logs/"+time.strftime("%Y-%m-%d-%H-%M-%S").replace("'", "")
 logger = logging.getLogger('discord')
 logging.basicConfig(level=logging.INFO)
 handler = logging.FileHandler(filename=logpath+'-discord.log', encoding='utf-8', mode='w')
 handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
 logger.addHandler(handler)
 try:
-    fs = open("./config.py","r")
+    fs = open("./config.py", "r")
 except:
     tp, val, tb = sys.exc_info()
-    print("Errored when loading config.py:"+str(val).split(',')[0].replace('(','').replace("'",""))
+    print("Errored when loading config.py:"+\
+        str(val).split(',')[0].replace('(', '').replace("'", ""))
     programPause = input("Press any key to stop...\n")
     exit()
 config = eval(fs.read())
@@ -30,20 +31,20 @@ discord_client = discord.Client()
 discord_token = config["TOKEN"]
 Debug = config['Debug']
 try:
-    fs = open("./langs/list.py","r")
+    fs = open("./langs/list.py", "r")
 except:
     tp, val, tb = sys.exc_info()
-    print("Errored when loading list.py:"+str(val).split(',')[0].replace('(','').replace("'",""))
+    print("Errored when loading list.py:"+str(val).split(',')[0].replace('(', '').replace("'", ""))
     programPause = input("Press any key to stop...\n")
     exit()
 langlist = eval(fs.read())
 fs.close()
 lang = {}
 for i in langlist:
-    fs = open(langlist[i]["file"],"r")
-    lang[i]={}
+    fs = open(langlist[i]["file"], "r")
+    lang[i] = {}
     lang[i]["display"] = eval(fs.read())
-    lang[i]["display_name"]=langlist[i]["display_name"]
+    lang[i]["display_name"] = langlist[i]["display_name"]
     fs.close()
 
 vlogdata = {}
@@ -51,10 +52,10 @@ def read_voice_log_data():
     global vlogdata
     clog('[Info] Reading voice log data...')
     if os.path.isfile("./vlogdata.json") == False:
-        fs = open("./vlogdata.json","w")
+        fs = open("./vlogdata.json", "w")
         fs.write("{}")
         fs.close
-    fs = open("./vlogdata.json","r")
+    fs = open("./vlogdata.json", "r")
     vlogdata = eval(fs.read())
     fs.close
     clog('... Done.')
@@ -62,36 +63,39 @@ def read_voice_log_data():
 
 def write_voice_log_data(data):
     clog("[Info] Writing voice log data...")
-    fs = open("./vlogdata.json","w")
+    fs = open("./vlogdata.json", "w")
     fs.write(str(data))
     fs.close
     return
 
 @discord_client.event
 async def on_ready():
-    clog('Logged in as {0} {1}'.format(discord_client.user.name,discord_client.user.id))
+    clog('Logged in as {0} {1}'.format(discord_client.user.name, discord_client.user.id))
     clog('------')
 
 
 @discord_client.event
-async def on_voice_state_update(before,after):
+async def on_voice_state_update(before, after):
     try:
         cur = vlogdata[after.server.id]
     except:
         return
     serlang = cur['lang']
     if before.voice.voice_channel == None:
-        msg = lang[serlang]["display"]['voice_log']["joined"].format("`" + after.display_name + "`","`" + str(after.voice.voice_channel)+ "`")
+        msg = lang[serlang]["display"]['voice_log']["joined"].format(
+            "`" + after.display_name + "`", "`" + str(after.voice.voice_channel)+ "`")
         #clog(msg)
-        await discord_client.send_message(discord.Object(id=cur['channel']),msg)
+        await discord_client.send_message(discord.Object(id=cur['channel']), msg)
     elif after.voice.voice_channel == None:
-        msg = lang[serlang]["display"]['voice_log']["left"].format("`" + after.display_name + "`","`" + str(before.voice.voice_channel) + "`")
+        msg = lang[serlang]["display"]['voice_log']["left"].format(
+            "`" + after.display_name + "`", "`" + str(before.voice.voice_channel) + "`")
         #clog(msg)
-        await discord_client.send_message(discord.Object(id=cur['channel']),msg)
+        await discord_client.send_message(discord.Object(id=cur['channel']), msg)
     elif before.voice.voice_channel == after.voice.voice_channel:
         time.sleep(0)
     else:
-        msg = lang[serlang]["display"]['voice_log']["changed"].format("`" + after.display_name + "`","`" + str(before.voice.voice_channel) + "`","`" +str(after.voice.voice_channel) +"`")
+        msg = lang[serlang]["display"]['voice_log']["changed"].format(
+            "`" + after.display_name + "`", "`" + str(before.voice.voice_channel) + "`", "`" +str(after.voice.voice_channel) +"`")
         #clog(msg)
         await discord_client.send_message(discord.Object(id=cur['channel']),msg)
         
@@ -99,7 +103,7 @@ async def on_voice_state_update(before,after):
 @discord_client.event
 async def on_message(message):
     global vlogdata
-    dislog = "[Discord]["+time.strftime("%Y/%m/%d-%H:%M:%S").replace("'","")+"][Info]"
+    dislog = "[Discord]["+time.strftime("%Y/%m/%d-%H:%M:%S").replace("'", "")+"][Info]"
     try:
         dislog = dislog + ' ' + message.author.display_name + '@' + message.author.name+' in '+message.channel.name +" ("+message.channel.id+') : '+ message.content
     except TypeError:
@@ -117,14 +121,14 @@ async def on_message(message):
             try:
                 cur = vlogdata[serverid]
             except:
-                vlogdata[serverid] = {"channel":message.channel.id,"lang":"en_US"}
+                vlogdata[serverid] = {"channel":message.channel.id, "lang":"en_US"}
             else:
                 if message.channel.id == vlogdata[serverid]["channel"]:
                     await discord_client.send_message(message.channel, lang[vlogdata[serverid]["lang"]]["display"]["config"]["exist"])
                     return
                 vlogdata[serverid]["channel"] = message.channel.id
             write_voice_log_data(vlogdata)
-            await discord_client.send_message(message.channel,lang[vlogdata[serverid]["lang"]]["display"]["config"]["success"])
+            await discord_client.send_message(message.channel, lang[vlogdata[serverid]["lang"]]["display"]["config"]["success"])
             return
         else:
             serverid = message.server.id
@@ -135,9 +139,9 @@ async def on_message(message):
                     tmp = lang[subcmd]
                 except:
                     await discord_client.send_message(message.channel, "Language not exist,using en_US instead.")
-                    vlogdata[serverid] = {"channel":message.channel.id,"lang":'en_US'}
+                    vlogdata[serverid] = {"channel":message.channel.id, "lang":'en_US'}
                 else:
-                    vlogdata[serverid] = {"channel":message.channel.id,"lang":subcmd}
+                    vlogdata[serverid] = {"channel":message.channel.id, "lang":subcmd}
             else:
                 if message.channel.id == vlogdata[serverid]["channel"]:
                     await discord_client.send_message(message.channel, lang[vlogdata[serverid]["lang"]]["display"]["config"]["exist"])
@@ -163,7 +167,7 @@ async def on_message(message):
                         await discord_client.send_message(message.channel, \
                         lang[vlogdata[serverid]["lang"]]["display"]["config"]["langsuccess"].format(lang[vlogdata[serverid]["lang"]]["display_name"]))
             write_voice_log_data(vlogdata)
-            await discord_client.send_message(message.channel,lang[vlogdata[serverid]["lang"]]["display"]["config"]["success"])
+            await discord_client.send_message(message.channel, lang[vlogdata[serverid]["lang"]]["display"]["config"]["success"])
             return
     if message.content.startswith('!setlang'):
         cmd = message.content.split()
