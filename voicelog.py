@@ -101,7 +101,7 @@ async def on_voice_state_update(before, after):
         #clog(msg)
         await discord_client.send_message(discord.Object(id=cur['channel']), msg)
     elif before.voice.voice_channel == after.voice.voice_channel:
-        time.sleep(0)
+        pass
     else:
         msg = lang[serlang]["display"]['voice_log']["changed"].format(
             "`" + after.display_name + "`", "`" + str(before.voice.voice_channel) + "`", "`" +str(after.voice.voice_channel) +"`")
