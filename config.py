@@ -1,6 +1,7 @@
 import json
 import logging
 
+
 class Config:
     def __init__(self, testing=False):
         self.__logger = logging.getLogger("Config")
@@ -9,14 +10,14 @@ class Config:
         self.__logger.info("Loading Config...")
         if testing:
             self.__logger.info("Testing mode detected, using testing config.")
-            self.__configraw = {
+            self.__config_raw = {
                 "TOKEN": "",
                 "Debug": False
             }
         else:
             try:
-                with open('config.json','r') as fs:
-                    self.__configraw = json.load(fs)
+                with open('config.json', 'r') as fs:
+                    self.__config_raw = json.load(fs)
             except FileNotFoundError:
                 self.__logger.info("Generating empty config...")
                 config = {
@@ -32,5 +33,5 @@ class Config:
                     "Can't load config.json: JSON decode error:{0}".format(str(e1.args)))
                 self.__logger.error("Check your config format and try again.")
                 exit()
-        self.TOKEN = self.__configraw['TOKEN']
-        self.Debug = self.__configraw['Debug']
+        self.TOKEN = self.__config_raw['TOKEN']
+        self.Debug = self.__config_raw['Debug']
