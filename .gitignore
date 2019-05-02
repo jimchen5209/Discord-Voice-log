@@ -3,3 +3,4 @@ logs/
 config.json
 vlogdata.json
 __pycache__/
+.idea/
