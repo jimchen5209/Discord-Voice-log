@@ -26,6 +26,7 @@ from discord.ext import commands
 
 from config import Config
 from data import Data
+from status.status import Status
 
 # Setup logging
 if not os.path.isdir("./logs"):
@@ -180,5 +181,6 @@ if len(sys.argv) != 1:
 
 logger.info("Bot has started")
 logger.info("Listening ...")
-
+status = Status("VoiceLog")
+status.set_status()
 discord_client.run(config.TOKEN)
