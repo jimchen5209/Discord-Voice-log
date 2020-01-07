@@ -52,11 +52,11 @@ else:
 
 # Load Language
 lang_list = {}
-if not os.path.isdir("lang"):
-    logger.error("Directory lang/ not found. Try re-pulling source code.")
+if not os.path.isdir("langs"):
+    logger.error("Directory langs/ not found. Try re-pulling source code.")
     exit()
-if not os.path.isfile("lang/list.json"):
-    logger.error("Directory lang/list.json not found. Try re-pulling source code.")
+if not os.path.isfile("langs/list.json"):
+    logger.error("Directory langs/list.json not found. Try re-pulling source code.")
     exit()
 try:
     with io.open("langs/list.json", "r", encoding='utf8') as fs:
@@ -102,9 +102,10 @@ async def on_voice_state_update(member, before, after):
                               timestamp=datetime.datetime.utcnow())
         embed.set_author(name="𝅺", icon_url=member.avatar_url)  # name=member.display_name,
         # embed.set_footer(text="VoiceLog", icon_url=member.avatar_url)
-        if after.channel.id == voice.channel.id:
-            voice_text = lang[data.lang]["display"]['voice_log']["joined_voice"].format(member.display_name,
-                                                                                        after.channel.name)
+        if voice is not None:
+            if after.channel.id == voice.channel.id:
+                voice_text = lang[data.lang]["display"]['voice_log']["joined_voice"].format(member.display_name,
+                                                                                            after.channel.name)
         await channel.send(embed=embed)
     elif after.channel is None:
         embed = discord.Embed(title=member.display_name, colour=discord.Colour(0x810011),
@@ -113,9 +114,10 @@ async def on_voice_state_update(member, before, after):
         # name=member.display_name,
         embed.set_author(name="𝅺", icon_url=member.avatar_url)
         # embed.set_footer(text="VoiceLog", icon_url=member.avatar_url)
-        if before.channel.id == voice.channel.id:
-            voice_text = lang[data.lang]["display"]['voice_log']["left_voice"].format(member.display_name,
-                                                                                      before.channel.name)
+        if voice is not None:
+            if before.channel.id == voice.channel.id:
+                voice_text = lang[data.lang]["display"]['voice_log']["left_voice"].format(member.display_name,
+                                                                                          before.channel.name)
         await channel.send(embed=embed)
     elif before.channel == after.channel:
         pass
@@ -126,12 +128,13 @@ async def on_voice_state_update(member, before, after):
         # name=member.display_name,
         embed.set_author(name="𝅺", icon_url=member.avatar_url)
         # embed.set_footer(text="VoiceLog", icon_url=member.avatar_url)
-        if before.channel.id == voice.channel.id:
-            voice_text = lang[data.lang]["display"]['voice_log']["move_left_voice"].format(member.display_name,
-                                                                                           after.channel.name)
-        if after.channel.id == voice.channel.id:
-            voice_text = lang[data.lang]["display"]['voice_log']["move_join_voice"].format(member.display_name,
-                                                                                           before.channel.name)
+        if voice is not None:
+            if before.channel.id == voice.channel.id:
+                voice_text = lang[data.lang]["display"]['voice_log']["move_left_voice"].format(member.display_name,
+                                                                                               after.channel.name)
+            if after.channel.id == voice.channel.id:
+                voice_text = lang[data.lang]["display"]['voice_log']["move_join_voice"].format(member.display_name,
+                                                                                               before.channel.name)
         await channel.send(embed=embed)
     if voice_text != "" and voice is not None:
         while voice.is_playing():

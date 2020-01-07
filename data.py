@@ -54,8 +54,8 @@ class Data:
         if server not in self.__data_raw:
             self.setData(server)
         if 'channel' not in self.__data_raw[server] \
-                or 'channel' not in self.__data_raw[server] \
-                or 'channel' not in self.__data_raw[server]:
+                or 'lang' not in self.__data_raw[server] \
+                or 'lastVoiceChannel' not in self.__data_raw[server]:
             self.__upgradeData(server)
         return ServerConfig(
             self.__data_raw[server]['channel'],
