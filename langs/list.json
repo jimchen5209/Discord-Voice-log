@@ -1,0 +1,10 @@
+{
+    "zh_TW":{
+        "file": "langs/zh_TW.json",
+        "display_name": "繁體中文(台灣)"
+    },
+    "en_US": {
+        "file": "langs/en_US.json",
+        "display_name": "English(US)"
+    }
+}

@@ -1,0 +1,17 @@
+{
+    "voice_log":{
+        "joined": "加入了{0}",
+        "left": "離開了{0}",
+        "joined_voice": "{0} 加入了頻道",
+        "left_voice": "{0} 離開了這個頻道",
+        "move_join_voice": "{0} 從 {1} 移到了這裡",
+        "move_left_voice": "{0} 從本頻道到了 {1}"
+    },
+    "config":{
+        "exist":"我已經正在把語音紀錄放到這個頻道啦",
+        "success": "我現在開始會把語音狀態記錄到這個頻道",
+        "langsuccess":"已將語言設置為 {0}",
+        "langexist":"語言已經是 {0}",
+        "notenoughargument":"參數不足"
+    }
+}

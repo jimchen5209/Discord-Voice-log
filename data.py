@@ -20,9 +20,10 @@ import os
 
 
 class ServerConfig:
-    def __init__(self, channel, lang):
+    def __init__(self, channel, lang, last_voice_channel):
         self.channel = channel
         self.lang = lang
+        self.lastVoiceChannel = last_voice_channel
 
 
 class Data:
@@ -52,14 +53,35 @@ class Data:
     def getData(self, server):
         if server not in self.__data_raw:
             self.setData(server)
-        return ServerConfig(self.__data_raw[server]['channel'], self.__data_raw[server]['lang'])
+        if 'channel' not in self.__data_raw[server] \
+                or 'channel' not in self.__data_raw[server] \
+                or 'channel' not in self.__data_raw[server]:
+            self.__upgradeData(server)
+        return ServerConfig(
+            self.__data_raw[server]['channel'],
+            self.__data_raw[server]['lang'],
+            self.__data_raw[server]['lastVoiceChannel']
+        )
 
-    def setData(self, server, channel="-1", lang="en_US"):
-        self.__data_raw[server] = {"channel": channel, "lang": lang}
+    def __upgradeData(self, server):
+        self.setData(
+            server,
+            channel=self.__data_raw[server]['channel'] if 'channel' in self.__data_raw[server] else "-1",
+            lang=self.__data_raw[server]['lang'] if 'lang' in self.__data_raw[server] else "en_US",
+            last_voice_channel=
+            self.__data_raw[server]['lastVoiceChannel'] if 'lastVoiceChannel' in self.__data_raw[server] else ""
+        )
+
+    def setData(self, server, channel="-1", lang="en_US", last_voice_channel=""):
+        self.__data_raw[server] = {"channel": channel, "lang": lang, "lastVoiceChannel": last_voice_channel}
         self.__saveData()
 
     def setLang(self, server, lang):
         self.__data_raw[server]['lang'] = lang
+        self.__saveData()
+
+    def setLastVoiceChannel(self, server, last_voice_channel):
+        self.__data_raw[server]['lastVoiceChannel'] = last_voice_channel
         self.__saveData()
 
     def __saveData(self):
