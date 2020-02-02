@@ -1,11 +1,7 @@
 {
     "voice_log":{
         "joined": "Joined {0}",
-        "left": "Left {0}",
-        "joined_voice": "{0} joined the channel.",
-        "left_voice": "{0} left the channel.",
-        "move_join_voice": "{0} moved from {1} to your channel.",
-        "move_left_voice": "{0} moved from your channel to {1}."
+        "left": "Left {0}"
     },
     "config":{
         "exist":"I have already been logging voice state to this channel.",

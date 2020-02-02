@@ -1,11 +1,7 @@
 {
     "voice_log":{
         "joined": "加入了{0}",
-        "left": "離開了{0}",
-        "joined_voice": "{0} 加入了頻道",
-        "left_voice": "{0} 離開了這個頻道",
-        "move_join_voice": "{0} 從 {1} 移到了這裡",
-        "move_left_voice": "{0} 從本頻道到了 {1}"
+        "left": "離開了{0}"
     },
     "config":{
         "exist":"我已經正在把語音紀錄放到這個頻道啦",

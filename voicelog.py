@@ -27,6 +27,7 @@ from discord.ext import commands
 
 from config import Config
 from data import Data
+from queue_util import PlayerQueue
 from status.status import Status
 
 # Setup logging
@@ -78,6 +79,11 @@ for i in lang_list:
 
 discord_client = commands.Bot(command_prefix='$')
 voice_log_data = Data()
+queue = PlayerQueue()
+tts_url = 'https://translate.google.com.tw/translate_tts?ie=UTF-8&q="{0}"&tl={1}&client=tw-ob'
+
+if not os.path.isdir("./assets"):
+    os.mkdir("./assets")
 
 
 @discord_client.event
@@ -88,14 +94,17 @@ async def on_ready():
 @discord_client.event
 async def on_voice_state_update(member, before, after):
     await auto_leave_channel(before, after)
-    tts_url = 'https://translate.google.com.tw/translate_tts?ie=UTF-8&q="{0}"&tl={1}&client=tw-ob'
     data = voice_log_data.getData(str(member.guild.id))
 
     voice = member.guild.voice_client
-    voice_text = ""
-    if data.channel == "-1":
-        return
-    channel = discord_client.get_channel(int(data.channel))
+    tts = {}
+    if os.path.isfile("assets/{0}.json".format(str(member.id))):
+        with io.open("assets/{0}.json".format(str(member.id))) as tmp:
+            tts = json.load(tmp)
+        if 'lang' not in tts:
+            tts = {}
+    voice_file = ""
+    embed = None
     if before.channel is None:
         embed = discord.Embed(title=member.display_name, colour=discord.Colour(0x417505),
                               description=lang[data.lang]["display"]['voice_log']["joined"].format(after.channel.name),
@@ -104,9 +113,9 @@ async def on_voice_state_update(member, before, after):
         # embed.set_footer(text="VoiceLog", icon_url=member.avatar_url)
         if voice is not None:
             if after.channel.id == voice.channel.id:
-                voice_text = lang[data.lang]["display"]['voice_log']["joined_voice"].format(member.display_name,
-                                                                                            after.channel.name)
-        await channel.send(embed=embed)
+                voice_file = tts_url.format(tts['join'], tts['lang']) if 'join' in tts else \
+                    "assets/{0}_join.wav".format(str(member.id)) if os.path.isfile("assets/{0}_join.wav".format(
+                        str(member.id))) else ""
     elif after.channel is None:
         embed = discord.Embed(title=member.display_name, colour=discord.Colour(0x810011),
                               description=lang[data.lang]["display"]['voice_log']["left"].format(before.channel.name),
@@ -116,9 +125,11 @@ async def on_voice_state_update(member, before, after):
         # embed.set_footer(text="VoiceLog", icon_url=member.avatar_url)
         if voice is not None:
             if before.channel.id == voice.channel.id:
-                voice_text = lang[data.lang]["display"]['voice_log']["left_voice"].format(member.display_name,
-                                                                                          before.channel.name)
-        await channel.send(embed=embed)
+                voice_file = tts_url.format(tts['left'],
+                                            tts['lang']) if 'left' in tts else "assets/{0}_left.wav".format(
+                    str(member.id)) \
+                    if os.path.isfile("assets/{0}_left.wav".format(str(member.id))) else \
+                    ""
     elif before.channel == after.channel:
         pass
     else:
@@ -130,16 +141,20 @@ async def on_voice_state_update(member, before, after):
         # embed.set_footer(text="VoiceLog", icon_url=member.avatar_url)
         if voice is not None:
             if before.channel.id == voice.channel.id:
-                voice_text = lang[data.lang]["display"]['voice_log']["move_left_voice"].format(member.display_name,
-                                                                                               after.channel.name)
+                voice_file = tts_url.format(tts['switched_out'], tts[
+                    'lang']) if 'switched_out' in tts else "assets/{0}_switched_out.wav".format(str(member.id)) \
+                    if os.path.isfile("assets/{0}_switched_out.wav".format(str(member.id))) else \
+                    ""
             if after.channel.id == voice.channel.id:
-                voice_text = lang[data.lang]["display"]['voice_log']["move_join_voice"].format(member.display_name,
-                                                                                               before.channel.name)
+                voice_file = tts_url.format(tts['switched_in'], tts[
+                    'lang']) if 'switched_in' in tts else "assets/{0}_switched_in.wav".format(str(member.id)) \
+                    if os.path.isfile("assets/{0}_switched_in.wav".format(str(member.id))) else \
+                    ""
+    if data.channel != "-1" and embed is not None:
+        channel = discord_client.get_channel(int(data.channel))
         await channel.send(embed=embed)
-    if voice_text != "" and voice is not None:
-        while voice.is_playing():
-            pass
-        voice.play(discord.FFmpegPCMAudio(tts_url.format(voice_text, data.lang).replace(" ", "%20")))
+    if voice_file != "" and voice is not None:
+        queue.queue_and_play(voice, voice_file.replace(' ', '%20'))
 
 
 async def auto_leave_channel(before, after):
