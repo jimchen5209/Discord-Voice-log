@@ -245,6 +245,7 @@ async def setlang(ctx, *args):
             await ctx.send(lang[newLang]["display"]["config"]["langsuccess"].format(lang[newLang]["display_name"]))
 
 
+# noinspection PyUnusedLocal,PyTypeChecker
 @discord_client.command()
 async def join(ctx, *args):
     if ctx.guild is None:
@@ -257,11 +258,15 @@ async def join(ctx, *args):
         if ctx.guild.voice_client is None:
             await voice.connect()
             voice_log_data.setLastVoiceChannel(str(ctx.guild.id), "")
+            voice_file = tts_url.format("VoiceLog TTS is ready.", "en-GB")
+            queue.queue_and_play(ctx.guild.voice_client, voice_file.replace(' ', '%20'))
         else:
             if ctx.guild.voice_client.channel == voice:
                 await ctx.send("Already connected")
             else:
                 await ctx.guild.voice_client.move_to(voice)
+                voice_file = tts_url.format("VoiceLog TTS is moved to your channel.", "en-GB")
+                queue.queue_and_play(ctx.guild.voice_client, voice_file.replace(' ', '%20'))
 
 
 @discord_client.command()
