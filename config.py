@@ -28,6 +28,7 @@ class Config:
             self.__logger.info("Testing mode detected, using testing config.")
             self.__config_raw = {
                 "TOKEN": "",
+                "admins": [],
                 "Debug": False
             }
         else:
@@ -38,6 +39,7 @@ class Config:
                 self.__logger.info("Generating empty config...")
                 config = {
                     "TOKEN": "",
+                    "admins": [],
                     "Debug": False
                 }
                 with open('./config.json', 'w') as fs:
@@ -50,4 +52,5 @@ class Config:
                 self.__logger.error("Check your config format and try again.")
                 exit()
         self.TOKEN = self.__config_raw['TOKEN']
+        self.admins = self.__config_raw['admins']
         self.Debug = self.__config_raw['Debug']
