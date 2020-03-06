@@ -297,6 +297,36 @@ async def leave(ctx):
     return
 
 
+@discord_client.command()
+async def force_disconnect(ctx):
+    if ctx.guild is None:
+        await ctx.send('This bot is not available for private chat.')
+        return
+    if ctx.author.id in config.admins:
+        voice = ctx.guild.voice_client
+        await voice.disconnect()
+    else:
+        data = voice_log_data.getData(str(ctx.guild.id))
+        await ctx.send(lang[data.lang]["display"]["command"]["no_permission"])
+    return
+
+
+@discord_client.command()
+async def suicide(ctx):
+    if ctx.author.id in config.admins:
+        voice = ctx.guild.voice_client
+        try:
+            await voice.disconnect()
+        except AttributeError:
+            pass
+        finally:
+            exit(-1)
+    else:
+        data = voice_log_data.getData(str(ctx.guild.id))
+        await ctx.send(lang[data.lang]["display"]["command"]["no_permission"])
+    return
+
+
 async def on_message(message):
     discord_log = ""
     try:
