@@ -17,30 +17,21 @@
 import datetime
 import io
 import json
-import logging
 import os
 import sys
-import time
 
 import discord
 from discord.ext import commands
 
 from config import ConfigManager
 from data import Data
+from logger import Logger
 from queue_util import PlayerQueue
 from status.status import Status
 
 # Setup logging
-if not os.path.isdir("./logs"):
-    os.mkdir("./logs")
-log_path = "./logs/" + time.strftime("%Y-%m-%d-%H-%M-%S").replace("'", "")
-log_format = "[%(asctime)s][%(levelname)s][%(name)s] %(message)s"
-logging.root.name = "VoiceLog"
-logger = logging.getLogger()
-logging.basicConfig(format=log_format, level=logging.INFO)
-handler = logging.FileHandler(filename=log_path + '.log', encoding='utf-8', mode='w')
-handler.setFormatter(logging.Formatter(log_format))
-logger.addHandler(handler)
+logger = Logger()
+logger.info("Starting...")
 
 # Setup Config
 if len(sys.argv) != 1:
