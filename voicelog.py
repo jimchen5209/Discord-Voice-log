@@ -25,7 +25,7 @@ import time
 import discord
 from discord.ext import commands
 
-from config import Config
+from config import ConfigManager
 from data import Data
 from queue_util import PlayerQueue
 from status.status import Status
@@ -45,11 +45,11 @@ logger.addHandler(handler)
 # Setup Config
 if len(sys.argv) != 1:
     if sys.argv[1] == 'test':
-        config = Config(True)
+        config = ConfigManager(True).get_config()
     else:
         raise SyntaxError("Invalid command syntax: {0}".format(sys.argv[1]))
 else:
-    config = Config()
+    config = ConfigManager().get_config()
 
 # Load Language
 lang_list = {}
