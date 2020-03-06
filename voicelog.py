@@ -199,8 +199,8 @@ async def setvlog(ctx, *args):
     if ctx.guild is None:
         await ctx.send('This function is not available for private chat.')
         return
+    data = voice_log_data.getData(str(ctx.guild.id))
     if ctx.author.guild_permissions.manage_messages or (ctx.author.id in config.admins):
-        data = voice_log_data.getData(str(ctx.guild.id))
         if len(args) == 0:
             if data.channel == str(ctx.channel.id):
                 await ctx.send(lang[data.lang]["display"]["config"]["exist"])
@@ -218,25 +218,26 @@ async def setvlog(ctx, *args):
                 if data.channel == str(ctx.channel.id):
                     voice_log_data.setLang(str(ctx.guild.id), new_lang)
                     await ctx.send(
-                        lang[new_lang]["display"]["config"]["langsuccess"].format(lang[new_lang]["display_name"]))
+                        lang[new_lang]["display"]["config"]["lang_success"].format(lang[new_lang]["display_name"]))
                     await ctx.send(lang[new_lang]["display"]["config"]["exist"])
                 else:
                     voice_log_data.setData(str(ctx.guild.id),
                                            str(ctx.channel.id), new_lang)
                     await ctx.send(lang[new_lang]["display"]["config"]["success"])
     else:
-        await ctx.send("Permission denied")
+        await ctx.send(lang[data.lang]["display"]["command"]["no_permission"])
 
 
 @discord_client.command()
 async def setlang(ctx, *args):
     if ctx.guild is None:
-        await ctx.send('This function is not avaliable for private chat.')
+        await ctx.send('This function is not available for private chat.')
         return
+    data = voice_log_data.getData(str(ctx.guild.id))
     if ctx.author.guild_permissions.manage_messages or (ctx.author.id in config.admins):
         data = voice_log_data.getData(str(ctx.guild.id))
         if len(args) == 0:
-            await ctx.send(lang[data.lang]["display"]["config"]["notenoughargument"])
+            await ctx.send(lang[data.lang]["display"]["command"]["not_enough_argument"])
             exit()
         newLang = args[0]
         if newLang not in lang:
@@ -244,24 +245,25 @@ async def setlang(ctx, *args):
         else:
             if newLang == data.lang:
                 await ctx.send(
-                    lang[data.lang]["display"]["config"]["langexist"].format(lang[data.lang]["display_name"]))
+                    lang[data.lang]["display"]["config"]["lang_exist"].format(lang[data.lang]["display_name"]))
             else:
                 voice_log_data.setLang(str(ctx.guild.id), newLang)
-                await ctx.send(lang[newLang]["display"]["config"]["langsuccess"].format(lang[newLang]["display_name"]))
+                await ctx.send(lang[newLang]["display"]["config"]["lang_success"].format(lang[newLang]["display_name"]))
     else:
-        await ctx.send("Permission denied")
+        await ctx.send(lang[data.lang]["display"]["command"]["no_permission"])
 
 
 # noinspection PyUnusedLocal,PyTypeChecker
 @discord_client.command()
 async def join(ctx, *args):
     if ctx.guild is None:
-        await ctx.send('This function is not avaliable for private chat.')
+        await ctx.send('This function is not available for private chat.')
         return
+    data = voice_log_data.getData(str(ctx.guild.id))
     if ctx.author.guild_permissions.manage_messages or (ctx.author.id in config.admins):
         voice = ctx.author.voice.channel
         if voice is None:
-            await ctx.send("You are not even in a voice channel")
+            await ctx.send(lang[data.lang]["display"]["command"]["not_in_channel"])
         else:
             if ctx.guild.voice_client is None:
                 await voice.connect()
@@ -270,13 +272,13 @@ async def join(ctx, *args):
                 queue.queue_and_play(ctx.guild.voice_client, voice_file.replace(' ', '%20'))
             else:
                 if ctx.guild.voice_client.channel == voice:
-                    await ctx.send("Already connected")
+                    await ctx.send(lang[data.lang]["display"]["command"]["already_connected"])
                 else:
                     await ctx.guild.voice_client.move_to(voice)
                     voice_file = tts_url.format("VoiceLog TTS is moved to your channel.", "en-GB")
                     queue.queue_and_play(ctx.guild.voice_client, voice_file.replace(' ', '%20'))
     else:
-        await ctx.send("Permission denied")
+        await ctx.send(lang[data.lang]["display"]["command"]["no_permission"])
     return
 
 
@@ -290,7 +292,8 @@ async def leave(ctx):
         if voice is not None:
             await voice.disconnect()
     else:
-        await ctx.send("Permission denied")
+        data = voice_log_data.getData(str(ctx.guild.id))
+        await ctx.send(lang[data.lang]["display"]["command"]["no_permission"])
     return
 
 
