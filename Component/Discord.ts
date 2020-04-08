@@ -41,9 +41,14 @@ export class Discord {
             this.logger.warn(e.message);
         });
 
-        this.bot.on('ready', () => {
+        this.bot.on('ready', async () => {
             this.logger.info(`Logged in as ${this.bot.user.username} (${this.bot.user.id})`);
             if (!fs.existsSync('./assets')) fs.mkdirSync('./assets');
+            const channels = await this.data.getCurrentChannels();
+            channels.forEach(element => {
+                this.logger.info(`Reconnecting to ${element.currentVoiceChannel}...`);
+                this.joinVoiceChannel(element.currentVoiceChannel);
+            });
         });
 
         this.bot.on('voiceChannelJoin', async (member: Member, newChannel: VoiceChannel) => {
@@ -178,12 +183,14 @@ export class Discord {
                     this.bot.leaveVoiceChannel(channelID);
                     const connection = await this.joinVoiceChannel(channelID);
                     this.data.updateLastVoiceChannel(msg.member.guild.id, '');
+                    this.data.updateCurrentVoiceChannel(msg.member.guild.id, channelID);
                     const voiceFile = vsprintf(ttsURL, ['VoiceLog TTS is ready.', 'en-GB']).replace(/ /gi, '%20');
                     this.queue.add(() => this.play(voiceFile, connection));
                 }
             } else {
                 const connection = await this.joinVoiceChannel(channelID);
                 this.data.updateLastVoiceChannel(msg.member.guild.id, '');
+                this.data.updateCurrentVoiceChannel(msg.member.guild.id, channelID);
                 const voiceFile = vsprintf(ttsURL, ['VoiceLog TTS is ready.', 'en-GB']).replace(/ /gi, '%20');
                 this.queue.add(() => this.play(voiceFile, connection));
             }
@@ -397,12 +404,14 @@ export class Discord {
         if (noUser) {
             if (voice) {
                 this.data.updateLastVoiceChannel(serverID, channelToCheck.id);
+                this.data.updateCurrentVoiceChannel(serverID, '');
                 this.bot.leaveVoiceChannel(channelToCheck.id);
             }
         } else {
             if (!voice) {
                 await this.joinVoiceChannel(channelToCheck.id);
                 this.data.updateLastVoiceChannel(serverID, '');
+                this.data.updateCurrentVoiceChannel(serverID, channelToCheck.id);
             }
         }
     }

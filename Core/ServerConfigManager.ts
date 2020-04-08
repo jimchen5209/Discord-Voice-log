@@ -10,6 +10,7 @@ export interface IServerConfig {
     lang: string;
     channelID: string;
     lastVoiceChannel: string;
+    currentVoiceChannel: string;
 }
 
 export class ServerConfigManager {
@@ -30,17 +31,21 @@ export class ServerConfigManager {
                 }
                 fs.renameSync('./vlogdata.json', './vlogdata.json.bak');
             }
+
+            // Add field admin to old lists
+            this.database.updateMany({ currentVoiceChannel: { $exists: false } }, { $set: { currentVoiceChannel: '' } });
         });
     }
 
-    public async create(serverID: string, channelID: string = '', lang: string = 'en_US', lastVoiceChannel: string = '') {
+    public async create(serverID: string, channelID: string = '', lang: string = 'en_US', lastVoiceChannel: string = '', currentVoiceChannel: string = '') {
         if (!this.database) throw ERR_DB_NOT_INIT;
 
         return (await this.database.insertOne({
             serverID,
             channelID,
             lang,
-            lastVoiceChannel
+            lastVoiceChannel,
+            currentVoiceChannel
         } as IServerConfig)).ops[0] as IServerConfig;
     }
 
@@ -48,6 +53,12 @@ export class ServerConfigManager {
         if (!this.database) throw ERR_DB_NOT_INIT;
 
         return this.database.findOne({ serverID });
+    }
+
+    public getCurrentChannels() {
+        if (!this.database) throw ERR_DB_NOT_INIT;
+
+        return this.database.find({ currentVoiceChannel: { $ne: '' } }).toArray();
     }
 
     public async updateChannel(serverID: string, channelID: string) {
@@ -76,6 +87,16 @@ export class ServerConfigManager {
         return (await this.database.findOneAndUpdate(
             { serverID },
             { $set: { lastVoiceChannel } },
+            { returnOriginal: false }
+        )).value;
+    }
+
+    public async updateCurrentVoiceChannel(serverID: string, currentVoiceChannel: string) {
+        if (!this.database) throw ERR_DB_NOT_INIT;
+
+        return (await this.database.findOneAndUpdate(
+            { serverID },
+            { $set: { currentVoiceChannel } },
             { returnOriginal: false }
         )).value;
     }
