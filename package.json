@@ -1,0 +1,33 @@
+{
+  "name": "discord_voice_log",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "repository": "",
+  "author": "Jim Chen <jimchen5209@gmail.com>",
+  "license": "AGPL",
+  "scripts": {
+    "lint": "tslint --project .",
+    "build": "tsc --pretty",
+    "build:prod": "tsc --pretty --sourceMap false"
+  },
+  "keywords": [],
+  "dependencies": {
+    "eris": "^0.11.2",
+    "fluent-ffmpeg": "^2.1.2",
+    "moment": "^2.24.0",
+    "mongodb": "^3.5.5",
+    "promise-queue": "^2.2.5",
+    "sprintf-js": "^1.1.2",
+    "ts-async-queue": "^1.1.0",
+    "typescript-logging": "^0.6.4"
+  },
+  "devDependencies": {
+    "@types/fluent-ffmpeg": "^2.1.14",
+    "@types/mongodb": "^3.5.3",
+    "@types/node": "^13.7.0",
+    "@types/promise-queue": "^2.2.0",
+    "@types/sprintf-js": "^1.1.2",
+    "tslint": "^5.20.0",
+    "typescript": "^3.7.5"
+  }
+}

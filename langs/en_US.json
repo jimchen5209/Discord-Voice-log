@@ -1,7 +1,7 @@
 {
     "voice_log": {
-        "joined": "Joined {0}",
-        "left": "Left {0}"
+        "joined": "Joined %s",
+        "left": "Left %s"
     },
     "command": {
         "not_in_channel": "You are not even in a voice channel",
@@ -12,7 +12,7 @@
     "config": {
         "exist": "I have already been logging voice state to this channel.",
         "success": "I will now log voice state to this channel",
-        "lang_success": "Set language to {0}",
-        "lang_exist": "The language has already been {0}"
+        "lang_success": "Set language to %s",
+        "lang_exist": "The language has already been %s"
     }
 }
