@@ -36,6 +36,9 @@ jobs:
           paths:
             - ./node_modules
 
+      - run:
+          name: build
+          command: yarn build:prod
       # - run:
       #     name: run tests
       #     command: |
