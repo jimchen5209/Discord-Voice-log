@@ -341,6 +341,7 @@ export class Discord {
     }
 
     private async joinVoiceChannel(channelID: string): Promise<VoiceConnection> {
+        this.logger.info(`Connecting to ${channelID}...`);
         const connection = await this.bot.joinVoiceChannel(channelID);
         connection.on('warn', (message: string) => {
             this.logger.warn(`Warning from ${channelID}: ${message}`);
