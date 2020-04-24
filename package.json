@@ -4,7 +4,7 @@
   "main": "dist/index.js",
   "repository": "",
   "author": "Jim Chen <jimchen5209@gmail.com>",
-  "license": "AGPL",
+  "license": "AGPL-3.0-only",
   "scripts": {
     "lint": "tslint --project .",
     "build": "tsc --pretty",
