@@ -154,6 +154,10 @@ export class Discord {
             guildOnly: true,
             usage: '<lang>',
         });
+        this.bot.registerCommand('unsetvlog', this.commandUnsetVlog.bind(this), {
+            description: 'Disable voiceLog',
+            guildOnly: true
+        });
     }
 
     private async commandJoin(msg: Message) {
@@ -291,6 +295,21 @@ export class Discord {
                 );
             }
         }
+    }
+
+    private async commandUnsetVlog(msg: Message) {
+        if (!msg.member) return;
+
+        let data = await this.data.get(msg.member.guild.id);
+        if (!data) data = await this.data.create(msg.member.guild.id);
+
+        if (!(msg.member.permission.has('manageMessages')) && !(this.config.admins.includes(msg.member.id))) {
+            msg.channel.createMessage(this.lang.get(data.lang).display.command.no_permission);
+            return;
+        }
+
+        this.data.updateChannel(msg.member.guild.id, '');
+        msg.channel.createMessage(this.lang.get(data.lang).display.config.unset_success);
     }
 
     private genVoiceLogEmbed(member: Member, lang: string, type: string, oldChannel: VoiceChannel | undefined, newChannel: VoiceChannel | undefined) {

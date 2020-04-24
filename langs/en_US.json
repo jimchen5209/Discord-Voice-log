@@ -1,18 +1,19 @@
 {
-    "voice_log": {
-        "joined": "Joined %s",
-        "left": "Left %s"
-    },
-    "command": {
-        "not_in_channel": "You are not even in a voice channel",
-        "already_connected": "Already connected",
-        "no_permission": "Permission denied",
-        "not_enough_argument": "Not Enough Argument"
-    },
-    "config": {
-        "exist": "I have already been logging voice state to this channel.",
-        "success": "I will now log voice state to this channel",
-        "lang_success": "Set language to %s",
-        "lang_exist": "The language has already been %s"
-    }
+  "voice_log": {
+    "joined": "Joined %s",
+    "left": "Left %s"
+  },
+  "command": {
+    "not_in_channel": "You are not even in a voice channel",
+    "already_connected": "Already connected",
+    "no_permission": "Permission denied",
+    "not_enough_argument": "Not Enough Argument"
+  },
+  "config": {
+    "exist": "I have already been logging voice state to this channel.",
+    "success": "I will now log voice state to this channel",
+    "lang_success": "Set language to %s",
+    "lang_exist": "The language has already been %s",
+    "unset_success": "Voice state logging disabled."
+  }
 }
