@@ -9,11 +9,11 @@ import { Core } from '..';
 import { Config } from '../Core/Config';
 import { Lang } from '../Core/Lang';
 import { ServerConfigManager } from '../Core/ServerConfigManager';
+import { TTSHelper } from '../Core/TTSHelper';
 
 const ERR_MISSING_TOKEN = Error('Discord token missing');
 const ERR_MISSING_LANG = 'Language not exist.';
 const ERR_MISSING_LANG_DEFAULT = 'Language not exist, will not change your language.';
-const ttsURL = 'https://translate.google.com.tw/translate_tts?ie=UTF-8&q="%1s"&tl=%2s&client=tw-ob';
 
 export class Discord {
     private config: Config;
@@ -22,12 +22,14 @@ export class Discord {
     private logger: Category;
     private lang: Lang;
     private queue = new Queue(1, Infinity);
+    private ttsHelper: TTSHelper;
 
     constructor(core: Core) {
         this.config = core.config;
         this.logger = new Category('Discord', core.mainLogger);
         this.data = core.data;
         this.lang = new Lang(core);
+        this.ttsHelper = new TTSHelper(core);
 
         if (this.config.TOKEN === '') throw ERR_MISSING_TOKEN;
 
@@ -44,6 +46,7 @@ export class Discord {
         this.bot.on('ready', async () => {
             this.logger.info(`Logged in as ${this.bot.user.username} (${this.bot.user.id})`);
             if (!fs.existsSync('./assets')) fs.mkdirSync('./assets');
+            if (!fs.existsSync('./caches')) fs.mkdirSync('./caches');
             const channels = await this.data.getCurrentChannels();
             channels.forEach(element => {
                 this.logger.info(`Reconnecting to ${element.currentVoiceChannel}...`);
@@ -180,23 +183,23 @@ export class Discord {
                         msg.channel.createMessage(this.lang.get(data.lang).display.command.already_connected);
                     } else {
                         voice.switchChannel(channelID);
-                        const voiceFile = vsprintf(ttsURL, ['VoiceLog TTS is moved to your channel.', 'en-GB']).replace(/ /gi, '%20');
-                        this.queue.add(() => this.play(voiceFile, voice));
+                        const voiceFile = await this.ttsHelper.getTTSFile('VoiceLog TTS is moved to your channel.', 'en-GB');
+                        if (voiceFile !== null) this.queue.add(() => this.play(voiceFile, voice));
                     }
                 } else {
                     this.bot.leaveVoiceChannel(channelID);
                     const connection = await this.joinVoiceChannel(channelID);
                     this.data.updateLastVoiceChannel(msg.member.guild.id, '');
                     this.data.updateCurrentVoiceChannel(msg.member.guild.id, channelID);
-                    const voiceFile = vsprintf(ttsURL, ['VoiceLog TTS is ready.', 'en-GB']).replace(/ /gi, '%20');
-                    this.queue.add(() => this.play(voiceFile, connection));
+                    const voiceFile = await this.ttsHelper.getTTSFile('VoiceLog TTS is ready.', 'en-GB');
+                    if (voiceFile !== null) this.queue.add(() => this.play(voiceFile, connection));
                 }
             } else {
                 const connection = await this.joinVoiceChannel(channelID);
                 this.data.updateLastVoiceChannel(msg.member.guild.id, '');
                 this.data.updateCurrentVoiceChannel(msg.member.guild.id, channelID);
-                const voiceFile = vsprintf(ttsURL, ['VoiceLog TTS is ready.', 'en-GB']).replace(/ /gi, '%20');
-                this.queue.add(() => this.play(voiceFile, connection));
+                const voiceFile = await this.ttsHelper.getTTSFile('VoiceLog TTS is ready.', 'en-GB');
+                if (voiceFile !== null) this.queue.add(() => this.play(voiceFile, connection));
             }
         } else {
             msg.channel.createMessage(this.lang.get(data.lang).display.command.not_in_channel);
@@ -349,7 +352,12 @@ export class Discord {
         if (fs.existsSync(`assets/${member.id}.json`)) {
             const tts = JSON.parse(fs.readFileSync(`assets/${member.id}.json`, { encoding: 'utf-8' }));
             if (tts.lang && tts[type]) {
-                voiceFile = vsprintf(ttsURL, [tts[type], tts.lang]).replace(/ /gi, '%20');
+                const file = await this.ttsHelper.getTTSFile(tts[type], tts.lang);
+                if (file !== null) {
+                    voiceFile = file;
+                } else if (fs.existsSync(`assets/${member.id}_${type}.wav`)) {
+                    voiceFile = `assets/${member.id}_${type}.wav`;
+                }
             } else if (fs.existsSync(`assets/${member.id}_${type}.wav`)) {
                 voiceFile = `assets/${member.id}_${type}.wav`;
             }
@@ -384,9 +392,10 @@ export class Discord {
     private play(file: string, voice: VoiceConnection) {
         return new Promise((res, _) => {
             if (file === '') return;
+            console.log(file);
             if (!voice) return;
             if (!voice.ready) return;
-            // voice.once('end', () => res());
+            voice.once('end', () => res());
             FFmpeg.ffprobe(file, (err, data) => {
                 voice.play(file);
                 const time = data.format.duration || 0;

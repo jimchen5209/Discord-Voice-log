@@ -14,8 +14,10 @@
   "dependencies": {
     "eris": "^0.11.2",
     "fluent-ffmpeg": "^2.1.2",
+    "md5": "^2.2.1",
     "moment": "^2.24.0",
     "mongodb": "^3.5.5",
+    "node-fetch": "^2.6.0",
     "promise-queue": "^2.2.5",
     "sprintf-js": "^1.1.2",
     "ts-async-queue": "^1.1.0",
@@ -23,8 +25,10 @@
   },
   "devDependencies": {
     "@types/fluent-ffmpeg": "^2.1.14",
+    "@types/md5": "^2.2.0",
     "@types/mongodb": "^3.5.3",
     "@types/node": "^13.7.0",
+    "@types/node-fetch": "^2.5.7",
     "@types/promise-queue": "^2.2.0",
     "@types/sprintf-js": "^1.1.2",
     "tslint": "^5.20.0",
