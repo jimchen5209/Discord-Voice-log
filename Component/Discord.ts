@@ -380,15 +380,30 @@ export class Discord {
 
     private async refreshCache(channelID: string | undefined) {
         this.logger.info('Starting cache refresh...');
-        let progressMessage = this.genProgressMessage('Refreshing Caches', [{ name: 'Preparing...', value: '0%' }]);
+        const title = '➡️ Refreshing Caches';
+        let seekCounter = 0;
+        let seekFilename = '';
+        let seekDone = false;
+        let seekField = {
+            name: `${seekDone ? '✅' : '➡️'} Seeking for files ...${seekDone ? ' Done' : ''}`,
+            value: `${(seekDone || seekCounter === 0) ? '' : `Current ${seekFilename}, `} Seeked ${seekCounter} files. `
+        };
+        let progressMessage = this.genProgressMessage(title, [seekField]);
         const message = (channelID !== undefined) ? await this.bot.createMessage(channelID, progressMessage) : undefined;
+        let progressCount = 0;
+        let progressTotal = 0;
         const queue = new Queue(1, Infinity);
         const getTTS = (text: string, lang: string) => {
             return new Promise((res, _) => {
-                progressMessage = this.genProgressMessage('Refreshing Caches', [{ name: 'Preparing...', value: 'Done' }, { name: `Processing files...`, value: text }]);
+                progressCount++;
+                const progressField = {
+                    name: `➡️ Processing texts...`,
+                    value: `(${progressCount}/${progressTotal}) ${text} in ${lang}`
+                };
+                progressMessage = this.genProgressMessage(title, [seekField, progressField]);
                 if (message !== undefined) this.bot.editMessage(channelID!, message.id, progressMessage);
                 this.ttsHelper.getTTSFile(text, lang).then(fileName => {
-                    this.logger.info(`Processed ${text} -> ${fileName}`);
+                    this.logger.info(`(${progressCount}/${progressTotal}) ${text} in ${lang} -> ${fileName}`);
                     if (fileName !== null) ttsList.push(fileName);
                     setTimeout(() => { res(); }, 500);
                 });
@@ -396,10 +411,15 @@ export class Discord {
         };
         const getWaveTTS = (text: string, lang: string, voice: string) => {
             return new Promise((res, _) => {
-                progressMessage = this.genProgressMessage('Refreshing Caches', [{ name: 'Preparing...', value: 'Done' }, { name: `Processing files...`, value: text }]);
+                progressCount++;
+                const progressField = {
+                    name: `➡️ Processing texts...`,
+                    value: `(${progressCount}/${progressTotal}) ${text} in ${lang} with voice ${voice}`
+                };
+                progressMessage = this.genProgressMessage(title, [seekField, progressField]);
                 if (message !== undefined) this.bot.editMessage(channelID!, message.id, progressMessage);
                 this.ttsHelper.getWaveTTS(text, lang, voice).then(fileName => {
-                    this.logger.info(`Processed ${text} -> ${fileName}`);
+                    this.logger.info(`(${progressCount}/${progressTotal}) ${text} in ${lang} with voice ${voice} -> ${fileName}`);
                     if (fileName !== null) ttsList.push(fileName);
                     setTimeout(() => { res(); }, 500);
                 });
@@ -408,39 +428,68 @@ export class Discord {
         const ttsList: string[] = [];
         queue.add(() => getWaveTTS('VoiceLog TTS is moved to your channel.', 'en-US', 'en-US-Wavenet-D'));
         queue.add(() => getWaveTTS('VoiceLog TTS is ready.', 'en-US', 'en-US-Wavenet-D'));
+        progressTotal += 2;
         const typeList = ['join', 'left', 'switched_out', 'switched_in'];
         const files = fs.readdirSync('assets/');
         files.forEach(file => {
             if (path.extname(file) === '.json') {
+                seekCounter++;
+                seekFilename = file;
+                seekField = {
+                    name: `${seekDone ? '✅' : '➡️'} Seeking for files ...${seekDone ? ' Done' : ''}`,
+                    value: `${(seekDone || seekCounter === 0) ? '' : `Current ${seekFilename}, `} Seeked ${seekCounter} files. `
+                };
                 const tts = JSON.parse(fs.readFileSync(`assets/${file}`, { encoding: 'utf-8' }));
                 if (tts.use_wave_tts && tts.lang && tts.voice) {
                     typeList.forEach(type => {
                         if (tts[type]) {
+                            progressTotal++;
                             queue.add(() => getWaveTTS(tts[type], tts.lang, tts.voice));
                         }
                     });
                 } else if (tts.lang) {
                     typeList.forEach(type => {
                         if (tts[type]) {
+                            progressTotal++;
                             queue.add(() => getTTS(tts[type], tts.lang));
                         }
                     });
                 }
             }
         });
+        seekDone = true;
+        seekField = {
+            name: `${seekDone ? '✅' : '➡️'} Seeking for files ...${seekDone ? ' Done' : ''}`,
+            value: `${(seekDone || seekCounter === 0) ? '' : `Current ${seekFilename}, `} Seeked ${seekCounter} files. `
+        };
         const afterWork = () => {
             return new Promise((res, _) => {
+                const progressField = {
+                    name: `✅ Processing files... Done`,
+                    value: `Processed ${progressTotal} texts.`
+                };
+                let cacheRemoveCount = 0;
+                let cacheField = {
+                    name: `➡️ Removing unused cache...`,
+                    value: (cacheRemoveCount === 0) ? 'Seeking...' : `Removed ${cacheRemoveCount} unused ${(cacheRemoveCount === 1) ? 'cache' : 'caches'}.`
+                };
+                progressMessage = this.genProgressMessage(title, [seekField, progressField, cacheField]);
+                if (message !== undefined) this.bot.editMessage(channelID!, message.id, progressMessage);
                 const cacheFiles = fs.readdirSync('caches/');
                 cacheFiles.forEach(file => {
                     if (!ttsList.includes(`./caches/${file}`)) {
                         fs.unlinkSync(`./caches/${file}`);
                         this.logger.info(`Deleted unused file ./caches/${file}`);
+                        cacheRemoveCount++;
+                        progressMessage = this.genProgressMessage(title, [seekField, progressField, cacheField]);
+                        if (message !== undefined) this.bot.editMessage(channelID!, message.id, progressMessage);
                     }
                 });
-                progressMessage = this.genProgressMessage(
-                    'Refreshing Caches Done',
-                    [{ name: 'Preparing...', value: 'Done' }, { name: `Processing files...`, value: `Done` }, { name: `Removing unused cache...`, value: `Done` }]
-                );
+                cacheField = {
+                    name: `✅ Removing unused cache... Done`,
+                    value: (cacheRemoveCount === 0) ? 'No unused caches found.' : `Removed ${cacheRemoveCount} unused ${(cacheRemoveCount === 1) ? 'cache' : 'caches'}.`
+                };
+                progressMessage = this.genProgressMessage('✅ Refresh Caches Done', [seekField, progressField, cacheField]);
                 if (message !== undefined) this.bot.editMessage(channelID!, message.id, progressMessage);
                 res();
             });
