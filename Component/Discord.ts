@@ -2,6 +2,8 @@ import { CommandClient, Member, Message, MessageContent, TextChannel, VoiceChann
 import FFmpeg from 'fluent-ffmpeg';
 import fs from 'fs';
 import moment from 'moment';
+import schedule from 'node-schedule';
+import path from 'path';
 import Queue from 'promise-queue';
 import { vsprintf } from 'sprintf-js';
 import { Category } from 'typescript-logging';
@@ -52,6 +54,7 @@ export class Discord {
                 this.logger.info(`Reconnecting to ${element.currentVoiceChannel}...`);
                 this.joinVoiceChannel(element.currentVoiceChannel);
             });
+            schedule.scheduleJob('0 0 * * *', () => { this.refreshCache(undefined); });
         });
 
         this.bot.on('voiceChannelJoin', async (member: Member, newChannel: VoiceChannel) => {
@@ -161,6 +164,10 @@ export class Discord {
             description: 'Disable voiceLog',
             guildOnly: true
         });
+        this.bot.registerCommand('refreshcache', this.commandRefreshCache.bind(this), {
+            description: 'Download and cache all tts file',
+            guildOnly: true
+        });
     }
 
     private async commandJoin(msg: Message) {
@@ -183,7 +190,7 @@ export class Discord {
                         msg.channel.createMessage(this.lang.get(data.lang).display.command.already_connected);
                     } else {
                         voice.switchChannel(channelID);
-                        const voiceFile = await this.ttsHelper.getTTSFile('VoiceLog TTS is moved to your channel.', 'en-GB');
+                        const voiceFile = await this.ttsHelper.getWaveTTS('VoiceLog TTS is moved to your channel.', 'en-US', 'en-US-Wavenet-D');
                         if (voiceFile !== null) this.queue.add(() => this.play(voiceFile, voice));
                     }
                 } else {
@@ -191,14 +198,14 @@ export class Discord {
                     const connection = await this.joinVoiceChannel(channelID);
                     this.data.updateLastVoiceChannel(msg.member.guild.id, '');
                     this.data.updateCurrentVoiceChannel(msg.member.guild.id, channelID);
-                    const voiceFile = await this.ttsHelper.getTTSFile('VoiceLog TTS is ready.', 'en-GB');
+                    const voiceFile = await this.ttsHelper.getWaveTTS('VoiceLog TTS is ready.', 'en-US', 'en-US-Wavenet-D');
                     if (voiceFile !== null) this.queue.add(() => this.play(voiceFile, connection));
                 }
             } else {
                 const connection = await this.joinVoiceChannel(channelID);
                 this.data.updateLastVoiceChannel(msg.member.guild.id, '');
                 this.data.updateCurrentVoiceChannel(msg.member.guild.id, channelID);
-                const voiceFile = await this.ttsHelper.getTTSFile('VoiceLog TTS is ready.', 'en-GB');
+                const voiceFile = await this.ttsHelper.getWaveTTS('VoiceLog TTS is ready.', 'en-US', 'en-US-Wavenet-D');
                 if (voiceFile !== null) this.queue.add(() => this.play(voiceFile, connection));
             }
         } else {
@@ -315,6 +322,20 @@ export class Discord {
         msg.channel.createMessage(this.lang.get(data.lang).display.config.unset_success);
     }
 
+    private async commandRefreshCache(msg: Message) {
+        if (!msg.member) return;
+
+        let data = await this.data.get(msg.member.guild.id);
+        if (!data) data = await this.data.create(msg.member.guild.id);
+
+        if (!(this.config.admins.includes(msg.member.id))) {
+            msg.channel.createMessage(this.lang.get(data.lang).display.command.no_permission);
+            return;
+        }
+
+        this.refreshCache(msg.channel.id);
+    }
+
     private genVoiceLogEmbed(member: Member, lang: string, type: string, oldChannel: VoiceChannel | undefined, newChannel: VoiceChannel | undefined) {
         let color: number;
         let content: string;
@@ -347,11 +368,93 @@ export class Discord {
         } as MessageContent;
     }
 
+    private genProgressMessage(title: string, fields: Array<{ name: string, value: string }>) {
+        return {
+            embed: {
+                color: 16312092,
+                title,
+                fields
+            }
+        } as MessageContent;
+    }
+
+    private async refreshCache(channelID: string | undefined) {
+        this.logger.info('Starting cache refresh...');
+        let progressMessage = this.genProgressMessage('Refreshing Caches', [{ name: 'Preparing...', value: '0%' }]);
+        const message = (channelID !== undefined) ? await this.bot.createMessage(channelID, progressMessage) : undefined;
+        const queue = new Queue(1, Infinity);
+        const getTTS = (text: string, lang: string) => {
+            return new Promise((res, _) => {
+                progressMessage = this.genProgressMessage('Refreshing Caches', [{ name: 'Preparing...', value: 'Done' }, { name: `Processing files...`, value: text }]);
+                if (message !== undefined) this.bot.editMessage(channelID!, message.id, progressMessage);
+                this.ttsHelper.getTTSFile(text, lang).then(fileName => {
+                    this.logger.info(`Processed ${text} -> ${fileName}`);
+                    if (fileName !== null) ttsList.push(fileName);
+                    setTimeout(() => { res(); }, 500);
+                });
+            });
+        };
+        const getWaveTTS = (text: string, lang: string, voice: string) => {
+            return new Promise((res, _) => {
+                progressMessage = this.genProgressMessage('Refreshing Caches', [{ name: 'Preparing...', value: 'Done' }, { name: `Processing files...`, value: text }]);
+                if (message !== undefined) this.bot.editMessage(channelID!, message.id, progressMessage);
+                this.ttsHelper.getWaveTTS(text, lang, voice).then(fileName => {
+                    this.logger.info(`Processed ${text} -> ${fileName}`);
+                    if (fileName !== null) ttsList.push(fileName);
+                    setTimeout(() => { res(); }, 500);
+                });
+            });
+        };
+        const ttsList: string[] = [];
+        queue.add(() => getWaveTTS('VoiceLog TTS is moved to your channel.', 'en-US', 'en-US-Wavenet-D'));
+        queue.add(() => getWaveTTS('VoiceLog TTS is ready.', 'en-US', 'en-US-Wavenet-D'));
+        const typeList = ['join', 'left', 'switched_out', 'switched_in'];
+        const files = fs.readdirSync('assets/');
+        files.forEach(file => {
+            if (path.extname(file) === '.json') {
+                const tts = JSON.parse(fs.readFileSync(`assets/${file}`, { encoding: 'utf-8' }));
+                if (tts.use_wave_tts && tts.lang && tts.voice) {
+                    typeList.forEach(type => {
+                        if (tts[type]) {
+                            queue.add(() => getWaveTTS(tts[type], tts.lang, tts.voice));
+                        }
+                    });
+                } else if (tts.lang) {
+                    typeList.forEach(type => {
+                        if (tts[type]) {
+                            queue.add(() => getTTS(tts[type], tts.lang));
+                        }
+                    });
+                }
+            }
+        });
+        const afterWork = () => {
+            return new Promise((res, _) => {
+                const cacheFiles = fs.readdirSync('caches/');
+                cacheFiles.forEach(file => {
+                    if (!ttsList.includes(`./caches/${file}`)) {
+                        fs.unlinkSync(`./caches/${file}`);
+                        this.logger.info(`Deleted unused file ./caches/${file}`);
+                    }
+                });
+                progressMessage = this.genProgressMessage(
+                    'Refreshing Caches Done',
+                    [{ name: 'Preparing...', value: 'Done' }, { name: `Processing files...`, value: `Done` }, { name: `Removing unused cache...`, value: `Done` }]
+                );
+                if (message !== undefined) this.bot.editMessage(channelID!, message.id, progressMessage);
+                res();
+            });
+        };
+        queue.add(() => afterWork());
+    }
+
     private async playVoice(member: Member, voice: VoiceConnection, type: string) {
         let voiceFile = '';
         if (fs.existsSync(`assets/${member.id}.json`)) {
             const tts = JSON.parse(fs.readFileSync(`assets/${member.id}.json`, { encoding: 'utf-8' }));
-            if (tts.lang && tts[type]) {
+            if (tts.use_wave_tts && tts.lang && tts.voice && tts[type]) {
+                voiceFile = await this.ttsHelper.getWaveTTS(tts[type], tts.lang, tts.voice);
+            } else if (tts.lang && tts[type]) {
                 const file = await this.ttsHelper.getTTSFile(tts[type], tts.lang);
                 if (file !== null) {
                     voiceFile = file;
@@ -392,7 +495,7 @@ export class Discord {
     private play(file: string, voice: VoiceConnection) {
         return new Promise((res, _) => {
             if (file === '') return;
-            console.log(file);
+            this.logger.info(`Playing ${file}`);
             if (!voice) return;
             if (!voice.ready) return;
             voice.once('end', () => res());
