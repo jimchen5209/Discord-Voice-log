@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events';
-import { Discord } from './Component/Discord';
+import { Discord } from './Components/Discord';
 import { Config } from './Core/Config';
 import { catService } from './Core/Logger';
 import { MongoDB } from './Core/MongoDB';
