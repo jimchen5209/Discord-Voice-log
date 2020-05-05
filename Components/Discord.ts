@@ -23,7 +23,7 @@ export class Discord {
     private data: ServerConfigManager;
     private logger: Category;
     private lang: Lang;
-    private queue: {[key: string]: Queue} = {};
+    private queue: { [key: string]: Queue } = {};
     private ttsHelper: TTSHelper;
 
     constructor(core: Core) {
@@ -177,7 +177,7 @@ export class Discord {
         if (!data) data = await this.data.create(msg.member.guild.id);
 
         if (!(msg.member.permission.has('manageMessages')) && !(this.config.admins.includes(msg.member.id))) {
-            msg.channel.createMessage(this.lang.get(data.lang).display.command.no_permission);
+            msg.channel.createMessage(this.genErrorMessage(this.lang.get(data.lang).display.command.no_permission));
             return;
         }
 
@@ -187,7 +187,7 @@ export class Discord {
             if (voice) {
                 if (voice.ready) {
                     if (voice.channelID === channelID) {
-                        msg.channel.createMessage(this.lang.get(data.lang).display.command.already_connected);
+                        msg.channel.createMessage(this.genNotChangedMessage(this.lang.get(data.lang).display.command.already_connected));
                     } else {
                         voice.switchChannel(channelID);
                         const voiceFile = await this.ttsHelper.getWaveTTS('VoiceLog TTS is moved to your channel.', 'en-US', 'en-US-Wavenet-D');
@@ -209,7 +209,7 @@ export class Discord {
                 if (voiceFile !== null) this.queue[channelID].add(() => this.play(voiceFile, connection));
             }
         } else {
-            msg.channel.createMessage(this.lang.get(data.lang).display.command.not_in_channel);
+            msg.channel.createMessage(this.genErrorMessage(this.lang.get(data.lang).display.command.not_in_channel));
         }
     }
 
@@ -222,7 +222,7 @@ export class Discord {
         const voice = this.bot.voiceConnections.get(msg.member.guild.id);
 
         if (!(msg.member.permission.has('manageMessages')) && !(this.config.admins.includes(msg.member.id))) {
-            msg.channel.createMessage(this.lang.get(data.lang).display.command.no_permission);
+            msg.channel.createMessage(this.genErrorMessage(this.lang.get(data.lang).display.command.no_permission));
             return;
         }
 
@@ -236,39 +236,41 @@ export class Discord {
         if (!data) data = await this.data.create(msg.member.guild.id);
 
         if (!(msg.member.permission.has('manageMessages')) && !(this.config.admins.includes(msg.member.id))) {
-            msg.channel.createMessage(this.lang.get(data.lang).display.command.no_permission);
+            msg.channel.createMessage(this.genErrorMessage(this.lang.get(data.lang).display.command.no_permission));
             return;
         }
 
         if (args.length === 0) {
             if (data.channelID === msg.channel.id) {
-                msg.channel.createMessage(this.lang.get(data.lang).display.config.exist);
+                msg.channel.createMessage(this.genNotChangedMessage(this.lang.get(data.lang).display.config.exist));
             } else {
                 this.data.updateChannel(msg.member.guild.id, msg.channel.id);
-                msg.channel.createMessage(this.lang.get(data.lang).display.config.success);
+                msg.channel.createMessage(this.genSuccessMessage(this.lang.get(data.lang).display.config.success));
             }
         } else {
             let newLang = args[0];
             if (!this.lang.isExist(newLang)) {
-                msg.channel.createMessage(ERR_MISSING_LANG_DEFAULT);
+                msg.channel.createMessage(this.genErrorMessage(ERR_MISSING_LANG_DEFAULT));
                 newLang = data.lang;
             }
             if (data.channelID === msg.channel.id && data.lang === newLang) {
-                msg.channel.createMessage(this.lang.get(data.lang).display.config.exist);
+                msg.channel.createMessage(this.genNotChangedMessage(this.lang.get(data.lang).display.config.exist));
             } else {
                 if (data.channelID === msg.channel.id) {
                     this.data.updateLang(msg.member.guild.id, newLang);
                     msg.channel.createMessage(
-                        vsprintf(
-                            this.lang.get(newLang).display.config.lang_success,
-                            [this.lang.get(newLang).displayName]
+                        this.genSuccessMessage(
+                            vsprintf(
+                                this.lang.get(newLang).display.config.lang_success,
+                                [this.lang.get(newLang).displayName]
+                            )
                         )
                     );
-                    msg.channel.createMessage(this.lang.get(newLang).display.config.exist);
+                    msg.channel.createMessage(this.genNotChangedMessage(this.lang.get(newLang).display.config.exist));
                 } else {
                     this.data.updateChannel(msg.member.guild.id, msg.channel.id);
                     this.data.updateLang(msg.member.guild.id, newLang);
-                    msg.channel.createMessage(this.lang.get(newLang).display.config.success);
+                    msg.channel.createMessage(this.genSuccessMessage(this.lang.get(newLang).display.config.success));
                 }
             }
         }
@@ -281,26 +283,31 @@ export class Discord {
         if (!data) data = await this.data.create(msg.member.guild.id);
 
         if (!(msg.member.permission.has('manageMessages')) && !(this.config.admins.includes(msg.member.id))) {
-            msg.channel.createMessage(this.lang.get(data.lang).display.command.no_permission);
+            msg.channel.createMessage(this.genErrorMessage(this.lang.get(data.lang).display.command.no_permission));
             return;
         }
 
         const newLang = args[0];
         if (!this.lang.isExist(newLang)) {
-            msg.channel.createMessage(ERR_MISSING_LANG);
+            msg.channel.createMessage(this.genErrorMessage(ERR_MISSING_LANG));
         } else {
             if (data.lang === newLang) {
                 msg.channel.createMessage(
-                    vsprintf(
-                        this.lang.get(data.lang).display.config.lang_exist,
-                        [this.lang.get(data.lang).displayName]
-                    ));
+                    this.genNotChangedMessage(
+                        vsprintf(
+                            this.lang.get(data.lang).display.config.lang_exist,
+                            [this.lang.get(data.lang).displayName]
+                        )
+                    )
+                );
             } else {
                 this.data.updateLang(msg.member.guild.id, newLang);
                 msg.channel.createMessage(
-                    vsprintf(
-                        this.lang.get(newLang).display.config.lang_success,
-                        [this.lang.get(newLang).displayName]
+                    this.genSuccessMessage(
+                        vsprintf(
+                            this.lang.get(newLang).display.config.lang_success,
+                            [this.lang.get(newLang).displayName]
+                        )
                     )
                 );
             }
@@ -314,12 +321,12 @@ export class Discord {
         if (!data) data = await this.data.create(msg.member.guild.id);
 
         if (!(msg.member.permission.has('manageMessages')) && !(this.config.admins.includes(msg.member.id))) {
-            msg.channel.createMessage(this.lang.get(data.lang).display.command.no_permission);
+            msg.channel.createMessage(this.genErrorMessage(this.lang.get(data.lang).display.command.no_permission));
             return;
         }
 
         this.data.updateChannel(msg.member.guild.id, '');
-        msg.channel.createMessage(this.lang.get(data.lang).display.config.unset_success);
+        msg.channel.createMessage(this.genSuccessMessage(this.lang.get(data.lang).display.config.unset_success));
     }
 
     private async commandRefreshCache(msg: Message) {
@@ -329,7 +336,7 @@ export class Discord {
         if (!data) data = await this.data.create(msg.member.guild.id);
 
         if (!(this.config.admins.includes(msg.member.id))) {
-            msg.channel.createMessage(this.lang.get(data.lang).display.command.no_permission);
+            msg.channel.createMessage(this.genErrorMessage(this.lang.get(data.lang).display.command.no_permission));
             return;
         }
 
@@ -368,12 +375,42 @@ export class Discord {
         } as MessageContent;
     }
 
-    private genProgressMessage(title: string, fields: Array<{ name: string, value: string }>) {
+    private genProgressMessage(title: string, fields: Array<{ name: string, value: string }>, isDone: boolean = false) {
         return {
             embed: {
-                color: 16312092,
+                color: (isDone) ? 4289797 : 16312092,
                 title,
                 fields
+            }
+        } as MessageContent;
+    }
+
+    private genSuccessMessage(msg: string) {
+        return {
+            embed: {
+                title: 'Success',
+                color: 4289797,
+                description: msg
+            }
+        } as MessageContent;
+    }
+
+    private genNotChangedMessage(msg: string) {
+        return {
+            embed: {
+                title: 'Nothing Changed',
+                color: 9274675,
+                description: msg
+            }
+        } as MessageContent;
+    }
+
+    private genErrorMessage(msg: string) {
+        return {
+            embed: {
+                title: 'Error',
+                color: 13632027,
+                description: msg
             }
         } as MessageContent;
     }
@@ -489,7 +526,7 @@ export class Discord {
                     name: `✅ Removing unused cache... Done`,
                     value: (cacheRemoveCount === 0) ? 'No unused caches found.' : `Removed ${cacheRemoveCount} unused ${(cacheRemoveCount === 1) ? 'cache' : 'caches'}.`
                 };
-                progressMessage = this.genProgressMessage('✅ Refresh Caches Done', [seekField, progressField, cacheField]);
+                progressMessage = this.genProgressMessage('✅ Refresh Caches Done', [seekField, progressField, cacheField], true);
                 if (message !== undefined) this.bot.editMessage(channelID!, message.id, progressMessage);
                 res();
             });
