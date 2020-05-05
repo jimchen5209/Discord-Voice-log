@@ -23,7 +23,7 @@ export class Discord {
     private data: ServerConfigManager;
     private logger: Category;
     private lang: Lang;
-    private queue = new Queue(1, Infinity);
+    private queue: {[key: string]: Queue} = {};
     private ttsHelper: TTSHelper;
 
     constructor(core: Core) {
@@ -191,7 +191,7 @@ export class Discord {
                     } else {
                         voice.switchChannel(channelID);
                         const voiceFile = await this.ttsHelper.getWaveTTS('VoiceLog TTS is moved to your channel.', 'en-US', 'en-US-Wavenet-D');
-                        if (voiceFile !== null) this.queue.add(() => this.play(voiceFile, voice));
+                        if (voiceFile !== null) this.queue[channelID].add(() => this.play(voiceFile, voice));
                     }
                 } else {
                     this.bot.leaveVoiceChannel(channelID);
@@ -199,14 +199,14 @@ export class Discord {
                     this.data.updateLastVoiceChannel(msg.member.guild.id, '');
                     this.data.updateCurrentVoiceChannel(msg.member.guild.id, channelID);
                     const voiceFile = await this.ttsHelper.getWaveTTS('VoiceLog TTS is ready.', 'en-US', 'en-US-Wavenet-D');
-                    if (voiceFile !== null) this.queue.add(() => this.play(voiceFile, connection));
+                    if (voiceFile !== null) this.queue[channelID].add(() => this.play(voiceFile, connection));
                 }
             } else {
                 const connection = await this.joinVoiceChannel(channelID);
                 this.data.updateLastVoiceChannel(msg.member.guild.id, '');
                 this.data.updateCurrentVoiceChannel(msg.member.guild.id, channelID);
                 const voiceFile = await this.ttsHelper.getWaveTTS('VoiceLog TTS is ready.', 'en-US', 'en-US-Wavenet-D');
-                if (voiceFile !== null) this.queue.add(() => this.play(voiceFile, connection));
+                if (voiceFile !== null) this.queue[channelID].add(() => this.play(voiceFile, connection));
             }
         } else {
             msg.channel.createMessage(this.lang.get(data.lang).display.command.not_in_channel);
@@ -516,11 +516,12 @@ export class Discord {
         } else if (fs.existsSync(`assets/${member.id}_${type}.wav`)) {
             voiceFile = `assets/${member.id}_${type}.wav`;
         }
-        if (voiceFile !== '') this.queue.add(() => this.play(voiceFile, voice));
+        if (voiceFile !== '') this.queue[voice.channelID].add(() => this.play(voiceFile, voice));
     }
 
     private async joinVoiceChannel(channelID: string): Promise<VoiceConnection> {
         this.logger.info(`Connecting to ${channelID}...`);
+        if (this.queue[channelID] === undefined) this.queue[channelID] = new Queue(1, Infinity);
         const connection = await this.bot.joinVoiceChannel(channelID);
         connection.on('warn', (message: string) => {
             this.logger.warn(`Warning from ${channelID}: ${message}`);
