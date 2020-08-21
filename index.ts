@@ -4,12 +4,14 @@ import { Config } from './Core/Config';
 import { catService } from './Core/Logger';
 import { MongoDB } from './Core/MongoDB';
 import { ServerConfigManager } from './Core/ServerConfigManager';
+import Status from './Libs/status/status';
 
 export class Core extends EventEmitter {
     public readonly mainLogger = catService;
     public readonly config = new Config(this);
     public readonly database = new MongoDB(this);
     public readonly data = new ServerConfigManager(this);
+    private readonly status = new Status('VoiceLog');
     constructor() {
         super();
 
@@ -24,6 +26,8 @@ export class Core extends EventEmitter {
             } catch (error) {
                 console.error(error);
             }
+            // tslint:disable-next-line:no-unused-expression
+            this.status.set_status();
         });
     }
 }

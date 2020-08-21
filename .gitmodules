@@ -1,0 +1,3 @@
+[submodule "Libs/status"]
+	path = Libs/status
+	url = https://github.com/jimchen5209/StatusClient_JS.git
