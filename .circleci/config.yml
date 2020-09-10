@@ -17,11 +17,11 @@ jobs:
     steps:
       - checkout
 
-      # - run:
-      #     name: checkout submodule
-      #     command: |
-      #       git submodule init
-      #       git submodule update
+      - run:
+          name: checkout submodule
+          command: |
+            git submodule init
+            git submodule update
 
       # Download and cache dependencies
       - restore_cache:
