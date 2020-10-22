@@ -21,4 +21,4 @@ VOLUME [ "/app/assets" ]
 VOLUME [ "/app/caches" ]
 VOLUME [ "/app/logs" ]
 
-ENTRYPOINT [ "node", "dist" ]
+ENTRYPOINT [ "node", "." ]
