@@ -14,6 +14,7 @@ ENV NODE_ENV=production
 RUN apk add --no-cache ffmpeg
 
 COPY --from=0 /app/dist /app/
+COPY --from=0 /app/langs /app/langs
 COPY --from=0 /app/node_modules /app/node_modules
 # COPY config.json /app/config.json
 
