@@ -32,7 +32,7 @@ jobs:
         run: |
           REF_SLUG=$([ "$GITHUB_REF" = "refs/heads/master" ] && echo "latest" || echo ${GITHUB_REF##*/})
           docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/voicelog:$REF_SLUG .
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/voicelog:$REF_SLUG .
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/voicelog:$REF_SLUG
         # with:
         #   push: true
         #   tags: ${{ secrets.DOCKERHUB_USERNAME }}/voicelog:$REF_SLUG
