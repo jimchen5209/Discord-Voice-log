@@ -38,6 +38,24 @@ export class Config {
     }
 
     private write(firstGenerate: boolean = false) {
+        if (firstGenerate) {
+            const jsonNew = {
+                TOKEN: this.TOKEN,
+                googleAPIKey: this.googleAPIKey,
+                admins: this.admins,
+                database: this.database,
+                Debug: this.debug
+            };
+            const jsonString = JSON.stringify(jsonNew, null, 4);
+            if (fs.existsSync('./config.json')) {
+                const config = require(resolve('./config.json'));
+                if (config === jsonNew) return;
+            }
+            this.logger.info('Detected first generation, dumping if you needed (e.g. running in docker).');
+            console.log(jsonString);
+            fs.writeFileSync('./config.json', jsonString, 'utf8');
+            return;
+        }
         this.canWrite('./config.json', (isWritable: boolean) => {
             const jsonNew = {
                 TOKEN: this.TOKEN,
@@ -51,10 +69,7 @@ export class Config {
                 const config = require(resolve('./config.json'));
                 if (config === jsonNew) return;
             }
-            if (firstGenerate) {
-                this.logger.info('Detected first generation, dumping if you needed (e.g. running in docker).');
-                console.log(jsonString);
-            }
+
             if (isWritable) {
                 fs.writeFileSync('./config.json', jsonString, 'utf8');
             } else {
