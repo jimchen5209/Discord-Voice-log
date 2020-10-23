@@ -30,21 +30,43 @@ export class Config {
             this.admins = [];
             this.debug = false;
             this.database = { host: 'mongodb://localhost:27017', name: 'VoiceLog' };
-            this.write();
+            this.write(true);
             this.logger.info('Fill your config and try again.');
             process.exit(-1);
         }
 
     }
 
-    private write() {
-        const json = JSON.stringify({
-            TOKEN: this.TOKEN,
-            googleAPIKey: this.googleAPIKey,
-            admins: this.admins,
-            database: this.database,
-            Debug: this.debug
-        }, null, 4);
-        fs.writeFileSync('./config.json', json, 'utf8');
+    private write(firstGenerate: boolean = false) {
+        this.canWrite('./config.json', (isWritable: boolean) => {
+            const jsonNew = {
+                TOKEN: this.TOKEN,
+                googleAPIKey: this.googleAPIKey,
+                admins: this.admins,
+                database: this.database,
+                Debug: this.debug
+            };
+            const jsonString = JSON.stringify(jsonNew, null, 4);
+            if (fs.existsSync('./config.json')) {
+                const config = require(resolve('./config.json'));
+                if (config === jsonNew) return;
+            }
+            if (firstGenerate) {
+                this.logger.info('Detected first generation, dumping if you needed (e.g. running in docker).');
+                console.log(jsonString);
+            }
+            if (isWritable) {
+                fs.writeFileSync('./config.json', jsonString, 'utf8');
+            } else {
+                this.logger.warn('Detected read-only config.json, created an alt file config.json.new and you need to merge it manually.');
+                fs.writeFileSync('./config.json.new', jsonString, 'utf8');
+            }
+        });
+    }
+
+    private canWrite(path: string, callback: (isWritable: boolean) => void ) {
+        fs.access(path, fs.constants.W_OK, err => {
+            callback(!err);
+        });
     }
 }
