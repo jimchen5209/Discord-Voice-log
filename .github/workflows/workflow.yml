@@ -3,7 +3,7 @@ on: [push, pull_request]
 
 jobs:
   Docker-image:
-    needs: Build
+    # needs: Build
     name: Push Docker image to GitHub Packages
     runs-on: ubuntu-latest
     steps:
