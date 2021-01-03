@@ -563,19 +563,21 @@ export class Discord {
         connection.on('warn', (message: string) => {
             this.logger.warn(`Warning from ${channelID}: ${message}`);
         });
-        const error = (err: Error) => {
-            connection.stopPlaying();
-            connection.removeAllListeners();
+        connection.on('error', (err: Error) => {
             if (err) {
                 this.logger.error(`Error from ${channelID}: ${err.name} ${err.message}`, null);
+            }
+        });
+        connection.on('disconnect', (err: Error) => {
+            if (err) {
+                this.logger.error(`Error from ${channelID} that caused voice disconnect: ${err.name} ${err.message}`, null);
                 setTimeout(() => {
-                    this.bot.leaveVoiceChannel(channelID);
+                    connection.stopPlaying();
+                    connection.removeAllListeners();
                     this.joinVoiceChannel(channelID);
                 }, 5000);
             }
-        };
-        connection.once('error', error);
-        connection.once('disconnect', error);
+        });
         return connection;
     }
 
