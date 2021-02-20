@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events';
+import { catService } from 'logging-ts';
 import { Discord } from './Components/Discord';
 import { Config } from './Core/Config';
-import { catService } from './Core/Logger';
 import { MongoDB } from './Core/MongoDB';
 import { ServerConfigManager } from './Core/ServerConfigManager';
 import Status from './Libs/status/status';
@@ -14,6 +14,7 @@ export class Core extends EventEmitter {
     private readonly status = new Status('VoiceLog');
     constructor() {
         super();
+        this.mainLogger.info('Starting...');
 
         this.emit('init', this);
 

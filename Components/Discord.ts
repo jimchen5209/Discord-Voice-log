@@ -1,12 +1,12 @@
 import { CommandClient, Member, Message, MessageContent, TextChannel, VoiceChannel, VoiceConnection } from 'eris';
 import FFmpeg from 'fluent-ffmpeg';
 import fs from 'fs';
+import { Category } from 'logging-ts';
 import moment from 'moment';
 import schedule from 'node-schedule';
 import path from 'path';
 import Queue from 'promise-queue';
 import { vsprintf } from 'sprintf-js';
-import { Category } from 'typescript-logging';
 import { Core } from '..';
 import { Config } from '../Core/Config';
 import { Lang } from '../Core/Lang';

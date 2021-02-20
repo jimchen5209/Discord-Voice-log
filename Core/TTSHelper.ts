@@ -1,8 +1,8 @@
 import fs from 'fs';
+import { Category } from 'logging-ts';
 import md5 from 'md5';
 import fetch from 'node-fetch';
 import stream from 'stream';
-import { Category } from 'typescript-logging';
 import util from 'util';
 import { Core } from '..';
 import { Config } from './Config';

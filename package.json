@@ -14,6 +14,7 @@
   "dependencies": {
     "eris": "^0.14.0",
     "fluent-ffmpeg": "^2.1.2",
+    "logging-ts": "https://github.com/jimchen5209/Logging-TS.git",
     "md5": "^2.2.1",
     "moment": "^2.24.0",
     "mongodb": "^3.5.5",
