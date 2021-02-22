@@ -6,7 +6,7 @@
   "author": "Jim Chen <jimchen5209@gmail.com>",
   "license": "AGPL-3.0-only",
   "scripts": {
-    "lint": "tslint --project .",
+    "lint": "tslint --project . --fix",
     "build": "tsc --pretty",
     "build:prod": "tsc --pretty --sourceMap false"
   },
