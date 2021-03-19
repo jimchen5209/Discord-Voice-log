@@ -535,7 +535,7 @@ export class Discord {
     }
 
     private async playVoice(member: Member, voice: VoiceConnection, type: string) {
-        if (member.id === '203024142092599297' && (type === 'switched_in' || type === 'join')) { // '275570140794322946') {
+        if (member.id === '275570140794322946' && (type === 'switched_in' || type === 'join')) {
             this.queue[voice.channelID].add(() => this.playTime(voice));
             return;
         }
@@ -566,7 +566,7 @@ export class Discord {
             const nowTime = moment();
             const nineOClock = moment({ hour: 21, minute: 0 });
             const time = nowTime.diff(nineOClock, 'minute');
-            const text = `9 點 ${time} 分`;
+            const text = `9 點 ${time} 分到了`;
             const lang = 'zh_tw';
 
             if (!voice) return;
