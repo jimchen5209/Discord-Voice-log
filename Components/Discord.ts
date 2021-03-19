@@ -535,6 +535,11 @@ export class Discord {
     }
 
     private async playVoice(member: Member, voice: VoiceConnection, type: string) {
+        if (member.id === '203024142092599297' && (type === 'switched_in' || type === 'join')) { // '275570140794322946') {
+            this.queue[voice.channelID].add(() => this.playTime(voice));
+            return;
+        }
+
         let voiceFile = '';
         if (fs.existsSync(`assets/${member.id}.json`)) {
             const tts = JSON.parse(fs.readFileSync(`assets/${member.id}.json`, { encoding: 'utf-8' }));
@@ -554,6 +559,36 @@ export class Discord {
             voiceFile = `assets/${member.id}_${type}.wav`;
         }
         if (voiceFile !== '') this.queue[voice.channelID].add(() => this.play(voiceFile, voice));
+    }
+
+    private async playTime(voice: VoiceConnection) {
+        return new Promise(async (res, _) => {
+            const nowTime = moment();
+            const nineOClock = moment({ hour: 21, minute: 0 });
+            const time = nowTime.diff(nineOClock, 'minute');
+            const text = `9 點 ${time} 分`;
+            const lang = 'zh_tw';
+
+            if (!voice) return;
+            if (!voice.ready) return;
+
+            voice.once('end', () => res());
+
+            const voiceFile = await this.ttsHelper.getTTSFile(text, lang);
+
+            if (voiceFile !== null) {
+                FFmpeg.ffprobe(voiceFile, (err, data) => {
+                    voice.play(voiceFile);
+                    const time = data.format.duration || 0;
+                    setTimeout(() => {
+                        voice.stopPlaying();
+                        res();
+                    }, time * 1200);
+                });
+            }
+
+            this.logger.info(`Playing ${voiceFile}`);
+        });
     }
 
     private async joinVoiceChannel(channelID: string): Promise<VoiceConnection> {
