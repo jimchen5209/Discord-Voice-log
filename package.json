@@ -12,7 +12,8 @@
   },
   "keywords": [],
   "dependencies": {
-    "eris": "^0.14.0",
+    "async-wait-until": "^2.0.5",
+    "eris": "^0.14.1",
     "fluent-ffmpeg": "^2.1.2",
     "logging-ts": "https://github.com/jimchen5209/Logging-TS.git",
     "md5": "^2.2.1",
