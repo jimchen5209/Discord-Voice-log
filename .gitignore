@@ -114,6 +114,9 @@ dist
 .yarn/build-state.yml
 .pnp.*
 
+#liveshare
+.vsls.json
+
 # project
 logs/
 .vscode/
