@@ -178,6 +178,8 @@ export class DiscordText {
 
         if (voice) {
             voice.destroy();
+            this.data.updateLastVoiceChannel(msg.member.guild.id, '');
+            this.data.updateCurrentVoiceChannel(msg.member.guild.id, '');
             delete this.audios[voiceID!];
         }
     }
@@ -188,7 +190,7 @@ export class DiscordText {
         let data = await this.data.get(msg.member.guild.id);
         if (!data) data = await this.data.create(msg.member.guild.id);
 
-        if (!(msg.member.permission.has('manageMessages')) && !(this.config.admins.includes(msg.member.id))) {
+        if (!(msg.member.permissions.has('manageMessages')) && !(this.config.admins.includes(msg.member.id))) {
             msg.channel.createMessage(this.genErrorMessage(this.lang.get(data.lang).display.command.no_permission));
             return;
         }
@@ -235,7 +237,7 @@ export class DiscordText {
         let data = await this.data.get(msg.member.guild.id);
         if (!data) data = await this.data.create(msg.member.guild.id);
 
-        if (!(msg.member.permission.has('manageMessages')) && !(this.config.admins.includes(msg.member.id))) {
+        if (!(msg.member.permissions.has('manageMessages')) && !(this.config.admins.includes(msg.member.id))) {
             msg.channel.createMessage(this.genErrorMessage(this.lang.get(data.lang).display.command.no_permission));
             return;
         }
