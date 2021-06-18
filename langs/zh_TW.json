@@ -10,10 +10,10 @@
     "not_enough_argument": "參數不足"
   },
   "config": {
-    "exist": "我已經正在把語音紀錄放到這個頻道啦",
-    "success": "我現在開始會把語音狀態記錄到這個頻道",
+    "exist": "我已經正在把語音頻道的狀態記錄到這個頻道啦",
+    "success": "我從現在開始會把語音頻道的狀態記錄到這個頻道",
     "lang_success": "已將語言設置為 %s",
     "lang_exist": "語言已經是 %s",
-    "unset_success": "語音記錄已取消"
+    "unset_success": "語音頻道狀態記錄已取消"
   }
 }
