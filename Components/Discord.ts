@@ -226,7 +226,11 @@ export class Discord {
             return;
         }
 
-        if (voice) this.bot.leaveVoiceChannel(voice.channelID);
+        if (voice) {
+            this.bot.leaveVoiceChannel(voice.channelID);
+            this.data.updateLastVoiceChannel(msg.member.guild.id, '');
+            this.data.updateCurrentVoiceChannel(msg.member.guild.id, '');
+        }
     }
 
     private async commandsetVlog(msg: Message, args: string[]) {
