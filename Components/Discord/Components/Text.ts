@@ -12,6 +12,7 @@ import { VoiceLog } from './VoiceLog';
 
 const ERR_MISSING_LANG = 'Language not exist.';
 const ERR_MISSING_LANG_DEFAULT = 'Language not exist, will not change your language.';
+const ERR_INSERT_FAILURE = Error('Data insert failed.');
 
 export class DiscordText {
     public voiceLog: VoiceLog;
@@ -121,6 +122,7 @@ export class DiscordText {
 
         let data = await this.data.get(msg.member.guild.id);
         if (!data) data = await this.data.create(msg.member.guild.id);
+        if (!data) throw ERR_INSERT_FAILURE;
 
         if (!(msg.member.permissions.has('manageMessages')) && !(this.config.admins.includes(msg.member.id))) {
             msg.channel.createMessage(this.genErrorMessage(this.lang.get(data.lang).display.command.no_permission));
@@ -131,21 +133,21 @@ export class DiscordText {
         if (channelID) {
             const voiceID = this.bot.voiceConnections.get(msg.member.guild.id)?.channelID;
             const voice = voiceID ? this.audios[voiceID] : undefined;
-            if (voice) {
+            if (voice && voiceID) {
                 if (voice.isReady()) {
                     if (voiceID === channelID) {
                         msg.channel.createMessage(this.genNotChangedMessage(this.lang.get(data.lang).display.command.already_connected));
                     } else {
                         voice.switchChannel(channelID);
                         this.audios[channelID] = voice;
-                        delete this.audios[voiceID!];
+                        delete this.audios[voiceID];
                         this.data.updateLastVoiceChannel(msg.member.guild.id, '');
                         this.data.updateCurrentVoiceChannel(msg.member.guild.id, channelID);
                         voice.playMoved();
                     }
                 } else {
                     voice.destroy();
-                    delete this.audios[voiceID!];
+                    delete this.audios[voiceID];
                     this.audios[channelID] = new DiscordVoice(this.bot, this.logger, this.ttsHelper, channelID);
                     this.data.updateLastVoiceChannel(msg.member.guild.id, '');
                     this.data.updateCurrentVoiceChannel(msg.member.guild.id, channelID);
@@ -167,6 +169,7 @@ export class DiscordText {
 
         let data = await this.data.get(msg.member.guild.id);
         if (!data) data = await this.data.create(msg.member.guild.id);
+        if (!data) throw ERR_INSERT_FAILURE;
 
         const voiceID = this.bot.voiceConnections.get(msg.member.guild.id)?.channelID;
         const voice = voiceID ? this.audios[voiceID] : undefined;
@@ -176,11 +179,11 @@ export class DiscordText {
             return;
         }
 
-        if (voice) {
+        if (voiceID && voice) {
             voice.destroy();
             this.data.updateLastVoiceChannel(msg.member.guild.id, '');
             this.data.updateCurrentVoiceChannel(msg.member.guild.id, '');
-            delete this.audios[voiceID!];
+            delete this.audios[voiceID];
         }
     }
 
@@ -189,6 +192,7 @@ export class DiscordText {
 
         let data = await this.data.get(msg.member.guild.id);
         if (!data) data = await this.data.create(msg.member.guild.id);
+        if (!data) throw ERR_INSERT_FAILURE;
 
         if (!(msg.member.permissions.has('manageMessages')) && !(this.config.admins.includes(msg.member.id))) {
             msg.channel.createMessage(this.genErrorMessage(this.lang.get(data.lang).display.command.no_permission));
@@ -236,6 +240,7 @@ export class DiscordText {
 
         let data = await this.data.get(msg.member.guild.id);
         if (!data) data = await this.data.create(msg.member.guild.id);
+        if (!data) throw ERR_INSERT_FAILURE;
 
         if (!(msg.member.permissions.has('manageMessages')) && !(this.config.admins.includes(msg.member.id))) {
             msg.channel.createMessage(this.genErrorMessage(this.lang.get(data.lang).display.command.no_permission));
@@ -274,6 +279,7 @@ export class DiscordText {
 
         let data = await this.data.get(msg.member.guild.id);
         if (!data) data = await this.data.create(msg.member.guild.id);
+        if (!data) throw ERR_INSERT_FAILURE;
 
         if (!(msg.member.permissions.has('manageMessages')) && !(this.config.admins.includes(msg.member.id))) {
             msg.channel.createMessage(this.genErrorMessage(this.lang.get(data.lang).display.command.no_permission));
@@ -289,6 +295,7 @@ export class DiscordText {
 
         let data = await this.data.get(msg.member.guild.id);
         if (!data) data = await this.data.create(msg.member.guild.id);
+        if (!data) throw ERR_INSERT_FAILURE;
 
         if (!(this.config.admins.includes(msg.member.id))) {
             msg.channel.createMessage(this.genErrorMessage(this.lang.get(data.lang).display.command.no_permission));

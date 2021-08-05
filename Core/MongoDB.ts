@@ -22,7 +22,7 @@ export class MongoDB extends EventEmitter {
 
         const config = core.config.database;
 
-        MongoClient.connect(config.host, { useNewUrlParser: true }).then(client => {
+        MongoClient.connect(config.host).then(client => {
             this.logger.info(`Successfully connected to ${config.host}`);
 
             this.client = client.db(config.name);

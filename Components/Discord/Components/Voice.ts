@@ -76,7 +76,7 @@ export class DiscordVoice {
         if (this.voice) {
             this.voice.stopPlaying();
             this.voice.removeAllListeners();
-            this.bot.leaveVoiceChannel(this.voice.channelID);
+            if (this.voice.channelID) this.bot.leaveVoiceChannel(this.voice.channelID);
             this.voice = undefined;
         }
     }
@@ -93,7 +93,7 @@ export class DiscordVoice {
                     this.logger.error(`Error from ${channelID}: ${err.name} ${err.message}`, null);
                 }
             });
-            connection.on('disconnect', (err: Error) => {
+            connection.once('disconnect', (err: Error) => {
                 if (err) {
                     this.logger.error(`Error from ${channelID} that caused voice disconnect: ${err.name} ${err.message}`, null);
                     // setTimeout(() => {
@@ -113,16 +113,17 @@ export class DiscordVoice {
     }
 
     private play(file: string) {
-        return new Promise<void>(async (res, _) => {
+        // eslint-disable-next-line no-async-promise-executor
+        return new Promise<void>(async (res) => {
             if (file === '') return;
             this.logger.info(`Playing ${file}`);
             await waitUntil(() => this.voice && this.voice.ready);
-            this.voice!.once('end', () => res());
+            this.voice?.once('end', () => res());
             FFmpeg.ffprobe(file, (__, data) => {
-                this.voice!.play(file);
+                this.voice?.play(file);
                 const time = data.format.duration || 0;
                 setTimeout(() => {
-                    this.voice!.stopPlaying();
+                    this.voice?.stopPlaying();
                     res();
                 }, time * 1200);
             });

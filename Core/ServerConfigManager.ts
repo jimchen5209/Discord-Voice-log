@@ -1,11 +1,10 @@
-import fs from 'fs';
-import { Collection, ObjectID } from 'mongodb';
-import { resolve } from 'path';
+import fs, { readFileSync } from 'fs';
+import { Collection, ObjectId, ReturnDocument } from 'mongodb';
 import { Core } from '..';
 import { ERR_DB_NOT_INIT } from './MongoDB';
 
 export interface IServerConfig {
-    _id: ObjectID;
+    _id: ObjectId;
     serverID: string;
     lang: string;
     channelID: string;
@@ -24,7 +23,7 @@ export class ServerConfigManager {
             this.database.createIndex({ serverID: 1 });
             if (fs.existsSync('./vlogdata.json')) {
                 core.mainLogger.info('Old data found. Migrating to db...');
-                const dataRaw = require(resolve('./vlogdata.json'));
+                const dataRaw = JSON.parse(readFileSync('./vlogdata.json', { encoding: 'utf-8' }));
                 for (const key of Object.keys(dataRaw)) {
                     if (dataRaw[key] === undefined) continue;
                     await this.create(key, dataRaw[key].channel, dataRaw[key].lang, dataRaw[key].lastVoiceChannel);
@@ -37,16 +36,18 @@ export class ServerConfigManager {
         });
     }
 
-    public async create(serverID: string, channelID: string = '', lang: string = 'en_US', lastVoiceChannel: string = '', currentVoiceChannel: string = '') {
+    public async create(serverID: string, channelID = '', lang = 'en_US', lastVoiceChannel = '', currentVoiceChannel = '') {
         if (!this.database) throw ERR_DB_NOT_INIT;
 
-        return (await this.database.insertOne({
+        const data = {
             serverID,
             channelID,
             lang,
             lastVoiceChannel,
             currentVoiceChannel
-        } as IServerConfig)).ops[0] as IServerConfig;
+        } as IServerConfig;
+
+        return (await this.database.insertOne(data)).acknowledged ? data : undefined;
     }
 
     public get(serverID: string) {
@@ -67,7 +68,7 @@ export class ServerConfigManager {
         return (await this.database.findOneAndUpdate(
             { serverID },
             { $set: { channelID } },
-            { returnOriginal: false }
+            { returnDocument: ReturnDocument.AFTER }
         )).value;
     }
 
@@ -77,7 +78,7 @@ export class ServerConfigManager {
         return (await this.database.findOneAndUpdate(
             { serverID },
             { $set: { lang } },
-            { returnOriginal: false }
+            { returnDocument: ReturnDocument.AFTER }
         )).value;
     }
 
@@ -87,7 +88,7 @@ export class ServerConfigManager {
         return (await this.database.findOneAndUpdate(
             { serverID },
             { $set: { lastVoiceChannel } },
-            { returnOriginal: false }
+            { returnDocument: ReturnDocument.AFTER }
         )).value;
     }
 
@@ -97,7 +98,7 @@ export class ServerConfigManager {
         return (await this.database.findOneAndUpdate(
             { serverID },
             { $set: { currentVoiceChannel } },
-            { returnOriginal: false }
+            { returnDocument: ReturnDocument.AFTER }
         )).value;
     }
 }
