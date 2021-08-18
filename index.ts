@@ -4,7 +4,7 @@ import { Discord } from './Components/Discord/Core';
 import { Config } from './Core/Config';
 import { MongoDB } from './Core/MongoDB';
 import { ServerConfigManager } from './Core/ServerConfigManager';
-import Status from './Libs/status/status';
+import { Status }from 'status-client';
 
 export class Core extends EventEmitter {
     public readonly mainLogger = catService;

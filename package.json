@@ -22,7 +22,8 @@
     "node-fetch": "^2.6.0",
     "node-schedule": "^2.0.0",
     "promise-queue": "^2.2.5",
-    "sprintf-js": "^1.1.2"
+    "sprintf-js": "^1.1.2",
+    "status-client": "https://github.com/jimchen5209/StatusClient_JS#dev"
   },
   "devDependencies": {
     "@types/fluent-ffmpeg": "^2.1.14",
