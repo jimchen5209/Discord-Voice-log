@@ -25,10 +25,10 @@ export class Discord {
         this.lang = new Lang(core);
         this.ttsHelper = new TTSHelper(core);
 
-        if (this.config.TOKEN === '') throw ERR_MISSING_TOKEN;
+        if (this.config.discord.botToken === '') throw ERR_MISSING_TOKEN;
 
         this.bot = new CommandClient(
-            this.config.TOKEN,
+            this.config.discord.botToken,
             { restMode: true },
             { defaultCommandOptions: { caseInsensitive: true } }
         );

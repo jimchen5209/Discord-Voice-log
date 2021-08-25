@@ -34,7 +34,7 @@ export class TTSHelper {
     public async getWaveTTS(text: string, lang: string, voice: string): Promise<string> {
         const filePath = `./caches/${md5(`${text}-${lang}-${voice}`)}.opus`;
         if (!fs.existsSync(filePath)) {
-            const key = this.config.googleAPIKey;
+            const key = this.config.googleTTS.apiKey;
             const url = `https://content-texttospeech.googleapis.com/v1/text:synthesize?alt=json&key=${key}`;
             const options = {
                 body: `{\"input\":{\"text\":\"${text}\"},\"voice\":{\"name\":\"${voice}\",\"languageCode\":\"${lang}\"},\"audioConfig\":{\"audioEncoding\":\"OGG_OPUS\"}}`,

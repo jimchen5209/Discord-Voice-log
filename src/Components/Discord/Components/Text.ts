@@ -124,7 +124,7 @@ export class DiscordText {
         if (!data) data = await this.data.create(msg.member.guild.id);
         if (!data) throw ERR_INSERT_FAILURE;
 
-        if (!(msg.member.permissions.has('manageMessages')) && !(this.config.admins.includes(msg.member.id))) {
+        if (!(msg.member.permissions.has('manageMessages')) && !(this.config.discord.admins.includes(msg.member.id))) {
             msg.channel.createMessage(this.genErrorMessage(this.lang.get(data.lang).display.command.no_permission));
             return;
         }
@@ -174,7 +174,7 @@ export class DiscordText {
         const voiceID = this.bot.voiceConnections.get(msg.member.guild.id)?.channelID;
         const voice = voiceID ? this.audios[voiceID] : undefined;
 
-        if (!(msg.member.permissions.has('manageMessages')) && !(this.config.admins.includes(msg.member.id))) {
+        if (!(msg.member.permissions.has('manageMessages')) && !(this.config.discord.admins.includes(msg.member.id))) {
             msg.channel.createMessage(this.genErrorMessage(this.lang.get(data.lang).display.command.no_permission));
             return;
         }
@@ -194,7 +194,7 @@ export class DiscordText {
         if (!data) data = await this.data.create(msg.member.guild.id);
         if (!data) throw ERR_INSERT_FAILURE;
 
-        if (!(msg.member.permissions.has('manageMessages')) && !(this.config.admins.includes(msg.member.id))) {
+        if (!(msg.member.permissions.has('manageMessages')) && !(this.config.discord.admins.includes(msg.member.id))) {
             msg.channel.createMessage(this.genErrorMessage(this.lang.get(data.lang).display.command.no_permission));
             return;
         }
@@ -242,7 +242,7 @@ export class DiscordText {
         if (!data) data = await this.data.create(msg.member.guild.id);
         if (!data) throw ERR_INSERT_FAILURE;
 
-        if (!(msg.member.permissions.has('manageMessages')) && !(this.config.admins.includes(msg.member.id))) {
+        if (!(msg.member.permissions.has('manageMessages')) && !(this.config.discord.admins.includes(msg.member.id))) {
             msg.channel.createMessage(this.genErrorMessage(this.lang.get(data.lang).display.command.no_permission));
             return;
         }
@@ -281,7 +281,7 @@ export class DiscordText {
         if (!data) data = await this.data.create(msg.member.guild.id);
         if (!data) throw ERR_INSERT_FAILURE;
 
-        if (!(msg.member.permissions.has('manageMessages')) && !(this.config.admins.includes(msg.member.id))) {
+        if (!(msg.member.permissions.has('manageMessages')) && !(this.config.discord.admins.includes(msg.member.id))) {
             msg.channel.createMessage(this.genErrorMessage(this.lang.get(data.lang).display.command.no_permission));
             return;
         }
@@ -297,7 +297,7 @@ export class DiscordText {
         if (!data) data = await this.data.create(msg.member.guild.id);
         if (!data) throw ERR_INSERT_FAILURE;
 
-        if (!(this.config.admins.includes(msg.member.id))) {
+        if (!(this.config.discord.admins.includes(msg.member.id))) {
             msg.channel.createMessage(this.genErrorMessage(this.lang.get(data.lang).display.command.no_permission));
             return;
         }
