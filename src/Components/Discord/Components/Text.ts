@@ -4,10 +4,8 @@ import { vsprintf } from 'sprintf-js';
 import { Core } from '../../..';
 import { Config } from '../../../Core/Config';
 import { Lang } from '../../../Core/Lang';
-import { ServerConfigManager } from '../../../Core/ServerConfigManager';
-import { TTSHelper } from '../../../Core/TTSHelper';
+import { IServerConfig, ServerConfigManager } from '../../../Core/ServerConfigManager';
 import { Discord } from '../Core';
-import { DiscordVoice } from './Voice';
 import { VoiceLog } from './VoiceLog';
 
 const ERR_MISSING_LANG = 'Language not exist.';
@@ -18,21 +16,17 @@ export class DiscordText {
     public voiceLog: VoiceLog;
     private bot: CommandClient;
     private config: Config;
-    private audios: { [key: string]: DiscordVoice } = {};
     private logger: Category;
     private data: ServerConfigManager;
     private lang: Lang;
-    private ttsHelper: TTSHelper;
 
     constructor(core: Core, discord: Discord, bot: CommandClient, logger: Category) {
         this.config = core.config;
         this.bot = bot;
         this.logger = logger;
-        this.audios = discord.audios;
         this.data = core.data;
         this.lang = discord.lang;
         this.voiceLog = discord.voiceLog;
-        this.ttsHelper = discord.ttsHelper;
 
         this.bot.on('messageCreate', msg => {
 
@@ -120,7 +114,7 @@ export class DiscordText {
     private async commandJoin(msg: Message) {
         if (!msg.member) return;
 
-        let data = await this.data.get(msg.member.guild.id);
+        let data: IServerConfig | undefined | null = await this.data.get(msg.member.guild.id);
         if (!data) data = await this.data.create(msg.member.guild.id);
         if (!data) throw ERR_INSERT_FAILURE;
 
@@ -129,35 +123,14 @@ export class DiscordText {
             return;
         }
 
+        const guildId = msg.member.guild.id;
         const channelID = msg.member.voiceState.channelID;
         if (channelID) {
-            const voiceID = this.bot.voiceConnections.get(msg.member.guild.id)?.channelID;
-            const voice = voiceID ? this.audios[voiceID] : undefined;
-            if (voice && voiceID) {
-                if (voice.isReady()) {
-                    if (voiceID === channelID) {
-                        msg.channel.createMessage(this.genNotChangedMessage(this.lang.get(data.lang).display.command.already_connected));
-                    } else {
-                        voice.switchChannel(channelID);
-                        this.audios[channelID] = voice;
-                        delete this.audios[voiceID];
-                        this.data.updateLastVoiceChannel(msg.member.guild.id, '');
-                        this.data.updateCurrentVoiceChannel(msg.member.guild.id, channelID);
-                        voice.playMoved();
-                    }
-                } else {
-                    voice.destroy();
-                    delete this.audios[voiceID];
-                    this.audios[channelID] = new DiscordVoice(this.bot, this.logger, this.ttsHelper, channelID);
-                    this.data.updateLastVoiceChannel(msg.member.guild.id, '');
-                    this.data.updateCurrentVoiceChannel(msg.member.guild.id, channelID);
-                    this.audios[channelID].playReady();
-                }
+            const voice = this.voiceLog.getCurrentVoice(guildId);
+            if (voice && voice.channelId === channelID) {
+                msg.channel.createMessage(this.genNotChangedMessage(this.lang.get(data.lang).display.command.already_connected));
             } else {
-                this.audios[channelID] = new DiscordVoice(this.bot, this.logger, this.ttsHelper, channelID);
-                this.data.updateLastVoiceChannel(msg.member.guild.id, '');
-                this.data.updateCurrentVoiceChannel(msg.member.guild.id, channelID);
-                this.audios[channelID].playReady();
+                this.voiceLog.join(guildId, channelID, true, true);
             }
         } else {
             msg.channel.createMessage(this.genErrorMessage(this.lang.get(data.lang).display.command.not_in_channel));
@@ -167,30 +140,27 @@ export class DiscordText {
     private async commandLeave(msg: Message) {
         if (!msg.member) return;
 
-        let data = await this.data.get(msg.member.guild.id);
+        let data: IServerConfig | undefined | null = await this.data.get(msg.member.guild.id);
         if (!data) data = await this.data.create(msg.member.guild.id);
         if (!data) throw ERR_INSERT_FAILURE;
-
-        const voiceID = this.bot.voiceConnections.get(msg.member.guild.id)?.channelID;
-        const voice = voiceID ? this.audios[voiceID] : undefined;
 
         if (!(msg.member.permissions.has('manageMessages')) && !(this.config.discord.admins.includes(msg.member.id))) {
             msg.channel.createMessage(this.genErrorMessage(this.lang.get(data.lang).display.command.no_permission));
             return;
         }
+        const guildId = msg.member.guild.id;
 
-        if (voiceID && voice) {
-            voice.destroy();
-            this.data.updateLastVoiceChannel(msg.member.guild.id, '');
-            this.data.updateCurrentVoiceChannel(msg.member.guild.id, '');
-            delete this.audios[voiceID];
+        const voice = this.voiceLog.getCurrentVoice(guildId);
+
+        if (voice) {
+            this.voiceLog.destroy(guildId, true);
         }
     }
 
     private async commandsetVlog(msg: Message, args: string[]) {
         if (!msg.member) return;
 
-        let data = await this.data.get(msg.member.guild.id);
+        let data: IServerConfig | undefined | null = await this.data.get(msg.member.guild.id);
         if (!data) data = await this.data.create(msg.member.guild.id);
         if (!data) throw ERR_INSERT_FAILURE;
 
@@ -238,7 +208,7 @@ export class DiscordText {
     private async commandLang(msg: Message, args: string[]) {
         if (!msg.member) return;
 
-        let data = await this.data.get(msg.member.guild.id);
+        let data: IServerConfig | undefined | null = await this.data.get(msg.member.guild.id);
         if (!data) data = await this.data.create(msg.member.guild.id);
         if (!data) throw ERR_INSERT_FAILURE;
 
@@ -277,7 +247,7 @@ export class DiscordText {
     private async commandUnsetVlog(msg: Message) {
         if (!msg.member) return;
 
-        let data = await this.data.get(msg.member.guild.id);
+        let data: IServerConfig | undefined | null = await this.data.get(msg.member.guild.id);
         if (!data) data = await this.data.create(msg.member.guild.id);
         if (!data) throw ERR_INSERT_FAILURE;
 
@@ -293,7 +263,7 @@ export class DiscordText {
     private async commandRefreshCache(msg: Message) {
         if (!msg.member) return;
 
-        let data = await this.data.get(msg.member.guild.id);
+        let data: IServerConfig | undefined | null = await this.data.get(msg.member.guild.id);
         if (!data) data = await this.data.create(msg.member.guild.id);
         if (!data) throw ERR_INSERT_FAILURE;
 

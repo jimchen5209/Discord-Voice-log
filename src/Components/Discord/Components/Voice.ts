@@ -7,6 +7,7 @@ import Queue from 'promise-queue';
 import { TTSHelper } from '../../../Core/TTSHelper';
 
 export class DiscordVoice {
+    private _channelId: string;
     private bot: CommandClient;
     private voice: VoiceConnection | undefined;
     private logger: Category;
@@ -17,23 +18,36 @@ export class DiscordVoice {
         bot: CommandClient,
         logger: Category,
         ttsHelper: TTSHelper,
-        channel: string
+        channel: string,
+        voice: VoiceConnection | undefined = undefined
     ) {
         this.bot = bot;
         this.logger = logger;
         this.ttsHelper = ttsHelper;
+
+        this._channelId = channel;
+
+        if (voice && voice.ready) {
+            this.voice = voice;
+        } else {
+            this.joinVoiceChannel(channel).then(connection => {
+                this.voice = connection;
+            });
+        }
+    }
+
+    public switchChannel(channel: string) {
+        this.destroy();
+
+        this._channelId = channel;
 
         this.joinVoiceChannel(channel).then(connection => {
             this.voice = connection;
         });
     }
 
-    public switchChannel(channel: string) {
-        this.destroy();
-
-        this.joinVoiceChannel(channel).then(connection => {
-            this.voice = connection;
-        });
+    public get channelId() {
+        return this._channelId;
     }
 
     public async playReady() {
@@ -81,33 +95,33 @@ export class DiscordVoice {
         }
     }
 
-    private async joinVoiceChannel(channelID: string): Promise<VoiceConnection|undefined> {
+    private async joinVoiceChannel(channelID: string): Promise<VoiceConnection | undefined> {
         this.logger.info(`Connecting to ${channelID}...`);
         try {
             const connection = await this.bot.joinVoiceChannel(channelID);
             connection.on('warn', (message: string) => {
                 this.logger.warn(`Warning from ${channelID}: ${message}`);
             });
-            connection.on('error', (err: Error) => {
-                if (err) {
-                    this.logger.error(`Error from ${channelID}: ${err.name} ${err.message}`, null);
-                }
+            connection.on('error', err => {
+                this.logger.error(`Error from voice connection ${channelID}: ${err.message}`, err);
             });
-            connection.once('disconnect', (err: Error) => {
-                if (err) {
-                    this.logger.error(`Error from ${channelID} that caused voice disconnect: ${err.name} ${err.message}`, null);
-                    // setTimeout(() => {
-                    //     connection.stopPlaying();
-                    //     connection.removeAllListeners();
-                    //     this.joinVoiceChannel(channelID).then(newConnection => {
-                    //         this.voice = newConnection;
-                    //     });
-                    // }, 5000);
-                }
+            connection.once('ready', () => {
+                console.error('Voice connection reconnected.');
+                this.bot.leaveVoiceChannel(channelID);
+            });
+            connection.once('disconnect', err => {
+                this.logger.error(`Error from voice connection ${channelID}: ${err?.message}`, err);
+                connection.stopPlaying();
+                this.bot.leaveVoiceChannel(channelID);
+                setTimeout(() => {
+                    this.joinVoiceChannel(channelID).then(newConnection => {
+                        this.voice = newConnection;
+                    });
+                }, 5 * 1000);
             });
             return connection;
         } catch (e) {
-            this.logger.error(`Error from ${channelID}: ${e.name} ${e.message}`, null);
+            this.logger.error(`Error from ${channelID}: ${e.name} ${e.message}`, e);
         }
         return;
     }
@@ -115,12 +129,21 @@ export class DiscordVoice {
     private play(file: string) {
         // eslint-disable-next-line no-async-promise-executor
         return new Promise<void>(async (res) => {
-            if (file === '') return;
+            if (file === '' || !this.voice) {
+                if (file !== '') this.logger.warn(`Skipping ${file} as no voice connection`);
+                res();
+                return;
+            }
             this.logger.info(`Playing ${file}`);
             await waitUntil(() => this.voice && this.voice.ready);
-            this.voice?.once('end', () => res());
+            this.voice.once('end', () => res());
             FFmpeg.ffprobe(file, (__, data) => {
-                this.voice?.play(file);
+                if (!this.voice) {
+                    if (file !== '') this.logger.warn(`Skipping ${file} as no voice connection`);
+                    res();
+                    return;
+                }
+                this.voice.play(file);
                 const time = data.format.duration || 0;
                 setTimeout(() => {
                     this.voice?.stopPlaying();
