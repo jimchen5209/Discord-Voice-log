@@ -173,14 +173,14 @@ export class VoiceLog {
         let progressTotal = 0;
         const queue = new Queue(1, Infinity);
         const getTTS = (text: string, lang: string) => {
-            return new Promise<void>((res, _) => {
+            return new Promise<void>((res) => {
                 progressCount++;
                 const progressField = {
                     name: '➡️ Processing texts...',
                     value: `(${progressCount}/${progressTotal}) ${text} in ${lang}`
                 };
                 progressMessage = this.genProgressMessage(title, [seekField, progressField]);
-                if (message !== undefined) this.bot.editMessage(channelID!, message.id, progressMessage);
+                if (message !== undefined) message.edit(progressMessage);
                 this.ttsHelper.getTTSFile(text, lang).then(fileName => {
                     this.logger.info(`(${progressCount}/${progressTotal}) ${text} in ${lang} -> ${fileName}`);
                     if (fileName !== null) ttsList.push(fileName);
@@ -189,14 +189,14 @@ export class VoiceLog {
             });
         };
         const getWaveTTS = (text: string, lang: string, voice: string) => {
-            return new Promise<void>((res, _) => {
+            return new Promise<void>((res) => {
                 progressCount++;
                 const progressField = {
                     name: '➡️ Processing texts...',
                     value: `(${progressCount}/${progressTotal}) ${text} in ${lang} with voice ${voice}`
                 };
                 progressMessage = this.genProgressMessage(title, [seekField, progressField]);
-                if (message !== undefined) this.bot.editMessage(channelID!, message.id, progressMessage);
+                if (message !== undefined) message.edit(progressMessage);
                 this.ttsHelper.getWaveTTS(text, lang, voice).then(fileName => {
                     this.logger.info(`(${progressCount}/${progressTotal}) ${text} in ${lang} with voice ${voice} -> ${fileName}`);
                     if (fileName !== null) ttsList.push(fileName);
@@ -242,7 +242,7 @@ export class VoiceLog {
             value: `${(seekDone || seekCounter === 0) ? '' : `Current ${seekFilename}, `} Seeked ${seekCounter} files. `
         };
         const afterWork = () => {
-            return new Promise<void>((res, _) => {
+            return new Promise<void>((res) => {
                 const progressField = {
                     name: '✅ Processing files... Done',
                     value: `Processed ${progressTotal} texts.`
@@ -253,7 +253,7 @@ export class VoiceLog {
                     value: (cacheRemoveCount === 0) ? 'Seeking...' : `Removed ${cacheRemoveCount} unused ${(cacheRemoveCount === 1) ? 'cache' : 'caches'}.`
                 };
                 progressMessage = this.genProgressMessage(title, [seekField, progressField, cacheField]);
-                if (message !== undefined) this.bot.editMessage(channelID!, message.id, progressMessage);
+                if (message !== undefined) message.edit(progressMessage);
                 const cacheFiles = fs.readdirSync('caches/');
                 cacheFiles.forEach(file => {
                     if (!ttsList.includes(`./caches/${file}`)) {
@@ -261,7 +261,7 @@ export class VoiceLog {
                         this.logger.info(`Deleted unused file ./caches/${file}`);
                         cacheRemoveCount++;
                         progressMessage = this.genProgressMessage(title, [seekField, progressField, cacheField]);
-                        if (message !== undefined) this.bot.editMessage(channelID!, message.id, progressMessage);
+                        if (message !== undefined) message.edit(progressMessage);
                     }
                 });
                 cacheField = {
@@ -269,7 +269,7 @@ export class VoiceLog {
                     value: (cacheRemoveCount === 0) ? 'No unused caches found.' : `Removed ${cacheRemoveCount} unused ${(cacheRemoveCount === 1) ? 'cache' : 'caches'}.`
                 };
                 progressMessage = this.genProgressMessage('✅ Refresh Caches Done', [seekField, progressField, cacheField], true);
-                if (message !== undefined) this.bot.editMessage(channelID!, message.id, progressMessage);
+                if (message !== undefined) message.edit(progressMessage);
                 res();
             });
         };
@@ -282,15 +282,15 @@ export class VoiceLog {
         switch (type) {
         case 'join':
             color = 4289797;
-            content = vsprintf(this.lang.get(lang).display.voice_log.joined, [newChannel!.name]);
+            content = vsprintf(this.lang.get(lang).display.voice_log.joined, [newChannel?.name]);
             break;
         case 'leave':
             color = 8454161;
-            content = vsprintf(this.lang.get(lang).display.voice_log.left, [oldChannel!.name]);
+            content = vsprintf(this.lang.get(lang).display.voice_log.left, [oldChannel?.name]);
             break;
         case 'move':
             color = 10448150;
-            content = vsprintf('%0s ▶️ %1s', [oldChannel!.name, newChannel!.name]);
+            content = vsprintf('%0s ▶️ %1s', [oldChannel?.name, newChannel?.name]);
             break;
         default:
             color = 6776679;
