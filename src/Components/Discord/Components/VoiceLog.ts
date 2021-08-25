@@ -30,9 +30,10 @@ export class VoiceLog {
 
         this.bot.on('voiceChannelJoin', async (member: Member, newChannel: VoiceChannel) => {
             if (member.id === this.bot.user.id) return;
-            const channelID = await this.autoLeaveChannel(undefined, newChannel, member.guild.id);
-            const voice = channelID ? this.audios[channelID] : undefined;
-            const data = await this.data.get(member.guild.id);
+            const guildId = member.guild.id;
+            const channelID = await this.autoLeaveChannel(undefined, newChannel, guildId);
+            const voice = this.getCurrentVoice(guildId);
+            const data = await this.data.get(guildId);
 
             if (data) {
                 if (data.channelID !== '') {
@@ -47,9 +48,10 @@ export class VoiceLog {
 
         this.bot.on('voiceChannelLeave', async (member: Member, oldChannel: VoiceChannel) => {
             if (member.id === this.bot.user.id) return;
-            const channelID = await this.autoLeaveChannel(oldChannel, undefined, member.guild.id);
-            const voice = channelID ? this.audios[channelID] : undefined;
-            const data = await this.data.get(member.guild.id);
+            const guildId = member.guild.id;
+            const channelID = await this.autoLeaveChannel(oldChannel, undefined, guildId);
+            const voice = this.getCurrentVoice(guildId);
+            const data = await this.data.get(guildId);
             if (data) {
                 if (data.channelID !== '') {
                     this.bot.createMessage(data.channelID, this.genVoiceLogEmbed(member, data.lang, 'leave', oldChannel, undefined));
@@ -66,9 +68,10 @@ export class VoiceLog {
                 this.data.updateCurrentVoiceChannel(member.guild.id, '');
                 return;
             }
-            const channelID = await this.autoLeaveChannel(oldChannel, newChannel, member.guild.id);
-            const voice = channelID ? this.audios[channelID] : undefined;
-            const data = await this.data.get(member.guild.id);
+            const guildId = member.guild.id;
+            const channelID = await this.autoLeaveChannel(oldChannel, newChannel, guildId);
+            const voice = this.getCurrentVoice(guildId);
+            const data = await this.data.get(guildId);
 
             if (data) {
                 if (data.channelID !== '') {
@@ -90,7 +93,7 @@ export class VoiceLog {
         const channels = await this.data.getCurrentChannels();
         channels.forEach(element => {
             this.logger.info(`Reconnecting to ${element.currentVoiceChannel}...`);
-            this.audios[element.currentVoiceChannel] = new DiscordVoice(this.bot, this.logger, this.ttsHelper, element.currentVoiceChannel);
+            this.join(element.serverID, element.currentVoiceChannel);
         });
         schedule.scheduleJob('0 0 * * *', () => { this.refreshCache(undefined); });
     }
@@ -325,9 +328,9 @@ export class VoiceLog {
         const data = await this.data.get(guildId);
 
         if (voice?.isReady()) {
-            channelToCheck = (oldChannel?.id === voice?.channelId) ? oldChannel : (newChannel?.id === voice?.channelId) ? newChannel : undefined;
+            channelToCheck = (oldChannel?.id === voice?.channelId) ? oldChannel : ((newChannel?.id === voice?.channelId) ? newChannel : undefined);
         } else if (data) {
-            channelToCheck = (oldChannel?.id === data.lastVoiceChannel) ? oldChannel : (newChannel?.id === data.lastVoiceChannel) ? newChannel : undefined;
+            channelToCheck = (oldChannel?.id === data.lastVoiceChannel) ? oldChannel : ((newChannel?.id === data.lastVoiceChannel) ? newChannel : undefined);
         }
 
         if (!channelToCheck) return;
