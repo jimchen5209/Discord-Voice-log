@@ -115,7 +115,7 @@ export class VoiceLog {
             return new Promise<void>((res, _) => {
                 progressCount++;
                 const progressField = {
-                    name: `➡️ Processing texts...`,
+                    name: '➡️ Processing texts...',
                     value: `(${progressCount}/${progressTotal}) ${text} in ${lang}`
                 };
                 progressMessage = this.genProgressMessage(title, [seekField, progressField]);
@@ -131,7 +131,7 @@ export class VoiceLog {
             return new Promise<void>((res, _) => {
                 progressCount++;
                 const progressField = {
-                    name: `➡️ Processing texts...`,
+                    name: '➡️ Processing texts...',
                     value: `(${progressCount}/${progressTotal}) ${text} in ${lang} with voice ${voice}`
                 };
                 progressMessage = this.genProgressMessage(title, [seekField, progressField]);
@@ -183,12 +183,12 @@ export class VoiceLog {
         const afterWork = () => {
             return new Promise<void>((res, _) => {
                 const progressField = {
-                    name: `✅ Processing files... Done`,
+                    name: '✅ Processing files... Done',
                     value: `Processed ${progressTotal} texts.`
                 };
                 let cacheRemoveCount = 0;
                 let cacheField = {
-                    name: `➡️ Removing unused cache...`,
+                    name: '➡️ Removing unused cache...',
                     value: (cacheRemoveCount === 0) ? 'Seeking...' : `Removed ${cacheRemoveCount} unused ${(cacheRemoveCount === 1) ? 'cache' : 'caches'}.`
                 };
                 progressMessage = this.genProgressMessage(title, [seekField, progressField, cacheField]);
@@ -204,7 +204,7 @@ export class VoiceLog {
                     }
                 });
                 cacheField = {
-                    name: `✅ Removing unused cache... Done`,
+                    name: '✅ Removing unused cache... Done',
                     value: (cacheRemoveCount === 0) ? 'No unused caches found.' : `Removed ${cacheRemoveCount} unused ${(cacheRemoveCount === 1) ? 'cache' : 'caches'}.`
                 };
                 progressMessage = this.genProgressMessage('✅ Refresh Caches Done', [seekField, progressField, cacheField], true);
@@ -219,22 +219,22 @@ export class VoiceLog {
         let color: number;
         let content: string;
         switch (type) {
-            case 'join':
-                color = 4289797;
-                content = vsprintf(this.lang.get(lang).display.voice_log.joined, [newChannel!.name]);
-                break;
-            case 'leave':
-                color = 8454161;
-                content = vsprintf(this.lang.get(lang).display.voice_log.left, [oldChannel!.name]);
-                break;
-            case 'move':
-                color = 10448150;
-                content = vsprintf('%0s ▶️ %1s', [oldChannel!.name, newChannel!.name]);
-                break;
-            default:
-                color = 6776679;
-                content = 'Unknown type';
-                break;
+        case 'join':
+            color = 4289797;
+            content = vsprintf(this.lang.get(lang).display.voice_log.joined, [newChannel!.name]);
+            break;
+        case 'leave':
+            color = 8454161;
+            content = vsprintf(this.lang.get(lang).display.voice_log.left, [oldChannel!.name]);
+            break;
+        case 'move':
+            color = 10448150;
+            content = vsprintf('%0s ▶️ %1s', [oldChannel!.name, newChannel!.name]);
+            break;
+        default:
+            color = 6776679;
+            content = 'Unknown type';
+            break;
         }
         return {
             embed: {
@@ -247,7 +247,7 @@ export class VoiceLog {
         } as MessageContent;
     }
 
-    private genProgressMessage(title: string, fields: Array<{ name: string, value: string }>, isDone: boolean = false) {
+    private genProgressMessage(title: string, fields: Array<{ name: string, value: string }>, isDone = false) {
         return {
             embed: {
                 color: (isDone) ? 4289797 : 16312092,
