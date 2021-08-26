@@ -5,12 +5,9 @@ import { Core } from '../../..';
 import { Config } from '../../../Core/Config';
 import { Lang } from '../../../Core/Lang';
 import { Discord } from '../Core';
-import { JoinCommand } from './Commands/Join';
-import { LeaveCommand } from './Commands/Leave';
+import { LogCommand } from './Commands/Log';
 import { RefreshCacheCommand } from './Commands/RefreshCache';
-import { SetLanguageCommand } from './Commands/SetLanguage';
-import { SetVoiceLogCommand } from './Commands/SetVoiceLog';
-import { UnSetVoiceLogCommand } from './Commands/UnSetVoiceLog';
+import { VoiceCommand } from './Commands/Voice';
 import { VoiceLog } from './VoiceLog';
 
 export class Command {
@@ -53,11 +50,8 @@ export class Command {
             value.forEach(value => { guildIDs.push(value.id); });
 
             const commands: SlashCommand[] = [
-                new JoinCommand(this.creator, guildIDs, this.voiceLog),
-                new LeaveCommand(this.creator, guildIDs, this.voiceLog),
-                new SetVoiceLogCommand(this.creator, guildIDs, this.lang, this.voiceLog),
-                new SetLanguageCommand(this.creator, guildIDs, this.lang, this.voiceLog),
-                new UnSetVoiceLogCommand(this.creator, guildIDs, this.voiceLog),
+                new VoiceCommand(this.creator, guildIDs, this.voiceLog),
+                new LogCommand(this.creator, guildIDs, this.lang, this.voiceLog),
                 new RefreshCacheCommand(this.creator, guildIDs, this.voiceLog),
             ];
 

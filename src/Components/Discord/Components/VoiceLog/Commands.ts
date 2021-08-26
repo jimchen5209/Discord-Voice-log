@@ -116,22 +116,29 @@ export class VoiceLogCommands {
         const guildId = member.guild.id;
         const channelId = context.channelID;
 
-        if (!context.options.language) {
-            switch (await this.voiceLog.text.setVoiceLog(guildId, channelId)) {
-                case VoiceLogSetStatus.NotChanged:
-                    await context.send({
-                        embeds: [this.genNotChangedMessage(this.lang.get(data.lang).display.config.exist)],
-                        ephemeral: true
-                    });
-                    return;
-                case VoiceLogSetStatus.ChannelSuccess:
-                    await context.send({
-                        embeds: [this.genSuccessMessage(this.lang.get(data.lang).display.config.success)]
-                    });
-                    return;
+        if (!context.options.set.language) {
+            try {
+                switch (await this.voiceLog.text.setVoiceLog(guildId, channelId)) {
+                    case VoiceLogSetStatus.NotChanged:
+                        await context.send({
+                            embeds: [this.genNotChangedMessage(this.lang.get(data.lang).display.config.exist)],
+                            ephemeral: true
+                        });
+                        return;
+                    case VoiceLogSetStatus.ChannelSuccess:
+                        await context.send({
+                            embeds: [this.genSuccessMessage(this.lang.get(data.lang).display.config.success)]
+                        });
+                        return;
+                }
+            } catch {
+                await context.send({
+                    embeds: [this.genErrorMessage(this.lang.get(data.lang).display.config.error)],
+                    ephemeral: true
+                });
             }
         } else {
-            const newLang = context.options.language as string;
+            const newLang = context.options.set.language as string;
 
             try {
                 switch (await this.voiceLog.text.setVoiceLog(guildId, channelId, newLang)) {
@@ -214,7 +221,7 @@ export class VoiceLogCommands {
         }
 
         const guildId = member.guild.id;
-        const newLang = context.options.language as string;
+        const newLang = context.options.language.language as string;
 
         switch (await this.voiceLog.text.setLang(guildId, newLang)) {
             case VoiceLogSetStatus.LangSuccess:
