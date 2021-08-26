@@ -1,8 +1,9 @@
+import { waitUntil } from 'async-wait-until';
 import { CommandClient, Member, MessageContent, VoiceChannel } from 'eris';
 import fs from 'fs';
 import { Category } from 'logging-ts';
 import moment from 'moment';
-import schedule from 'node-schedule';
+import { scheduleJob } from 'node-schedule';
 import path from 'path';
 import Queue from 'promise-queue';
 import { vsprintf } from 'sprintf-js';
@@ -16,6 +17,7 @@ import { DiscordVoice } from './Voice';
 export class VoiceLog {
     private bot: CommandClient;
     private audios: { [key: string]: DiscordVoice } = {};
+    private queue: Queue = new Queue(1, Infinity);
     private logger: Category;
     private data: ServerConfigManager;
     private lang: Lang;
@@ -29,61 +31,67 @@ export class VoiceLog {
         this.ttsHelper = discord.ttsHelper;
 
         this.bot.on('voiceChannelJoin', async (member: Member, newChannel: VoiceChannel) => {
-            if (member.id === this.bot.user.id) return;
-            const guildId = member.guild.id;
-            const channelID = await this.autoLeaveChannel(undefined, newChannel, guildId);
-            const voice = this.getCurrentVoice(guildId);
-            const data = await this.data.get(guildId);
+            this.queue.add(async () => {
+                if (member.id === this.bot.user.id) return;
+                const guildId = member.guild.id;
+                const channelID = await this.autoLeaveChannel(undefined, newChannel, guildId);
+                const voice = this.getCurrentVoice(guildId);
+                const data = await this.data.get(guildId);
 
-            if (data) {
-                if (data.channelID !== '') {
-                    this.bot.createMessage(data.channelID, this.genVoiceLogEmbed(member, data.lang, 'join', undefined, newChannel));
+                if (data) {
+                    if (data.channelID !== '') {
+                        this.bot.createMessage(data.channelID, this.genVoiceLogEmbed(member, data.lang, 'join', undefined, newChannel));
+                    }
                 }
-            }
 
-            if (newChannel.id === channelID) {
-                if (voice) voice.playVoice(member, 'join');
-            }
+                if (newChannel.id === channelID) {
+                    if (voice) voice.playVoice(member, 'join');
+                }
+            });
         });
 
         this.bot.on('voiceChannelLeave', async (member: Member, oldChannel: VoiceChannel) => {
-            if (member.id === this.bot.user.id) return;
-            const guildId = member.guild.id;
-            const channelID = await this.autoLeaveChannel(oldChannel, undefined, guildId);
-            const voice = this.getCurrentVoice(guildId);
-            const data = await this.data.get(guildId);
-            if (data) {
-                if (data.channelID !== '') {
-                    this.bot.createMessage(data.channelID, this.genVoiceLogEmbed(member, data.lang, 'leave', oldChannel, undefined));
+            this.queue.add(async () => {
+                if (member.id === this.bot.user.id) return;
+                const guildId = member.guild.id;
+                const channelID = await this.autoLeaveChannel(oldChannel, undefined, guildId);
+                const voice = this.getCurrentVoice(guildId);
+                const data = await this.data.get(guildId);
+                if (data) {
+                    if (data.channelID !== '') {
+                        this.bot.createMessage(data.channelID, this.genVoiceLogEmbed(member, data.lang, 'leave', oldChannel, undefined));
+                    }
                 }
-            }
-            if (oldChannel.id === channelID) {
-                if (voice) voice.playVoice(member, 'left');
-            }
+                if (oldChannel.id === channelID) {
+                    if (voice) voice.playVoice(member, 'left');
+                }
+            });
         });
 
         this.bot.on('voiceChannelSwitch', async (member: Member, newChannel: VoiceChannel, oldChannel: VoiceChannel) => {
-            if (member.id === this.bot.user.id) {
-                this.data.updateLastVoiceChannel(member.guild.id, newChannel.id);
-                this.data.updateCurrentVoiceChannel(member.guild.id, '');
-                return;
-            }
-            const guildId = member.guild.id;
-            const channelID = await this.autoLeaveChannel(oldChannel, newChannel, guildId);
-            const voice = this.getCurrentVoice(guildId);
-            const data = await this.data.get(guildId);
-
-            if (data) {
-                if (data.channelID !== '') {
-                    this.bot.createMessage(data.channelID, this.genVoiceLogEmbed(member, data.lang, 'move', oldChannel, newChannel));
+            this.queue.add(async () => {
+                if (member.id === this.bot.user.id) {
+                    this.data.updateLastVoiceChannel(member.guild.id, newChannel.id);
+                    this.data.updateCurrentVoiceChannel(member.guild.id, '');
+                    return;
                 }
-            }
-            if (oldChannel.id === channelID) {
-                if (voice) voice.playVoice(member, 'switched_out');
-            }
-            if (newChannel.id === channelID) {
-                if (voice) voice.playVoice(member, 'switched_in');
-            }
+                const guildId = member.guild.id;
+                const channelID = await this.autoLeaveChannel(oldChannel, newChannel, guildId);
+                const voice = this.getCurrentVoice(guildId);
+                const data = await this.data.get(guildId);
+
+                if (data) {
+                    if (data.channelID !== '') {
+                        this.bot.createMessage(data.channelID, this.genVoiceLogEmbed(member, data.lang, 'move', oldChannel, newChannel));
+                    }
+                }
+                if (oldChannel.id === channelID) {
+                    if (voice) voice.playVoice(member, 'switched_out');
+                }
+                if (newChannel.id === channelID) {
+                    if (voice) voice.playVoice(member, 'switched_in');
+                }
+            });
         });
     }
 
@@ -95,7 +103,7 @@ export class VoiceLog {
             this.logger.info(`Reconnecting to ${element.currentVoiceChannel}...`);
             this.join(element.serverID, element.currentVoiceChannel);
         });
-        schedule.scheduleJob('0 0 * * *', () => { this.refreshCache(undefined); });
+        scheduleJob('0 0 * * *', () => { this.refreshCache(undefined); });
     }
 
     public getCurrentVoice(guildId: string): DiscordVoice | undefined{
@@ -103,7 +111,7 @@ export class VoiceLog {
         if (!voice) {
             const botVoice = this.bot.voiceConnections.get(guildId);
             if (botVoice && botVoice.ready) {
-                this.audios[guildId] = new DiscordVoice(this.bot, this.logger, this.ttsHelper, botVoice.id, botVoice);
+                if (botVoice.channelID) this.audios[guildId] = new DiscordVoice(this.bot, this.logger, this.ttsHelper, botVoice.channelID, botVoice);
                 return this.audios[guildId];
             }
             return undefined;
@@ -117,7 +125,7 @@ export class VoiceLog {
 
     public async join(guildId: string, channelId: string, updateDatabase = false, playJoin = false): Promise<DiscordVoice> {
         if (this.audios[guildId]) {
-            if (!this.audios[guildId].isReady()) {
+            if (!this.audios[guildId].isReady() && !this.audios[guildId].init) {
                 this.destroy(guildId);
             } else if (this.audios[guildId].channelId !== channelId) {
                 this.audios[guildId].switchChannel(channelId);
@@ -135,6 +143,7 @@ export class VoiceLog {
         }
         
         this.audios[guildId] = new DiscordVoice(this.bot, this.logger, this.ttsHelper, channelId);
+        await waitUntil(() => this.audios[guildId].isReady());
         if (updateDatabase) {
             this.data.updateLastVoiceChannel(guildId, '');
             this.data.updateCurrentVoiceChannel(guildId, channelId);
@@ -321,7 +330,7 @@ export class VoiceLog {
         } as MessageContent;
     }
 
-    private async autoLeaveChannel(oldChannel: VoiceChannel | undefined, newChannel: VoiceChannel | undefined, guildId: string): Promise<string|undefined> {
+    private async autoLeaveChannel(oldChannel: VoiceChannel | undefined, newChannel: VoiceChannel | undefined, guildId: string): Promise<string | undefined> {
         let channelToCheck: VoiceChannel | undefined;
 
         const voice = this.getCurrentVoice(guildId);
@@ -346,11 +355,11 @@ export class VoiceLog {
 
         if (noUser) {
             if (voice) {
-                this.sleep(guildId, channelToCheck.id);
+                await this.sleep(guildId, channelToCheck.id);
             }
             return;
         } else {
-            this.join(guildId, channelToCheck.id, true);
+            await this.join(guildId, channelToCheck.id, true);
             return channelToCheck.id;
         }
     }

@@ -7,6 +7,7 @@ import Queue from 'promise-queue';
 import { TTSHelper } from '../../../Core/TTSHelper';
 
 export class DiscordVoice {
+    private _init = true;
     private _channelId: string;
     private bot: CommandClient;
     private voice: VoiceConnection | undefined;
@@ -29,9 +30,15 @@ export class DiscordVoice {
 
         if (voice && voice.ready) {
             this.voice = voice;
+            this._init = false;
+            this.logger.info(`Using the existing voice connection for ${this._channelId}`);
         } else {
             this.joinVoiceChannel(channel).then(connection => {
                 this.voice = connection;
+                if (connection) {
+                    this._init = false;
+                    this.logger.info(`Connected to ${this._channelId}`);
+                }
             });
         }
     }
@@ -50,13 +57,17 @@ export class DiscordVoice {
         return this._channelId;
     }
 
+    public get init() {
+        return this._init;
+    }
+
     public async playReady() {
-        const voiceFile = await this.ttsHelper.getWaveTTS('VoiceLog TTS is ready.', 'en-US', 'en-US-Wavenet-D');
+        const voiceFile = await this.ttsHelper.getWaveTTS('VoiceLog is ready.', 'en-US', 'en-US-Wavenet-D');
         if (voiceFile !== null) this.queue.add(() => this.play(voiceFile));
     }
 
     public async playMoved() {
-        const voiceFile = await this.ttsHelper.getWaveTTS('VoiceLog TTS is moved to your channel.', 'en-US', 'en-US-Wavenet-D');
+        const voiceFile = await this.ttsHelper.getWaveTTS('VoiceLog is moved to your channel.', 'en-US', 'en-US-Wavenet-D');
         if (voiceFile !== null) this.queue.add(() => this.play(voiceFile));
     }
 
@@ -106,15 +117,22 @@ export class DiscordVoice {
                 this.logger.error(`Error from voice connection ${channelID}: ${err.message}`, err);
             });
             connection.once('ready', () => {
-                console.error('Voice connection reconnected.');
-                this.bot.leaveVoiceChannel(channelID);
+                this.logger.error('Voice connection reconnected.', null);
+                const channelId = connection.channelID;
+                if (channelId) {
+                    if (channelId !== this._channelId) {
+                        this.logger.warn(`Voice channel changed from ${this._channelId} to ${channelId}`);
+                        this._channelId = channelId;
+                    }
+                    this.switchChannel(channelId);
+                }
             });
             connection.once('disconnect', err => {
                 this.logger.error(`Error from voice connection ${channelID}: ${err?.message}`, err);
                 connection.stopPlaying();
                 this.bot.leaveVoiceChannel(channelID);
                 setTimeout(() => {
-                    this.joinVoiceChannel(channelID).then(newConnection => {
+                    this.joinVoiceChannel(this._channelId || channelID).then(newConnection => {
                         this.voice = newConnection;
                     });
                 }, 5 * 1000);
@@ -129,21 +147,15 @@ export class DiscordVoice {
     private play(file: string) {
         // eslint-disable-next-line no-async-promise-executor
         return new Promise<void>(async (res) => {
-            if (file === '' || !this.voice) {
-                if (file !== '') this.logger.warn(`Skipping ${file} as no voice connection`);
+            if (file === '') {
                 res();
                 return;
             }
             this.logger.info(`Playing ${file}`);
             await waitUntil(() => this.voice && this.voice.ready);
-            this.voice.once('end', () => res());
+            this.voice?.once('end', () => res());
             FFmpeg.ffprobe(file, (__, data) => {
-                if (!this.voice) {
-                    if (file !== '') this.logger.warn(`Skipping ${file} as no voice connection`);
-                    res();
-                    return;
-                }
-                this.voice.play(file);
+                this.voice?.play(file);
                 const time = data.format.duration || 0;
                 setTimeout(() => {
                     this.voice?.stopPlaying();
