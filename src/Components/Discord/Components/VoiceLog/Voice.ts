@@ -61,7 +61,7 @@ export class VoiceLogVoice {
         }
 
         this.audios[guildId] = new DiscordVoice(this.bot, this.logger, this.ttsHelper, channelId);
-        await waitUntil(() => this.audios[guildId].isReady());
+        await waitUntil(() => this.audios[guildId] && this.audios[guildId].isReady());
         if (updateDatabase) {
             this.data.updateLastVoiceChannel(guildId, '');
             this.data.updateCurrentVoiceChannel(guildId, channelId);
