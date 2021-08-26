@@ -21,6 +21,7 @@
     "node-fetch": "^2.6.0",
     "node-schedule": "^2.0.0",
     "promise-queue": "^2.2.5",
+    "slash-create": "^4.0.1",
     "sprintf-js": "^1.1.2",
     "status-client": "https://github.com/jimchen5209/StatusClient_JS#dev"
   },

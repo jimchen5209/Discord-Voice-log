@@ -1,9 +1,10 @@
 import waitUntil from 'async-wait-until';
-import { CommandClient, MessageContent, VoiceChannel } from 'eris';
+import { Client, VoiceChannel } from 'eris';
 import { readdirSync, readFileSync, unlinkSync } from 'fs';
 import { Category } from 'logging-ts';
 import path from 'path';
 import Queue from 'promise-queue';
+import { CommandContext, MessageEmbedOptions } from 'slash-create';
 import { Core } from '../../../..';
 import { ServerConfigManager } from '../../../../Core/ServerConfigManager';
 import { TTSHelper } from '../../../../Core/TTSHelper';
@@ -11,13 +12,13 @@ import { Discord } from '../../Core';
 import { DiscordVoice } from '../Voice';
 
 export class VoiceLogVoice {
-    private bot: CommandClient;
+    private bot: Client;
     private audios: { [key: string]: DiscordVoice } = {};
     private logger: Category;
     private data: ServerConfigManager;
     private ttsHelper: TTSHelper;
 
-    constructor(core: Core, discord: Discord, bot: CommandClient, logger: Category) {
+    constructor(core: Core, discord: Discord, bot: Client, logger: Category) {
         this.bot = bot;
         this.logger = new Category('VoiceLog/Voice', logger);
         this.data = core.data;
@@ -87,7 +88,7 @@ export class VoiceLogVoice {
         this.data.updateCurrentVoiceChannel(guildId, '');
     }
 
-    public async refreshCache(channelID: string | undefined) {
+    public async refreshCache(context: CommandContext | undefined) {
         this.logger.info('Starting cache refresh...');
         const title = '➡️ Refreshing Caches';
         let seekCounter = 0;
@@ -98,19 +99,20 @@ export class VoiceLogVoice {
             value: `${(seekDone || seekCounter === 0) ? '' : `Current ${seekFilename}, `} Seeked ${seekCounter} files. `
         };
         let progressMessage = this.genProgressMessage(title, [seekField]);
-        const message = (channelID !== undefined) ? await this.bot.createMessage(channelID, progressMessage) : undefined;
+        await context?.send({ embeds: [progressMessage] });
         let progressCount = 0;
         let progressTotal = 0;
         const queue = new Queue(1, Infinity);
         const getTTS = (text: string, lang: string) => {
-            return new Promise<void>((res) => {
+            // eslint-disable-next-line no-async-promise-executor
+            return new Promise<void>(async (res) => {
                 progressCount++;
                 const progressField = {
                     name: '➡️ Processing texts...',
                     value: `(${progressCount}/${progressTotal}) ${text} in ${lang}`
                 };
                 progressMessage = this.genProgressMessage(title, [seekField, progressField]);
-                if (message !== undefined) message.edit(progressMessage);
+                await context?.editOriginal({ embeds: [progressMessage] });
                 this.ttsHelper.getTTSFile(text, lang).then(fileName => {
                     this.logger.info(`(${progressCount}/${progressTotal}) ${text} in ${lang} -> ${fileName}`);
                     if (fileName !== null) ttsList.push(fileName);
@@ -119,14 +121,15 @@ export class VoiceLogVoice {
             });
         };
         const getWaveTTS = (text: string, lang: string, voice: string) => {
-            return new Promise<void>((res) => {
+            // eslint-disable-next-line no-async-promise-executor
+            return new Promise<void>(async (res) => {
                 progressCount++;
                 const progressField = {
                     name: '➡️ Processing texts...',
                     value: `(${progressCount}/${progressTotal}) ${text} in ${lang} with voice ${voice}`
                 };
                 progressMessage = this.genProgressMessage(title, [seekField, progressField]);
-                if (message !== undefined) message.edit(progressMessage);
+                await context?.editOriginal({ embeds: [progressMessage] });
                 this.ttsHelper.getWaveTTS(text, lang, voice).then(fileName => {
                     this.logger.info(`(${progressCount}/${progressTotal}) ${text} in ${lang} with voice ${voice} -> ${fileName}`);
                     if (fileName !== null) ttsList.push(fileName);
@@ -135,8 +138,8 @@ export class VoiceLogVoice {
             });
         };
         const ttsList: string[] = [];
-        queue.add(() => getWaveTTS('VoiceLog TTS is moved to your channel.', 'en-US', 'en-US-Wavenet-D'));
-        queue.add(() => getWaveTTS('VoiceLog TTS is ready.', 'en-US', 'en-US-Wavenet-D'));
+        queue.add(() => getWaveTTS('VoiceLog is moved to your channel.', 'en-US', 'en-US-Wavenet-D'));
+        queue.add(() => getWaveTTS('VoiceLog is ready.', 'en-US', 'en-US-Wavenet-D'));
         progressTotal += 2;
         const typeList = ['join', 'left', 'switched_out', 'switched_in'];
         const files = readdirSync('assets/');
@@ -172,7 +175,8 @@ export class VoiceLogVoice {
             value: `${(seekDone || seekCounter === 0) ? '' : `Current ${seekFilename}, `} Seeked ${seekCounter} files. `
         };
         const afterWork = () => {
-            return new Promise<void>((res) => {
+            // eslint-disable-next-line no-async-promise-executor
+            return new Promise<void>(async (res) => {
                 const progressField = {
                     name: '✅ Processing files... Done',
                     value: `Processed ${progressTotal} texts.`
@@ -183,15 +187,15 @@ export class VoiceLogVoice {
                     value: (cacheRemoveCount === 0) ? 'Seeking...' : `Removed ${cacheRemoveCount} unused ${(cacheRemoveCount === 1) ? 'cache' : 'caches'}.`
                 };
                 progressMessage = this.genProgressMessage(title, [seekField, progressField, cacheField]);
-                if (message !== undefined) message.edit(progressMessage);
+                await context?.editOriginal({ embeds: [progressMessage] });
                 const cacheFiles = readdirSync('caches/');
-                cacheFiles.forEach(file => {
+                cacheFiles.forEach(async file => {
                     if (!ttsList.includes(`./caches/${file}`)) {
                         unlinkSync(`./caches/${file}`);
                         this.logger.info(`Deleted unused file ./caches/${file}`);
                         cacheRemoveCount++;
                         progressMessage = this.genProgressMessage(title, [seekField, progressField, cacheField]);
-                        if (message !== undefined) message.edit(progressMessage);
+                        await context?.editOriginal({ embeds: [progressMessage] });
                     }
                 });
                 cacheField = {
@@ -199,7 +203,7 @@ export class VoiceLogVoice {
                     value: (cacheRemoveCount === 0) ? 'No unused caches found.' : `Removed ${cacheRemoveCount} unused ${(cacheRemoveCount === 1) ? 'cache' : 'caches'}.`
                 };
                 progressMessage = this.genProgressMessage('✅ Refresh Caches Done', [seekField, progressField, cacheField], true);
-                if (message !== undefined) message.edit(progressMessage);
+                await context?.editOriginal({ embeds: [progressMessage] });
                 res();
             });
         };
@@ -208,12 +212,10 @@ export class VoiceLogVoice {
 
     private genProgressMessage(title: string, fields: Array<{ name: string, value: string }>, isDone = false) {
         return {
-            embed: {
-                color: (isDone) ? 4289797 : 16312092,
-                title,
-                fields
-            }
-        } as MessageContent;
+            color: (isDone) ? 4289797 : 16312092,
+            title,
+            fields
+        } as MessageEmbedOptions;
     }
 
     public async autoLeaveChannel(oldChannel: VoiceChannel | undefined, newChannel: VoiceChannel | undefined, guildId: string): Promise<string | undefined> {

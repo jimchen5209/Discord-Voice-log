@@ -1,9 +1,10 @@
-import { CommandClient } from 'eris';
+import { Client } from 'eris';
 import { Category } from 'logging-ts';
 import { Core } from '../..';
 import { Config } from '../../Core/Config';
 import { Lang } from '../../Core/Lang';
 import { TTSHelper } from '../../Core/TTSHelper';
+import { Command } from './Components/Command';
 import { DiscordText } from './Components/Text';
 import { VoiceLog } from './Components/VoiceLog';
 
@@ -14,7 +15,8 @@ export class Discord {
     private _ttsHelper: TTSHelper;
     private _voiceLog: VoiceLog;
     private config: Config;
-    private bot: CommandClient;
+    private bot: Client;
+    private command: Command;
     private logger: Category;
 
     constructor(core: Core) {
@@ -25,13 +27,14 @@ export class Discord {
 
         if (this.config.discord.botToken === '') throw ERR_MISSING_TOKEN;
 
-        this.bot = new CommandClient(
+        this.bot = new Client(
             this.config.discord.botToken,
-            { restMode: true },
-            { defaultCommandOptions: { caseInsensitive: true } }
+            { restMode: true }
         );
 
         this._voiceLog = new VoiceLog(core, this, this.bot, this.logger);
+
+        this.command = new Command(this._voiceLog, core, this, this.bot);
 
         process.on('warning', e => {
             this.logger.warn(e.message);
@@ -39,11 +42,12 @@ export class Discord {
 
         this.bot.on('ready', async () => {
             this.logger.info(`Logged in as ${this.bot.user.username} (${this.bot.user.id})`);
+            this.command.refreshCommands();
             this._voiceLog.start();
         });
 
         // tslint:disable-next-line:no-unused-expression
-        new DiscordText(core, this, this.bot, this.logger);
+        new DiscordText(core, this.bot, this.logger);
 
         this.bot.connect();
     }

@@ -1,5 +1,5 @@
 import { waitUntil } from 'async-wait-until';
-import { CommandClient, Member, VoiceConnection  } from 'eris';
+import { Client, Member, VoiceConnection  } from 'eris';
 import FFmpeg from 'fluent-ffmpeg';
 import fs from 'fs';
 import { Category } from 'logging-ts';
@@ -9,14 +9,14 @@ import { TTSHelper } from '../../../Core/TTSHelper';
 export class DiscordVoice {
     private _init = true;
     private _channelId: string;
-    private bot: CommandClient;
+    private bot: Client;
     private voice: VoiceConnection | undefined;
     private logger: Category;
     private queue: Queue = new Queue(1, Infinity);
     private ttsHelper: TTSHelper;
 
     constructor(
-        bot: CommandClient,
+        bot: Client,
         logger: Category,
         ttsHelper: TTSHelper,
         channel: string,

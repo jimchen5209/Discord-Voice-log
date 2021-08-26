@@ -1,4 +1,4 @@
-import { CommandClient, Member, VoiceChannel } from 'eris';
+import { Client, Member, VoiceChannel } from 'eris';
 import fs from 'fs';
 import { Category } from 'logging-ts';
 import { scheduleJob } from 'node-schedule';
@@ -11,7 +11,7 @@ import { VoiceLogText } from './VoiceLog/Text';
 import { VoiceLogVoice } from './VoiceLog/Voice';
 
 export class VoiceLog {
-    private bot: CommandClient;
+    private bot: Client;
     private _voice: VoiceLogVoice;
     private _text: VoiceLogText;
     private _command: VoiceLogCommands;
@@ -19,13 +19,13 @@ export class VoiceLog {
     private logger: Category;
     private data: ServerConfigManager;
 
-    constructor(core: Core, discord: Discord, bot: CommandClient, logger: Category) {
+    constructor(core: Core, discord: Discord, bot: Client, logger: Category) {
         this.bot = bot;
         this.logger = new Category('VoiceLog', logger);
         this.data = core.data;
         this._voice = new VoiceLogVoice(core, discord, bot, logger);
         this._text = new VoiceLogText(core, discord, bot, logger);
-        this._command = new VoiceLogCommands(this, core, discord);
+        this._command = new VoiceLogCommands(this, core, discord, bot);
 
         this.bot.on('voiceChannelJoin', async (member: Member, newChannel: VoiceChannel) => {
             this.queue.add(async () => {
