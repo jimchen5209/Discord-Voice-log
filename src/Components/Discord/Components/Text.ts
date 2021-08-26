@@ -1,31 +1,17 @@
-import { CommandClient, Message, MessageContent, TextChannel } from 'eris';
+import { CommandClient, Message, TextChannel } from 'eris';
 import { Category } from 'logging-ts';
-import { vsprintf } from 'sprintf-js';
 import { Core } from '../../..';
-import { Config } from '../../../Core/Config';
-import { Lang } from '../../../Core/Lang';
-import { IServerConfig, ServerConfigManager } from '../../../Core/ServerConfigManager';
 import { Discord } from '../Core';
 import { VoiceLog } from './VoiceLog';
 
-const ERR_MISSING_LANG = 'Language not exist.';
-const ERR_MISSING_LANG_DEFAULT = 'Language not exist, will not change your language.';
-const ERR_INSERT_FAILURE = Error('Data insert failed.');
-
 export class DiscordText {
-    public voiceLog: VoiceLog;
+    private voiceLog: VoiceLog;
     private bot: CommandClient;
-    private config: Config;
     private logger: Category;
-    private data: ServerConfigManager;
-    private lang: Lang;
 
-    constructor(core: Core, discord: Discord, bot: CommandClient, logger: Category) {
-        this.config = core.config;
+    constructor(_core: Core, discord: Discord, bot: CommandClient, logger: Category) {
         this.bot = bot;
         this.logger = logger;
-        this.data = core.data;
-        this.lang = discord.lang;
         this.voiceLog = discord.voiceLog;
 
         this.bot.on('messageCreate', msg => {
@@ -81,197 +67,28 @@ export class DiscordText {
         });
     }
 
-    private genSuccessMessage(msg: string) {
-        return {
-            embed: {
-                title: 'Success',
-                color: 4289797,
-                description: msg
-            }
-        } as MessageContent;
-    }
-
-    private genNotChangedMessage(msg: string) {
-        return {
-            embed: {
-                title: 'Nothing Changed',
-                color: 9274675,
-                description: msg
-            }
-        } as MessageContent;
-    }
-
-    private genErrorMessage(msg: string) {
-        return {
-            embed: {
-                title: 'Error',
-                color: 13632027,
-                description: msg
-            }
-        } as MessageContent;
-    }
-
     private async commandJoin(msg: Message) {
-        if (!msg.member) return;
-
-        let data: IServerConfig | undefined | null = await this.data.get(msg.member.guild.id);
-        if (!data) data = await this.data.create(msg.member.guild.id);
-        if (!data) throw ERR_INSERT_FAILURE;
-
-        if (!(msg.member.permissions.has('manageMessages')) && !(this.config.discord.admins.includes(msg.member.id))) {
-            msg.channel.createMessage(this.genErrorMessage(this.lang.get(data.lang).display.command.no_permission));
-            return;
-        }
-
-        const guildId = msg.member.guild.id;
-        const channelID = msg.member.voiceState.channelID;
-        if (channelID) {
-            const voice = this.voiceLog.voice.getCurrentVoice(guildId);
-            if (voice && voice.channelId === channelID) {
-                msg.channel.createMessage(this.genNotChangedMessage(this.lang.get(data.lang).display.command.already_connected));
-            } else {
-                this.voiceLog.voice.join(guildId, channelID, true, true);
-            }
-        } else {
-            msg.channel.createMessage(this.genErrorMessage(this.lang.get(data.lang).display.command.not_in_channel));
-        }
+        await this.voiceLog.command.commandJoin(msg);
     }
 
     private async commandLeave(msg: Message) {
-        if (!msg.member) return;
-
-        let data: IServerConfig | undefined | null = await this.data.get(msg.member.guild.id);
-        if (!data) data = await this.data.create(msg.member.guild.id);
-        if (!data) throw ERR_INSERT_FAILURE;
-
-        if (!(msg.member.permissions.has('manageMessages')) && !(this.config.discord.admins.includes(msg.member.id))) {
-            msg.channel.createMessage(this.genErrorMessage(this.lang.get(data.lang).display.command.no_permission));
-            return;
-        }
-        const guildId = msg.member.guild.id;
-
-        const voice = this.voiceLog.voice.getCurrentVoice(guildId);
-
-        if (voice) {
-            this.voiceLog.voice.destroy(guildId, true);
-        }
+        await this.voiceLog.command.commandLeave(msg);
     }
 
     private async commandsetVlog(msg: Message, args: string[]) {
-        if (!msg.member) return;
-
-        let data: IServerConfig | undefined | null = await this.data.get(msg.member.guild.id);
-        if (!data) data = await this.data.create(msg.member.guild.id);
-        if (!data) throw ERR_INSERT_FAILURE;
-
-        if (!(msg.member.permissions.has('manageMessages')) && !(this.config.discord.admins.includes(msg.member.id))) {
-            msg.channel.createMessage(this.genErrorMessage(this.lang.get(data.lang).display.command.no_permission));
-            return;
-        }
-
-        if (args.length === 0) {
-            if (data.channelID === msg.channel.id) {
-                msg.channel.createMessage(this.genNotChangedMessage(this.lang.get(data.lang).display.config.exist));
-            } else {
-                this.data.updateChannel(msg.member.guild.id, msg.channel.id);
-                msg.channel.createMessage(this.genSuccessMessage(this.lang.get(data.lang).display.config.success));
-            }
-        } else {
-            let newLang = args[0];
-            if (!this.lang.isExist(newLang)) {
-                msg.channel.createMessage(this.genErrorMessage(ERR_MISSING_LANG_DEFAULT));
-                newLang = data.lang;
-            }
-            if (data.channelID === msg.channel.id && data.lang === newLang) {
-                msg.channel.createMessage(this.genNotChangedMessage(this.lang.get(data.lang).display.config.exist));
-            } else {
-                if (data.channelID === msg.channel.id) {
-                    this.data.updateLang(msg.member.guild.id, newLang);
-                    msg.channel.createMessage(
-                        this.genSuccessMessage(
-                            vsprintf(
-                                this.lang.get(newLang).display.config.lang_success,
-                                [this.lang.get(newLang).displayName]
-                            )
-                        )
-                    );
-                    msg.channel.createMessage(this.genNotChangedMessage(this.lang.get(newLang).display.config.exist));
-                } else {
-                    this.data.updateChannel(msg.member.guild.id, msg.channel.id);
-                    this.data.updateLang(msg.member.guild.id, newLang);
-                    msg.channel.createMessage(this.genSuccessMessage(this.lang.get(newLang).display.config.success));
-                }
-            }
-        }
+        await this.voiceLog.command.commandsetVlog(msg, args);
     }
 
     private async commandLang(msg: Message, args: string[]) {
-        if (!msg.member) return;
-
-        let data: IServerConfig | undefined | null = await this.data.get(msg.member.guild.id);
-        if (!data) data = await this.data.create(msg.member.guild.id);
-        if (!data) throw ERR_INSERT_FAILURE;
-
-        if (!(msg.member.permissions.has('manageMessages')) && !(this.config.discord.admins.includes(msg.member.id))) {
-            msg.channel.createMessage(this.genErrorMessage(this.lang.get(data.lang).display.command.no_permission));
-            return;
-        }
-
-        const newLang = args[0];
-        if (!this.lang.isExist(newLang)) {
-            msg.channel.createMessage(this.genErrorMessage(ERR_MISSING_LANG));
-        } else {
-            if (data.lang === newLang) {
-                msg.channel.createMessage(
-                    this.genNotChangedMessage(
-                        vsprintf(
-                            this.lang.get(data.lang).display.config.lang_exist,
-                            [this.lang.get(data.lang).displayName]
-                        )
-                    )
-                );
-            } else {
-                this.data.updateLang(msg.member.guild.id, newLang);
-                msg.channel.createMessage(
-                    this.genSuccessMessage(
-                        vsprintf(
-                            this.lang.get(newLang).display.config.lang_success,
-                            [this.lang.get(newLang).displayName]
-                        )
-                    )
-                );
-            }
-        }
+        await this.voiceLog.command.commandLang(msg, args);
     }
 
     private async commandUnsetVlog(msg: Message) {
-        if (!msg.member) return;
-
-        let data: IServerConfig | undefined | null = await this.data.get(msg.member.guild.id);
-        if (!data) data = await this.data.create(msg.member.guild.id);
-        if (!data) throw ERR_INSERT_FAILURE;
-
-        if (!(msg.member.permissions.has('manageMessages')) && !(this.config.discord.admins.includes(msg.member.id))) {
-            msg.channel.createMessage(this.genErrorMessage(this.lang.get(data.lang).display.command.no_permission));
-            return;
-        }
-
-        this.data.updateChannel(msg.member.guild.id, '');
-        msg.channel.createMessage(this.genSuccessMessage(this.lang.get(data.lang).display.config.unset_success));
+        await this.voiceLog.command.commandUnsetVlog(msg);
     }
 
     private async commandRefreshCache(msg: Message) {
-        if (!msg.member) return;
-
-        let data: IServerConfig | undefined | null = await this.data.get(msg.member.guild.id);
-        if (!data) data = await this.data.create(msg.member.guild.id);
-        if (!data) throw ERR_INSERT_FAILURE;
-
-        if (!(this.config.discord.admins.includes(msg.member.id))) {
-            msg.channel.createMessage(this.genErrorMessage(this.lang.get(data.lang).display.command.no_permission));
-            return;
-        }
-
-        this.voiceLog.voice.refreshCache(msg.channel.id);
+        await this.voiceLog.command.commandRefreshCache(msg);
     }
 }
+

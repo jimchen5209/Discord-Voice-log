@@ -14,6 +14,7 @@
     "success": "I will now log voice state to this channel",
     "lang_success": "Set language to %s",
     "lang_exist": "The language has already been %s",
-    "unset_success": "Voice state logging disabled."
+    "unset_success": "Voice state logging disabled.",
+    "error": "An error occurred while setting logging state."
   }
 }

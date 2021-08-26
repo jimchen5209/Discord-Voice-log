@@ -4,6 +4,7 @@ import { Db, MongoClient } from 'mongodb';
 import { Core } from '..';
 
 export const ERR_DB_NOT_INIT = Error('Database is not initialized');
+export const ERR_INSERT_FAILURE = Error('Data insert failed.');
 
 // tslint:disable-next-line:interface-name
 export declare interface MongoDB {

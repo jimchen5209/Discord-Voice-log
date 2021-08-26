@@ -1,7 +1,7 @@
 import fs, { readFileSync } from 'fs';
 import { Collection, ObjectId, ReturnDocument } from 'mongodb';
 import { Core } from '..';
-import { ERR_DB_NOT_INIT } from './MongoDB';
+import { ERR_DB_NOT_INIT, ERR_INSERT_FAILURE } from './MongoDB';
 
 export interface IServerConfig {
     _id: ObjectId;
@@ -47,13 +47,21 @@ export class ServerConfigManager {
             currentVoiceChannel
         } as IServerConfig;
 
-        return (await this.database.insertOne(data)).acknowledged ? data : undefined;
+        return (await this.database.insertOne(data)).acknowledged ? data : null;
     }
 
     public get(serverID: string) {
         if (!this.database) throw ERR_DB_NOT_INIT;
 
         return this.database.findOne({ serverID });
+    }
+
+    public async getOrCreate(guildId: string) {
+        let data = await this.get(guildId);
+        if (!data) data = await this.create(guildId);
+        if (!data) throw ERR_INSERT_FAILURE;
+
+        return data;
     }
 
     public getCurrentChannels() {

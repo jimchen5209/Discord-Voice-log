@@ -14,6 +14,7 @@
     "success": "我從現在開始會把語音頻道的狀態記錄到這個頻道",
     "lang_success": "已將語言設置為 %s",
     "lang_exist": "語言已經是 %s",
-    "unset_success": "語音頻道狀態記錄已取消"
+    "unset_success": "語音頻道狀態記錄已取消",
+    "error": "設定語音頻道狀態時發生錯誤"
   }
 }
