@@ -126,11 +126,11 @@ export class DiscordText {
         const guildId = msg.member.guild.id;
         const channelID = msg.member.voiceState.channelID;
         if (channelID) {
-            const voice = this.voiceLog.getCurrentVoice(guildId);
+            const voice = this.voiceLog.voice.getCurrentVoice(guildId);
             if (voice && voice.channelId === channelID) {
                 msg.channel.createMessage(this.genNotChangedMessage(this.lang.get(data.lang).display.command.already_connected));
             } else {
-                this.voiceLog.join(guildId, channelID, true, true);
+                this.voiceLog.voice.join(guildId, channelID, true, true);
             }
         } else {
             msg.channel.createMessage(this.genErrorMessage(this.lang.get(data.lang).display.command.not_in_channel));
@@ -150,10 +150,10 @@ export class DiscordText {
         }
         const guildId = msg.member.guild.id;
 
-        const voice = this.voiceLog.getCurrentVoice(guildId);
+        const voice = this.voiceLog.voice.getCurrentVoice(guildId);
 
         if (voice) {
-            this.voiceLog.destroy(guildId, true);
+            this.voiceLog.voice.destroy(guildId, true);
         }
     }
 
@@ -272,6 +272,6 @@ export class DiscordText {
             return;
         }
 
-        this.voiceLog.refreshCache(msg.channel.id);
+        this.voiceLog.voice.refreshCache(msg.channel.id);
     }
 }
