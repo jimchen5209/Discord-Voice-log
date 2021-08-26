@@ -1,6 +1,5 @@
 import { Member, VoiceChannel, MessageContent, CommandClient, TextChannel } from 'eris';
 import { Category } from 'logging-ts';
-import moment from 'moment';
 import { vsprintf } from 'sprintf-js';
 import { Core } from '../../../..';
 import { Lang } from '../../../../Core/Lang';
@@ -107,7 +106,7 @@ export class VoiceLogText {
                 color,
                 title: member.nick ? member.nick : member.username,
                 description: content,
-                timestamp: moment().toISOString(),
+                timestamp: (new Date()).toISOString(),
                 author: { name: '𝅺', icon_url: member.avatarURL }
             }
         } as MessageContent;

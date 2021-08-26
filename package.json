@@ -17,7 +17,6 @@
     "fluent-ffmpeg": "^2.1.2",
     "logging-ts": "https://github.com/jimchen5209/Logging-TS.git",
     "md5": "^2.2.1",
-    "moment": "^2.24.0",
     "mongodb": "^4.1.0",
     "node-fetch": "^2.6.0",
     "node-schedule": "^2.0.0",
