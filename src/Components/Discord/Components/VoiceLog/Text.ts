@@ -7,7 +7,7 @@ import { ServerConfigManager } from '../../../../Core/ServerConfigManager';
 import { Discord } from '../../Core';
 
 const ERR_UNEXPECTED_LANG_STATUS = new Error('Unexpected lang set status');
-const ERR_NO_PERMRSSION = new Error('Unexpected lang set status');
+const ERR_NO_PERMRSSION = new Error('Not enough permissions to send message');
 
 export enum VoiceLogSetStatus {
     AllSuccess,
