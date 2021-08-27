@@ -12,7 +12,7 @@ export declare interface MongoDB {
 }
 
 export class MongoDB extends EventEmitter {
-    public client?: Db;
+    private _client?: Db;
     private logger: Category;
 
     constructor(core: Core) {
@@ -26,9 +26,13 @@ export class MongoDB extends EventEmitter {
         MongoClient.connect(config.host).then(client => {
             this.logger.info(`Successfully connected to ${config.host}`);
 
-            this.client = client.db(config.name);
+            this._client = client.db(config.name);
 
-            this.emit('connect', this.client);
+            this.emit('connect', this._client);
         });
+    }
+
+    public get client() {
+        return this._client;
     }
 }
