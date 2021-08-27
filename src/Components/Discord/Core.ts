@@ -22,8 +22,8 @@ export class Discord {
     constructor(core: Core) {
         this.config = core.config;
         this.logger = new Category('Discord', core.mainLogger);
-        this._lang = new Lang(core);
-        this._ttsHelper = new TTSHelper(core);
+        this._lang = core.lang;
+        this._ttsHelper = core.ttsHelper;
 
         if (this.config.discord.botToken === '') throw ERR_MISSING_TOKEN;
 

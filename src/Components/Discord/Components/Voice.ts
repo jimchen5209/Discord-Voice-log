@@ -5,6 +5,7 @@ import fs from 'fs';
 import { Category } from 'logging-ts';
 import Queue from 'promise-queue';
 import { TTSHelper } from '../../../Core/TTSHelper';
+import { PluginManager } from '../../Plugin/Core';
 
 export class DiscordVoice {
     private _init = true;
@@ -13,11 +14,13 @@ export class DiscordVoice {
     private voice: VoiceConnection | undefined;
     private logger: Category;
     private queue: Queue = new Queue(1, Infinity);
+    private plugins: PluginManager;
     private ttsHelper: TTSHelper;
 
     constructor(
         bot: Client,
         logger: Category,
+        plugins: PluginManager,
         ttsHelper: TTSHelper,
         channel: string,
         voice: VoiceConnection | undefined = undefined
@@ -25,6 +28,7 @@ export class DiscordVoice {
         this.bot = bot;
         this.logger = new Category(`Voice/${channel}`, logger);
         this.ttsHelper = ttsHelper;
+        this.plugins = plugins;
 
         this._channelId = channel;
 
@@ -72,6 +76,19 @@ export class DiscordVoice {
     }
 
     public async playVoice(member: Member, type: string) {
+        let overwrited = false;
+
+        for (const voice of this.plugins.voiceOverwrites) {
+            const overwritedFile = await voice.playVoice(member, type);
+            if (overwritedFile) {
+                this.queue.add(() => this.play(overwritedFile));
+                overwrited = true;
+                return;
+            }
+        }
+
+        if (overwrited) return;
+
         let voiceFile = '';
         if (fs.existsSync(`assets/${member.id}.json`)) {
             const tts = JSON.parse(fs.readFileSync(`assets/${member.id}.json`, { encoding: 'utf-8' }));
