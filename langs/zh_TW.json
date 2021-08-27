@@ -7,13 +7,17 @@
     "not_in_channel": "您根本沒有在語音頻道內",
     "already_connected": "已連線",
     "no_permission": "權限不足",
-    "not_enough_argument": "參數不足"
+    "not_enough_argument": "參數不足",
+    "join_success": "語音已連線",
+    "leave_success": "語音已中斷連線",
+    "bot_not_connected": "Bot 沒有在語音頻道內"
   },
   "config": {
     "exist": "我已經正在把語音頻道的狀態記錄到這個頻道啦",
     "success": "我從現在開始會把語音頻道的狀態記錄到這個頻道",
     "lang_success": "已將語言設置為 %s",
     "lang_exist": "語言已經是 %s",
-    "unset_success": "語音頻道狀態記錄已取消"
+    "unset_success": "語音頻道狀態記錄已取消",
+    "error": "設定語音頻道狀態時發生錯誤"
   }
 }

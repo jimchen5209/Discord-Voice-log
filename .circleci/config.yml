@@ -4,8 +4,8 @@ jobs:
     docker:
       # specify the version you desire here
       # use `-browsers` prefix for selenium tests, e.g. `3.6.1-browsers`
-      - image: circleci/node:10.18.1
-      - image: mongo:4.2.1
+      - image: node:14
+      # - image: mongo:5.0.2
       
       # Specify service dependencies here if necessary
       # CircleCI maintains a library of pre-built images
@@ -17,11 +17,11 @@ jobs:
     steps:
       - checkout
 
-      - run:
-          name: checkout submodule
-          command: |
-            git submodule init
-            git submodule update
+      # - run:
+      #     name: checkout submodule
+      #     command: |
+      #       git submodule init
+      #       git submodule update
 
       # Download and cache dependencies
       - restore_cache:

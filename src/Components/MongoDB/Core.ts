@@ -1,9 +1,10 @@
 import { EventEmitter } from 'events';
 import { Category } from 'logging-ts';
 import { Db, MongoClient } from 'mongodb';
-import { Core } from '..';
+import { Core } from '../..';
 
 export const ERR_DB_NOT_INIT = Error('Database is not initialized');
+export const ERR_INSERT_FAILURE = Error('Data insert failed.');
 
 // tslint:disable-next-line:interface-name
 export declare interface MongoDB {
@@ -11,7 +12,7 @@ export declare interface MongoDB {
 }
 
 export class MongoDB extends EventEmitter {
-    public client?: Db;
+    private _client?: Db;
     private logger: Category;
 
     constructor(core: Core) {
@@ -20,14 +21,18 @@ export class MongoDB extends EventEmitter {
         this.logger = new Category('MongoDB', core.mainLogger);
         this.logger.info('Loading MongoDB...');
 
-        const config = core.config.database;
+        const config = core.config.mongodb;
 
-        MongoClient.connect(config.host, { useNewUrlParser: true }).then(client => {
-            this.logger.info(`Successfully connected to ${config.host}`);
+        MongoClient.connect(config.host).then(client => {
+            this.logger.info('Successfully connected to mongoDB');
 
-            this.client = client.db(config.name);
+            this._client = client.db(config.name);
 
-            this.emit('connect', this.client);
+            this.emit('connect', this._client);
         });
+    }
+
+    public get client() {
+        return this._client;
     }
 }
