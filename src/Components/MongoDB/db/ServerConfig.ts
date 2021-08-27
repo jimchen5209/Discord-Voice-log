@@ -1,7 +1,7 @@
 import fs, { readFileSync } from 'fs';
 import { Collection, ObjectId, ReturnDocument } from 'mongodb';
-import { Core } from '..';
-import { ERR_DB_NOT_INIT, ERR_INSERT_FAILURE } from './MongoDB';
+import { Core } from '../../..';
+import { ERR_DB_NOT_INIT, ERR_INSERT_FAILURE } from '../Core';
 
 export interface IServerConfig {
     _id: ObjectId;

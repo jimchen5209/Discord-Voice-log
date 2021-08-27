@@ -3,7 +3,7 @@ import { Category } from 'logging-ts';
 import { vsprintf } from 'sprintf-js';
 import { Core } from '../../../..';
 import { Lang } from '../../../../Core/Lang';
-import { ServerConfigManager } from '../../../../Core/ServerConfigManager';
+import { ServerConfigManager } from '../../../MongoDB/db/ServerConfig';
 import { Discord } from '../../Core';
 
 const ERR_UNEXPECTED_LANG_STATUS = new Error('Unexpected lang set status');

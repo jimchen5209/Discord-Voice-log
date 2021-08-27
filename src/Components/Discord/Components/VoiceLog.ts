@@ -4,7 +4,7 @@ import { Category } from 'logging-ts';
 import { scheduleJob } from 'node-schedule';
 import Queue from 'promise-queue';
 import { Core } from '../../..';
-import { ServerConfigManager } from '../../../Core/ServerConfigManager';
+import { ServerConfigManager } from '../../MongoDB/db/ServerConfig';
 import { Discord } from '../Core';
 import { VoiceLogCommands } from './VoiceLog/Commands';
 import { VoiceLogText } from './VoiceLog/Text';

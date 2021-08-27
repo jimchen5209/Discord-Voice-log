@@ -5,7 +5,7 @@ import { vsprintf } from 'sprintf-js';
 import { Core } from '../../../..';
 import { Config } from '../../../../Core/Config';
 import { Lang } from '../../../../Core/Lang';
-import { ServerConfigManager } from '../../../../Core/ServerConfigManager';
+import { ServerConfigManager } from '../../../MongoDB/db/ServerConfig';
 import { Discord } from '../../Core';
 import { VoiceLog } from '../VoiceLog';
 import { VoiceLogSetStatus } from './Text';

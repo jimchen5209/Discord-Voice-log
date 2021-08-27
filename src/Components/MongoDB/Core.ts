@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events';
 import { Category } from 'logging-ts';
 import { Db, MongoClient } from 'mongodb';
-import { Core } from '..';
+import { Core } from '../..';
 
 export const ERR_DB_NOT_INIT = Error('Database is not initialized');
 export const ERR_INSERT_FAILURE = Error('Data insert failed.');

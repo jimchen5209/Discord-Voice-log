@@ -6,7 +6,7 @@ import path from 'path';
 import Queue from 'promise-queue';
 import { CommandContext, MessageEmbedOptions } from 'slash-create';
 import { Core } from '../../../..';
-import { ServerConfigManager } from '../../../../Core/ServerConfigManager';
+import { ServerConfigManager } from '../../../MongoDB/db/ServerConfig';
 import { TTSHelper } from '../../../../Core/TTSHelper';
 import { Discord } from '../../Core';
 import { DiscordVoice } from '../Voice';
