@@ -1,11 +1,10 @@
-import fs from 'fs';
-import { Collection, ObjectID } from 'mongodb';
-import { resolve } from 'path';
-import { Core } from '..';
-import { ERR_DB_NOT_INIT } from './MongoDB';
+import { existsSync, readFileSync, renameSync } from 'fs';
+import { Collection, ObjectId, ReturnDocument } from 'mongodb';
+import { Core } from '../../..';
+import { ERR_DB_NOT_INIT, ERR_INSERT_FAILURE } from '../Core';
 
 export interface IServerConfig {
-    _id: ObjectID;
+    _id: ObjectId;
     serverID: string;
     lang: string;
     channelID: string;
@@ -22,14 +21,14 @@ export class ServerConfigManager {
             if (!core.database.client) throw Error('Database client not init');
             this.database = core.database.client.collection('serverConfig');
             this.database.createIndex({ serverID: 1 });
-            if (fs.existsSync('./vlogdata.json')) {
+            if (existsSync('./vlogdata.json')) {
                 core.mainLogger.info('Old data found. Migrating to db...');
-                const dataRaw = require(resolve('./vlogdata.json'));
+                const dataRaw = JSON.parse(readFileSync('./vlogdata.json', { encoding: 'utf-8' }));
                 for (const key of Object.keys(dataRaw)) {
                     if (dataRaw[key] === undefined) continue;
                     await this.create(key, dataRaw[key].channel, dataRaw[key].lang, dataRaw[key].lastVoiceChannel);
                 }
-                fs.renameSync('./vlogdata.json', './vlogdata.json.bak');
+                renameSync('./vlogdata.json', './vlogdata.json.bak');
             }
 
             // Add field admin to old lists
@@ -37,22 +36,32 @@ export class ServerConfigManager {
         });
     }
 
-    public async create(serverID: string, channelID: string = '', lang: string = 'en_US', lastVoiceChannel: string = '', currentVoiceChannel: string = '') {
+    public async create(serverID: string, channelID = '', lang = 'en_US', lastVoiceChannel = '', currentVoiceChannel = '') {
         if (!this.database) throw ERR_DB_NOT_INIT;
 
-        return (await this.database.insertOne({
+        const data = {
             serverID,
             channelID,
             lang,
             lastVoiceChannel,
             currentVoiceChannel
-        } as IServerConfig)).ops[0] as IServerConfig;
+        } as IServerConfig;
+
+        return (await this.database.insertOne(data)).acknowledged ? data : null;
     }
 
     public get(serverID: string) {
         if (!this.database) throw ERR_DB_NOT_INIT;
 
         return this.database.findOne({ serverID });
+    }
+
+    public async getOrCreate(guildId: string) {
+        let data = await this.get(guildId);
+        if (!data) data = await this.create(guildId);
+        if (!data) throw ERR_INSERT_FAILURE;
+
+        return data;
     }
 
     public getCurrentChannels() {
@@ -67,7 +76,7 @@ export class ServerConfigManager {
         return (await this.database.findOneAndUpdate(
             { serverID },
             { $set: { channelID } },
-            { returnOriginal: false }
+            { returnDocument: ReturnDocument.AFTER }
         )).value;
     }
 
@@ -77,7 +86,7 @@ export class ServerConfigManager {
         return (await this.database.findOneAndUpdate(
             { serverID },
             { $set: { lang } },
-            { returnOriginal: false }
+            { returnDocument: ReturnDocument.AFTER }
         )).value;
     }
 
@@ -87,7 +96,7 @@ export class ServerConfigManager {
         return (await this.database.findOneAndUpdate(
             { serverID },
             { $set: { lastVoiceChannel } },
-            { returnOriginal: false }
+            { returnDocument: ReturnDocument.AFTER }
         )).value;
     }
 
@@ -97,7 +106,7 @@ export class ServerConfigManager {
         return (await this.database.findOneAndUpdate(
             { serverID },
             { $set: { currentVoiceChannel } },
-            { returnOriginal: false }
+            { returnDocument: ReturnDocument.AFTER }
         )).value;
     }
 }
