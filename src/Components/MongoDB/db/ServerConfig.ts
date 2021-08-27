@@ -1,4 +1,4 @@
-import fs, { readFileSync } from 'fs';
+import { existsSync, readFileSync, renameSync } from 'fs';
 import { Collection, ObjectId, ReturnDocument } from 'mongodb';
 import { Core } from '../../..';
 import { ERR_DB_NOT_INIT, ERR_INSERT_FAILURE } from '../Core';
@@ -21,14 +21,14 @@ export class ServerConfigManager {
             if (!core.database.client) throw Error('Database client not init');
             this.database = core.database.client.collection('serverConfig');
             this.database.createIndex({ serverID: 1 });
-            if (fs.existsSync('./vlogdata.json')) {
+            if (existsSync('./vlogdata.json')) {
                 core.mainLogger.info('Old data found. Migrating to db...');
                 const dataRaw = JSON.parse(readFileSync('./vlogdata.json', { encoding: 'utf-8' }));
                 for (const key of Object.keys(dataRaw)) {
                     if (dataRaw[key] === undefined) continue;
                     await this.create(key, dataRaw[key].channel, dataRaw[key].lang, dataRaw[key].lastVoiceChannel);
                 }
-                fs.renameSync('./vlogdata.json', './vlogdata.json.bak');
+                renameSync('./vlogdata.json', './vlogdata.json.bak');
             }
 
             // Add field admin to old lists

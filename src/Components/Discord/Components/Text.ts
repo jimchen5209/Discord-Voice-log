@@ -8,7 +8,7 @@ export class DiscordText {
 
     constructor(_core: Core, bot: Client, logger: Category) {
         this.bot = bot;
-        this.logger = logger;
+        this.logger = new Category('Discord/Text', logger);
 
         this.bot.on('messageCreate', msg => {
 
@@ -28,6 +28,11 @@ export class DiscordText {
             messageContent.split('\n').forEach(content => {
                 this.logger.info(`${userNick}[${userName}, ${userID}] => ${channelName} (${channelID}): ${content}`);
             });
+            if (msg.attachments.length !== 0) {
+                msg.attachments.forEach(attachments => {
+                    this.logger.info(`Attachment: ${attachments.url}`);
+                });
+            }
         });
     }
 }

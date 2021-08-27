@@ -24,7 +24,7 @@ export class MongoDB extends EventEmitter {
         const config = core.config.mongodb;
 
         MongoClient.connect(config.host).then(client => {
-            this.logger.info(`Successfully connected to ${config.host}`);
+            this.logger.info('Successfully connected to mongoDB');
 
             this._client = client.db(config.name);
 

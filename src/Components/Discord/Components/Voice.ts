@@ -23,7 +23,7 @@ export class DiscordVoice {
         voice: VoiceConnection | undefined = undefined
     ) {
         this.bot = bot;
-        this.logger = logger;
+        this.logger = new Category(`Voice/${channel}`, logger);
         this.ttsHelper = ttsHelper;
 
         this._channelId = channel;
