@@ -17,6 +17,7 @@ export class Command {
     private logger: Category;
     private voiceLog: VoiceLog;
     private lang: Lang;
+    private registered = false;
 
     constructor(voiceLog: VoiceLog, core: Core, discord: Discord, bot: Client) {
         this.config = core.config;
@@ -42,6 +43,8 @@ export class Command {
     }
 
     public refreshCommands() {
+        if (this.registered) return;
+
         this.logger.info('Refreshing commands to all guilds...');
 
         this.bot.getRESTGuilds({ limit: 200 }).then(value => {
@@ -56,6 +59,7 @@ export class Command {
             ];
 
             this.creator.registerCommands(commands);
+            this.registered = true;
             this.creator.syncCommands();
         });
     }
