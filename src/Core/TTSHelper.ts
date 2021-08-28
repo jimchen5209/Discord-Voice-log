@@ -24,7 +24,9 @@ export class TTSHelper {
             try {
                 await this.download(ttsURL, filePath);
             } catch (error) {
-                this.logger.error(`TTS ${text} in ${lang} download failed: ${error.message}`, null);
+                if (error instanceof Error) {
+                    this.logger.error(`TTS ${text} in ${lang} download failed: ${error.message}`, null);
+                }
                 return null;
             }
         }

@@ -112,10 +112,15 @@
   dependencies:
     "@types/node" "*"
 
-"@types/node@*", "@types/node@^16.4.12":
+"@types/node@*":
   version "16.7.1"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-16.7.1.tgz#c6b9198178da504dfca1fd0be9b2e1002f1586f0"
   integrity sha512-ncRdc45SoYJ2H4eWU9ReDfp3vtFqDYhjOsKlFFUDEn8V1Bgr2RjYal8YT5byfadWIRluhPFU6JiDOl0H6Sl87A==
+
+"@types/node@^16.4.12":
+  version "16.7.4"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-16.7.4.tgz#68a9384694af63ceab8848e95d76d9a3519e84b6"
+  integrity sha512-25QXpDsTiDnl2rZGUenagVMwO46way8dOUdvoC3R3p+6TrbpxeJBo/v87BEG1IHI31Jhaa8lPeSHcqwxsVBeYQ==
 
 "@types/promise-queue@^2.2.0":
   version "2.2.0"
@@ -948,7 +953,7 @@ lodash.uniq@^4.5.0:
 
 "logging-ts@https://github.com/jimchen5209/Logging-TS.git":
   version "1.0.0"
-  resolved "https://github.com/jimchen5209/Logging-TS.git#d38e8eb227cd8817e8e9967239ee7f3babc74b45"
+  resolved "https://github.com/jimchen5209/Logging-TS.git#edd320906feac375eb18183f11464558f884247e"
   dependencies:
     moment "^2.29.1"
     typescript-logging "^1.0.0"
@@ -1299,7 +1304,7 @@ stacktrace-js@1.3.1:
 
 "status-client@https://github.com/jimchen5209/StatusClient_JS#dev":
   version "1.0.0"
-  resolved "https://github.com/jimchen5209/StatusClient_JS#87a81fb3816f93bf070568df121dbf157f39d0b4"
+  resolved "https://github.com/jimchen5209/StatusClient_JS#0559489e4fbe6444f9c42632ca73997045930a04"
 
 string-width@^4.2.0:
   version "4.2.2"
@@ -1404,9 +1409,9 @@ typescript-logging@^1.0.0:
     stacktrace-js "1.3.1"
 
 typescript@^4.3.5:
-  version "4.3.5"
-  resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.3.5.tgz#4d1c37cc16e893973c45a06886b7113234f119f4"
-  integrity sha512-DqQgihaQ9cUrskJo9kIyW/+g0Vxsk8cDtZ52a3NGh0YNTfpUSArXSohyUGnvbPazEPLu398C0UxmKSOrPumUzA==
+  version "4.4.2"
+  resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.4.2.tgz#6d618640d430e3569a1dfb44f7d7e600ced3ee86"
+  integrity sha512-gzP+t5W4hdy4c+68bfcv0t400HVJMMd2+H9B7gae1nQlBzCqvrXX+6GL/b3GAgyTH966pzrZ70/fRjwAtZksSQ==
 
 uri-js@^4.2.2:
   version "4.4.1"
