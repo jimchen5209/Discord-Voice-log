@@ -16,6 +16,7 @@ export class VoiceLogVoice {
     private bot: Client;
     private audios: { [key: string]: DiscordVoice } = {};
     private logger: Category;
+    private voiceLogger: Category;
     private data: ServerConfigManager;
     private ttsHelper: TTSHelper;
     private plugins: PluginManager;
@@ -23,6 +24,7 @@ export class VoiceLogVoice {
     constructor(core: Core, discord: Discord, bot: Client, logger: Category) {
         this.bot = bot;
         this.logger = new Category('VoiceLog/Voice', logger);
+        this.voiceLogger = new Category('Discord/Voice', logger);
         this.data = core.data;
         this.ttsHelper = discord.ttsHelper;
         this.plugins = core.plugins;
@@ -33,7 +35,7 @@ export class VoiceLogVoice {
         if (!voice) {
             const botVoice = this.bot.voiceConnections.get(guildId);
             if (botVoice && botVoice.ready) {
-                if (botVoice.channelID) this.audios[guildId] = new DiscordVoice(this.bot, this.logger, this.plugins, this.ttsHelper, botVoice.channelID, botVoice);
+                if (botVoice.channelID) this.audios[guildId] = new DiscordVoice(this.bot, this.voiceLogger, this.plugins, this.ttsHelper, botVoice.channelID, botVoice);
                 return this.audios[guildId];
             }
             return undefined;
@@ -64,7 +66,7 @@ export class VoiceLogVoice {
             }
         }
 
-        this.audios[guildId] = new DiscordVoice(this.bot, this.logger, this.plugins, this.ttsHelper, channelId);
+        this.audios[guildId] = new DiscordVoice(this.bot, this.voiceLogger, this.plugins, this.ttsHelper, channelId);
         await waitUntil(() => this.audios[guildId] && this.audios[guildId].isReady());
         if (updateDatabase) {
             this.data.updateLastVoiceChannel(guildId, '');
