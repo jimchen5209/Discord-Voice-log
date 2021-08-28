@@ -139,7 +139,9 @@ export class DiscordVoice {
             });
             return connection;
         } catch (e) {
-            this.logger.error(`Error from ${channelID}: ${e.name} ${e.message}`, e);
+            if (e instanceof Error) {
+                this.logger.error(`Error from ${channelID}: ${e.name} ${e.message}`, e);
+            }
         }
         return;
     }
