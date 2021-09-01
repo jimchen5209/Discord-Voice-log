@@ -23,7 +23,7 @@
     "promise-queue": "^2.2.5",
     "slash-create": "^4.0.1",
     "sprintf-js": "^1.1.2",
-    "status-client": "https://github.com/jimchen5209/StatusClient_JS#dev"
+    "status-client": "https://github.com/jimchen5209/StatusClient_JS#2.0.0"
   },
   "devDependencies": {
     "@types/fluent-ffmpeg": "^2.1.14",
