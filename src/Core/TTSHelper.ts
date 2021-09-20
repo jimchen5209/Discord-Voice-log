@@ -59,13 +59,18 @@ export class TTSHelper {
                     throw new Error(`unexpected response ${res.statusText}`);
                 }
 
-                return streamPipeline(res.body, createWriteStream(path));
+                if (!res.body) {
+                    throw new Error('response body is null');
+                }
+
+                return streamPipeline(res.body, createWriteStream(path)) ;
             });
     }
 
     private async downloadWaveTTS(url: string, options: RequestInit, path: string) {
         await fetch(url, options)
-            .then(response => response.json())
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            .then(response => response.json() as any)
             .then(data => {
                 const imgBuffer = Buffer.from(data.audioContent, 'base64');
 
