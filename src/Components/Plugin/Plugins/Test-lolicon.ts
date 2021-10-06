@@ -18,8 +18,7 @@ export class Test_lolicon implements IVoiceOverwrite{
             const nowTime = new Date();
             const testTime = new Date('04/30/2022');
             const time = Math.ceil((testTime.getTime() - nowTime.getTime()) / (1000 * 3600 * 24)) - 1;
-            if (time < 0) return;
-            const text = `早安小瑞克，統測剩下 ${time} 天喔`;
+            const text = (time < 0) ? '早安小瑞克，統測結束了，是不是要準備買顯卡了' : `早安小瑞克，統測剩下 ${time} 天喔`;
             const lang = 'zh_tw';
 
             const file = await this.ttsHelper.getTTSFile(text, lang);
