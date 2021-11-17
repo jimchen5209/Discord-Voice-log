@@ -2,7 +2,7 @@ import { waitUntil } from 'async-wait-until';
 import { Client, Member, VoiceConnection  } from 'eris';
 import FFmpeg from 'fluent-ffmpeg';
 import fs from 'fs';
-import { Category } from 'logging-ts';
+import { Logger } from 'tslog-helper';
 import Queue from 'promise-queue';
 import { TTSHelper } from '../../../Core/TTSHelper';
 import { PluginManager } from '../../Plugin/Core';
@@ -12,14 +12,14 @@ export class DiscordVoice {
     private _channelId: string;
     private bot: Client;
     private voice: VoiceConnection | undefined;
-    private logger: Category;
+    private logger: Logger;
     private queue: Queue = new Queue(1, Infinity);
     private plugins: PluginManager;
     private ttsHelper: TTSHelper;
 
     constructor(
         bot: Client,
-        logger: Category,
+        logger: Logger,
         plugins: PluginManager,
         ttsHelper: TTSHelper,
         channel: string,
@@ -145,7 +145,7 @@ export class DiscordVoice {
                 }
             });
             connection.once('disconnect', err => {
-                this.logger.error(`Error from voice connection ${channelID}: ${err?.message}`, null);
+                this.logger.error(`Error from voice connection ${channelID}: ${err?.message}`, err);
                 connection.stopPlaying();
                 this.bot.leaveVoiceChannel(channelID);
                 setTimeout(() => {

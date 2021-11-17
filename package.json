@@ -15,7 +15,6 @@
     "async-wait-until": "^2.0.5",
     "eris": "^0.16.1",
     "fluent-ffmpeg": "^2.1.2",
-    "logging-ts": "https://github.com/jimchen5209/Logging-TS.git",
     "md5": "^2.2.1",
     "mongodb": "^4.1.0",
     "node-fetch": "^2.6.0",
@@ -23,7 +22,8 @@
     "promise-queue": "^2.2.5",
     "slash-create": "^4.0.1",
     "sprintf-js": "^1.1.2",
-    "status-client": "https://github.com/jimchen5209/StatusClient_JS#2.0.0"
+    "status-client": "https://github.com/jimchen5209/StatusClient_JS#2.0.0",
+    "tslog-helper": "https://github.com/jimchen5209/Logging-TS#dev"
   },
   "devDependencies": {
     "@types/fluent-ffmpeg": "^2.1.14",

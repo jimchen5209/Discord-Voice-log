@@ -1,14 +1,14 @@
 import { Client, TextChannel } from 'eris';
-import { Category } from 'logging-ts';
+import { Logger } from 'tslog-helper';
 import { Core } from '../../..';
 
 export class DiscordText {
     private bot: Client;
-    private logger: Category;
+    private logger: Logger;
 
-    constructor(_core: Core, bot: Client, logger: Category) {
+    constructor(_core: Core, bot: Client, logger: Logger) {
         this.bot = bot;
-        this.logger = new Category('Discord/Text', logger);
+        this.logger = logger.getChildLogger({ name: 'Discord/Text'});
 
         this.bot.on('messageCreate', msg => {
 

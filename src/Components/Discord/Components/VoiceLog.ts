@@ -1,6 +1,6 @@
 import { Client, Member, VoiceChannel } from 'eris';
 import fs from 'fs';
-import { Category } from 'logging-ts';
+import { Logger } from 'tslog-helper';
 import { scheduleJob } from 'node-schedule';
 import Queue from 'promise-queue';
 import { Core } from '../../..';
@@ -16,12 +16,12 @@ export class VoiceLog {
     private _text: VoiceLogText;
     private _command: VoiceLogCommands;
     private queue: Queue = new Queue(1, Infinity);
-    private logger: Category;
+    private logger: Logger;
     private data: ServerConfigManager;
 
-    constructor(core: Core, discord: Discord, bot: Client, logger: Category) {
+    constructor(core: Core, discord: Discord, bot: Client, logger: Logger) {
         this.bot = bot;
-        this.logger = new Category('VoiceLog', logger);
+        this.logger = logger.getChildLogger({ name: 'VoiceLog'});
         this.data = core.data;
         this._voice = new VoiceLogVoice(core, discord, bot, logger);
         this._text = new VoiceLogText(core, discord, bot, logger);

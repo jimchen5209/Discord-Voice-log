@@ -1,5 +1,5 @@
 import { readdirSync } from 'fs';
-import { Category } from 'logging-ts';
+import { Logger } from 'tslog-helper';
 import path from 'path';
 import { Core } from '../..';
 import { IPluginBase } from './Base/PluginBase';
@@ -7,13 +7,13 @@ import { IVoiceOverwrite } from './Base/VoiceOverwrite';
 
 export class PluginManager {
     private core: Core;
-    private logger: Category;
+    private logger: Logger;
     private loadedPlugins: { [key: string]: IPluginBase } = {};
     private _voiceOverwrites: { [key: string]: IVoiceOverwrite } = {};
 
     constructor(core: Core) {
         this.core = core;
-        this.logger = new Category('Plugin', core.mainLogger);
+        this.logger = core.mainLogger.getChildLogger({ name: 'Plugin'});
 
         this.reloadPluginList().then(() => {
             this.enablePlugins();

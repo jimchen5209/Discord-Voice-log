@@ -1,5 +1,5 @@
 import { createWriteStream, existsSync } from 'fs';
-import { Category } from 'logging-ts';
+import { Logger } from 'tslog-helper';
 import md5 from 'md5';
 import fetch, { RequestInit } from 'node-fetch';
 import { pipeline, Readable } from 'stream';
@@ -9,11 +9,11 @@ import { Config } from './Config';
 const streamPipeline = promisify(pipeline);
 
 export class TTSHelper {
-    private logger: Category;
+    private logger: Logger;
     private config: Config;
 
     constructor(core: Core) {
-        this.logger = new Category('TTSHelper', core.mainLogger);
+        this.logger = core.mainLogger.getChildLogger({ name: 'TTSHelper'});
         this.config = core.config;
     }
 
@@ -25,7 +25,7 @@ export class TTSHelper {
                 await this.download(ttsURL, filePath);
             } catch (error) {
                 if (error instanceof Error) {
-                    this.logger.error(`TTS ${text} in ${lang} download failed: ${error.message}`, null);
+                    this.logger.error(`TTS ${text} in ${lang} download failed: ${error.message}`, error);
                 }
                 return null;
             }

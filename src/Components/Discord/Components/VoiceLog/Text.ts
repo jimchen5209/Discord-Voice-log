@@ -1,5 +1,5 @@
 import { Member, VoiceChannel, MessageContent, Client, TextChannel } from 'eris';
-import { Category } from 'logging-ts';
+import { Logger } from 'tslog-helper';
 import { vsprintf } from 'sprintf-js';
 import { Core } from '../../../..';
 import { Lang } from '../../../../Core/Lang';
@@ -20,13 +20,13 @@ export enum VoiceLogSetStatus {
 
 export class VoiceLogText {
     private bot: Client;
-    private logger: Category;
+    private logger: Logger;
     private data: ServerConfigManager;
     private lang: Lang;
 
-    constructor(core: Core, discord: Discord,bot: Client, logger: Category) {
+    constructor(core: Core, discord: Discord, bot: Client, logger: Logger) {
         this.bot = bot;
-        this.logger = new Category('VoiceLog/Text', logger);
+        this.logger = logger.getChildLogger({ name: 'VoiceLog/Text'});
         this.data = core.data;
         this.lang = discord.lang;
     }

@@ -1,5 +1,5 @@
 import { existsSync, readFileSync, writeFileSync } from 'fs';
-import { Category } from 'logging-ts';
+import { Logger } from 'tslog-helper';
 import { Core } from '..';
 
 export class Config {
@@ -8,10 +8,10 @@ export class Config {
     private _googleTTS: { apiKey: string };
     private _mongodb: { host: string, name: string };
     private _debug: boolean;
-    private logger: Category;
+    private logger: Logger;
 
     constructor(core: Core) {
-        this.logger = new Category('Config', core.mainLogger);
+        this.logger = core.mainLogger.getChildLogger({ name: 'Config'});
         this.logger.info('Loading Config...');
 
         const discordDefault = { botToken: '', applicationID: '', publicKey: '', admins: [] };

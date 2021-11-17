@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events';
-import { catService } from 'logging-ts';
+import { LogHelper } from 'tslog-helper';
 import { Discord } from './Components/Discord/Core';
 import { Config } from './Core/Config';
 import { MongoDB } from './Components/MongoDB/Core';
@@ -10,7 +10,8 @@ import { TTSHelper } from './Core/TTSHelper';
 import { Lang } from './Core/Lang';
 
 export class Core extends EventEmitter {
-    public readonly mainLogger = catService;
+    private readonly logHelper = new LogHelper();
+    public readonly mainLogger = this.logHelper.logger;
     public readonly config = new Config(this);
     public readonly database = new MongoDB(this);
     public readonly data = new ServerConfigManager(this);
