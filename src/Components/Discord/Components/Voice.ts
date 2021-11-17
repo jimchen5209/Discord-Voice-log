@@ -128,7 +128,7 @@ export class DiscordVoice {
                 }
             });
             connection.once('disconnect', err => {
-                this.logger.error(`Error from voice connection ${channelID}: ${err?.message}`, err);
+                this.logger.error(`Error from voice connection ${channelID}: ${err?.message}`, null);
                 connection.stopPlaying();
                 this.bot.leaveVoiceChannel(channelID);
                 setTimeout(() => {
