@@ -29,7 +29,7 @@ export class Discord {
 
         this.bot = new Client(
             this.config.discord.botToken,
-            { restMode: true }
+            { restMode: true, intents: ['guilds','guildIntegrations', 'guildMessages', 'guildVoiceStates', 'guildMembers'] }
         );
 
         this._voiceLog = new VoiceLog(core, this, this.bot, this.logger);
