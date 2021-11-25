@@ -257,8 +257,18 @@ export class VoiceLogVoice {
             }
             return;
         } else {
-            await this.join(guildId, channelToCheck.id, true);
-            return channelToCheck.id;
+            let connection = await this.join(guildId, channelToCheck.id, true);
+            for (let i = 0; i < 5; ++i){
+                if (!connection) {
+                    this.logger.warn(`Auto reconnect failed, retrying (${i + 1} / 5)...`);
+                    connection = await this.join(guildId, channelToCheck.id, true);
+                } else {
+                    return channelToCheck.id;
+                }
+            }
+
+            this.logger.error('Auto reconnect fails after 5 tries');
+            return;
         }
     }
 }
