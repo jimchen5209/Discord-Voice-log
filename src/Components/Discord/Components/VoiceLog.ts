@@ -25,7 +25,7 @@ export class VoiceLog {
         this.data = core.data;
         this._voice = new VoiceLogVoice(core, discord, bot, logger);
         this._text = new VoiceLogText(core, discord, bot, logger);
-        this._command = new VoiceLogCommands(this, core, discord, bot);
+        this._command = new VoiceLogCommands(this, core, discord, bot, this.logger);
 
         this.bot.on('voiceChannelJoin', async (member: Member, newChannel: VoiceChannel) => {
             this.queue.add(async () => {

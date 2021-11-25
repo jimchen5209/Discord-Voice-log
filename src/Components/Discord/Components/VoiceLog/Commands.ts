@@ -2,6 +2,7 @@ import waitUntil from 'async-wait-until';
 import { Client } from 'eris';
 import { CommandContext, MessageEmbedOptions } from 'slash-create';
 import { vsprintf } from 'sprintf-js';
+import { Logger } from 'tslog-helper';
 import { Core } from '../../../..';
 import { Config } from '../../../../Core/Config';
 import { Lang } from '../../../../Core/Lang';
@@ -16,13 +17,15 @@ const ERR_MISSING_LANG_DEFAULT = 'Language not exist, will not change your langu
 export class VoiceLogCommands {
     private bot: Client;
     private voiceLog: VoiceLog;
+    private logger: Logger;
     private config: Config;
     private data: ServerConfigManager;
     private lang: Lang;
 
-    constructor(voiceLog: VoiceLog, core: Core, discord: Discord, bot: Client) {
+    constructor(voiceLog: VoiceLog, core: Core, discord: Discord, bot: Client, logger: Logger) {
         this.config = core.config;
         this.data = core.data;
+        this.logger = logger.getChildLogger({ name: 'VoiceLog/Voice' });
         this.lang = discord.lang;
         this.voiceLog = voiceLog;
         this.bot = bot;
@@ -54,7 +57,16 @@ export class VoiceLogCommands {
                 });
             } else {
                 const newVoice = await this.voiceLog.voice.join(guildId, channelID, true, true);
-                await waitUntil(() => newVoice.isReady());
+                try {
+                    await waitUntil(() => newVoice?.isReady());
+                } catch (error) {
+                    this.logger.error('Voice timed out', error);
+                    await context.send({
+                        embeds: [this.genErrorMessage(this.lang.get(data.lang).display.command.timed_out)],
+                        ephemeral: true
+                    });
+                    return;
+                }
                 await context.send({
                     embeds: [this.genSuccessMessage(this.lang.get(data.lang).display.command.join_success)]
                 });

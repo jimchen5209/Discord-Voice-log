@@ -171,7 +171,12 @@ export class DiscordVoice {
                 return;
             }
             this.logger.info(`Playing ${file}`);
-            await waitUntil(() => this.voice && this.voice.ready);
+            try {
+                await waitUntil(() => this.voice && this.voice.ready);
+            } catch (error) {
+                this.logger.error('Voice timed out, trying to reconnect', error);
+                return;
+            }
             this.voice?.once('end', () => res());
             FFmpeg.ffprobe(file, (__, data) => {
                 this.voice?.play(file);

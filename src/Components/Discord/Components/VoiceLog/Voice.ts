@@ -47,7 +47,7 @@ export class VoiceLogVoice {
         return this.audios[guildId];
     }
 
-    public async join(guildId: string, channelId: string, updateDatabase = false, playJoin = false): Promise<DiscordVoice> {
+    public async join(guildId: string, channelId: string, updateDatabase = false, playJoin = false): Promise<DiscordVoice | undefined> {
         if (this.audios[guildId]) {
             if (!this.audios[guildId].isReady() && !this.audios[guildId].init) {
                 this.destroy(guildId);
@@ -67,7 +67,12 @@ export class VoiceLogVoice {
         }
 
         this.audios[guildId] = new DiscordVoice(this.bot, this.voiceLogger, this.plugins, this.ttsHelper, channelId);
-        await waitUntil(() => this.audios[guildId] && this.audios[guildId].isReady());
+        try {
+            await waitUntil(() => this.audios[guildId] && this.audios[guildId].isReady());
+        } catch (error) {
+            this.logger.error('Voice timed out:', error);
+            return;
+        }
         if (updateDatabase) {
             this.data.updateLastVoiceChannel(guildId, '');
             this.data.updateCurrentVoiceChannel(guildId, channelId);

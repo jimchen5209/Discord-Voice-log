@@ -10,7 +10,8 @@
     "not_enough_argument": "Not Enough Argument",
     "join_success": "Connected to voice",
     "leave_success": "Voice disconnected",
-    "bot_not_connected": "Bot is not in a voice channel"
+    "bot_not_connected": "Bot is not in a voice channel",
+    "timed_out": "Voice connection failed: Timed out"
   },
   "config": {
     "exist": "I have already been logging voice state to this channel",
