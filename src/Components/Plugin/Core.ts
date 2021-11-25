@@ -51,7 +51,7 @@ export class PluginManager {
             return true;
         }
 
-        this.logger.error(`Enable ${this.loadedPlugins[className].pluginName} failed: No compatible plugins found`, null);
+        this.logger.error(`Enable ${this.loadedPlugins[className].pluginName} failed: No compatible plugins found`);
         return false;
     }
 
@@ -63,7 +63,7 @@ export class PluginManager {
             return true;
         }
 
-        this.logger.error(`Disable ${this.loadedPlugins[className].pluginName} failed: Plugin is not enabled`, null);
+        this.logger.error(`Disable ${this.loadedPlugins[className].pluginName} failed: Plugin is not enabled`);
         return false;
     }
 

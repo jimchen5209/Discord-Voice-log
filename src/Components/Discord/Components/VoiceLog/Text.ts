@@ -34,7 +34,7 @@ export class VoiceLogText {
     public async setVoiceLog(guildId: string, channelId: string, lang: string | undefined = undefined): Promise<VoiceLogSetStatus> {
         const permissionCheck = ((this.bot.getChannel(channelId)) as TextChannel).permissionsOf(this.bot.user.id);
         if (!permissionCheck.has('sendMessages') || !permissionCheck.has('embedLinks')) {
-            this.logger.error('Not enough permissions to send message', null);
+            this.logger.error('Not enough permissions to send message');
             throw ERR_NO_PERMRSSION;
         }
 
@@ -53,7 +53,7 @@ export class VoiceLogText {
                     case VoiceLogSetStatus.NotChanged:
                         return VoiceLogSetStatus.ChannelSuccess;
                     default:
-                        this.logger.error('Unexpected lang set status', null);
+                        this.logger.error('Unexpected lang set status');
                         throw ERR_UNEXPECTED_LANG_STATUS;
                 }
             }

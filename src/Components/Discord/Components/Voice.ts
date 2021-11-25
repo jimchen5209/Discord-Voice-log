@@ -134,7 +134,7 @@ export class DiscordVoice {
                 this.logger.error(`Error from voice connection ${channelID}: ${err.message}`, err);
             });
             connection.once('ready', () => {
-                this.logger.error('Voice connection reconnected.', null);
+                this.logger.error('Voice connection reconnected.');
                 const channelId = connection.channelID;
                 if (channelId) {
                     if (channelId !== this._channelId) {
