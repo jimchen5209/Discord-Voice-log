@@ -11,7 +11,7 @@
     "join_success": "語音已連線",
     "leave_success": "語音已中斷連線",
     "bot_not_connected": "Bot 沒有在語音頻道內",
-    "timed_out": "語音連線失敗：連線逾時"
+    "error": "語音連線失敗"
   },
   "config": {
     "exist": "我已經正在把語音頻道的狀態記錄到這個頻道啦",

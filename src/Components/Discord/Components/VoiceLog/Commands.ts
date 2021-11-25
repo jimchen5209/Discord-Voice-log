@@ -62,7 +62,7 @@ export class VoiceLogCommands {
                 } catch (error) {
                     this.logger.error('Voice timed out', error);
                     await context.send({
-                        embeds: [this.genErrorMessage(this.lang.get(data.lang).display.command.timed_out)],
+                        embeds: [this.genErrorMessage(this.lang.get(data.lang).display.command.error)],
                         ephemeral: true
                     });
                     return;
