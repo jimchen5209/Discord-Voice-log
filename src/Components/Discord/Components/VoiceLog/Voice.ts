@@ -20,6 +20,7 @@ export class VoiceLogVoice {
     private data: ServerConfigManager;
     private ttsHelper: TTSHelper;
     private plugins: PluginManager;
+    private updateLock = false;
 
     constructor(core: Core, discord: Discord, bot: Client, logger: Logger) {
         this.bot = bot;
@@ -99,6 +100,19 @@ export class VoiceLogVoice {
     }
 
     public async refreshCache(context: CommandContext | undefined) {
+        if (this.updateLock) {
+            await context?.send({
+                embeds: [{
+                    title: 'Operation skipped',
+                    color: 13632027,
+                    description: 'Currently refreshing in progress...'
+                } as MessageEmbedOptions],
+                ephemeral: true
+            });
+
+            return;
+        }
+        this.updateLock = true;
         this.logger.info('Starting cache refresh...');
         const title = '➡️ Refreshing Caches';
         let seekCounter = 0;
@@ -214,6 +228,7 @@ export class VoiceLogVoice {
                 };
                 progressMessage = this.genProgressMessage('✅ Refresh Caches Done', [seekField, progressField, cacheField], true);
                 await context?.editOriginal({ embeds: [progressMessage] });
+                this.updateLock = false;
                 res();
             });
         };
