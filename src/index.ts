@@ -29,16 +29,14 @@ export class Core extends EventEmitter {
         this.database.on('connect', () => this.emit('ready'));
         this.on('ready', async () => {
             try {
-                // tslint:disable-next-line:no-unused-expression
                 new Discord(this);
             } catch (error) {
                 console.error(error);
             }
-            // tslint:disable-next-line:no-unused-expression
+
             this.status.set_status();
         });
     }
 }
 
-// tslint:disable-next-line:no-unused-expression
 new Core();
