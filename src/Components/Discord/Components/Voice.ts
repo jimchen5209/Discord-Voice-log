@@ -76,18 +76,18 @@ export class DiscordVoice {
     }
 
     public async playVoice(member: Member, type: string) {
-        let overwrited = false;
+        let overwritten = false;
 
         for (const voice of this.plugins.voiceOverwrites) {
-            const overwritedFile = await voice.playVoice(member, type);
-            if (overwritedFile) {
-                this.queue.add(() => this.play(overwritedFile));
-                overwrited = true;
+            const overwrittenFile = await voice.playVoice(member, type);
+            if (overwrittenFile) {
+                this.queue.add(() => this.play(overwrittenFile));
+                overwritten = true;
                 return;
             }
         }
 
-        if (overwrited) return;
+        if (overwritten) return;
 
         let voiceFile = '';
         if (fs.existsSync(`assets/${member.id}.json`)) {
