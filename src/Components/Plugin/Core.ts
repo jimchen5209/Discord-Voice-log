@@ -1,4 +1,4 @@
-import { readdirSync } from 'fs';
+import { readdirSync, existsSync } from 'fs';
 import { Logger } from 'tslog-helper';
 import path from 'path';
 import { Core } from '../..';
@@ -22,6 +22,10 @@ export class PluginManager {
 
     public async reloadPluginList() {
         this.logger.info('Loading plugins...');
+        if (!existsSync(`${__dirname}/Plugins/`)) {
+            this.logger.error(`${__dirname}/Plugins/ not found, skipping`);
+            return;
+        }
         const files = readdirSync(`${__dirname}/Plugins/`);
 
         for (const file of files) {
