@@ -7,18 +7,18 @@ export class Lang {
     private lang: { [key: string]: { display: { [key: string]: { [key: string]: string } }, displayName: string } } = {};
     constructor(core: Core) {
         if (!fs.existsSync('./langs')) {
-            core.mainLogger.error('Directory langs/ not found. Try re-pulling source code.', null);
+            core.mainLogger.error('Directory langs/ not found. Try re-pulling source code.');
             process.exit(1);
         }
         if (!fs.existsSync('./langs/list.json')) {
-            core.mainLogger.error('Directory langs/list.json not found. Try re-pulling source code.', null);
+            core.mainLogger.error('Directory langs/list.json not found. Try re-pulling source code.');
             process.exit(1);
         }
         let listRaw: { [key: string]: { file: string, display_name: string } };
         try {
             listRaw = require(resolve('./langs/list.json'));
         } catch (error) {
-            core.mainLogger.error(`Error when loading langs/list.json: ${error}`, null);
+            core.mainLogger.error(`Error when loading langs/list.json: ${error}`);
             process.exit(1);
         }
         for (const key of Object.keys(listRaw)) {
@@ -28,7 +28,7 @@ export class Lang {
                     displayName: listRaw[key].display_name
                 };
             } catch (error) {
-                core.mainLogger.error(`Error when loading ${listRaw[key].file}: ${error}`, null);
+                core.mainLogger.error(`Error when loading ${listRaw[key].file}: ${error}`);
             }
         }
     }

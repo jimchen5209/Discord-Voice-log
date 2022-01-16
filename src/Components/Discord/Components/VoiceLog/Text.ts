@@ -1,5 +1,5 @@
 import { Member, VoiceChannel, MessageContent, Client, TextChannel } from 'eris';
-import { Category } from 'logging-ts';
+import { Logger } from 'tslog-helper';
 import { vsprintf } from 'sprintf-js';
 import { Core } from '../../../..';
 import { Lang } from '../../../../Core/Lang';
@@ -7,7 +7,7 @@ import { ServerConfigManager } from '../../../MongoDB/db/ServerConfig';
 import { Discord } from '../../Core';
 
 const ERR_UNEXPECTED_LANG_STATUS = new Error('Unexpected lang set status');
-const ERR_NO_PERMRSSION = new Error('Not enough permissions to send message');
+const ERR_NO_PERMISSION = new Error('Not enough permissions to send message');
 
 export enum VoiceLogSetStatus {
     AllSuccess,
@@ -20,13 +20,13 @@ export enum VoiceLogSetStatus {
 
 export class VoiceLogText {
     private bot: Client;
-    private logger: Category;
+    private logger: Logger;
     private data: ServerConfigManager;
     private lang: Lang;
 
-    constructor(core: Core, discord: Discord,bot: Client, logger: Category) {
+    constructor(core: Core, discord: Discord, bot: Client, logger: Logger) {
         this.bot = bot;
-        this.logger = new Category('VoiceLog/Text', logger);
+        this.logger = logger.getChildLogger({ name: 'VoiceLog/Text'});
         this.data = core.data;
         this.lang = discord.lang;
     }
@@ -34,8 +34,8 @@ export class VoiceLogText {
     public async setVoiceLog(guildId: string, channelId: string, lang: string | undefined = undefined): Promise<VoiceLogSetStatus> {
         const permissionCheck = ((this.bot.getChannel(channelId)) as TextChannel).permissionsOf(this.bot.user.id);
         if (!permissionCheck.has('sendMessages') || !permissionCheck.has('embedLinks')) {
-            this.logger.error('Not enough permissions to send message', null);
-            throw ERR_NO_PERMRSSION;
+            this.logger.error('Not enough permissions to send message');
+            throw ERR_NO_PERMISSION;
         }
 
         const data = await this.data.getOrCreate(guildId);
@@ -53,7 +53,7 @@ export class VoiceLogText {
                     case VoiceLogSetStatus.NotChanged:
                         return VoiceLogSetStatus.ChannelSuccess;
                     default:
-                        this.logger.error('Unexpected lang set status', null);
+                        this.logger.error('Unexpected lang set status');
                         throw ERR_UNEXPECTED_LANG_STATUS;
                 }
             }

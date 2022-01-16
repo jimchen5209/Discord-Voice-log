@@ -34,10 +34,10 @@ export class LogCommand extends SlashCommand {
 
     async run(ctx: CommandContext) {
         if (ctx.options.set) {
-            this.voiceLog.command.commandsetVlog(ctx);
+            this.voiceLog.command.commandSetVoiceLog(ctx);
         }
         if (ctx.options.unset) {
-            this.voiceLog.command.commandUnsetVlog(ctx);
+            this.voiceLog.command.commandUnsetVoiceLog(ctx);
         }
         if (ctx.options.language) {
             this.voiceLog.command.commandLang(ctx);

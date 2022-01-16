@@ -1,5 +1,5 @@
 import { Client } from 'eris';
-import { Category } from 'logging-ts';
+import { Logger } from 'tslog-helper';
 import { Core } from '../..';
 import { Config } from '../../Core/Config';
 import { Lang } from '../../Core/Lang';
@@ -17,13 +17,13 @@ export class Discord {
     private config: Config;
     private bot: Client;
     private command: Command;
-    private logger: Category;
+    private logger: Logger;
 
     constructor(core: Core) {
         this.config = core.config;
-        this.logger = new Category('Discord', core.mainLogger);
-        this._lang = new Lang(core);
-        this._ttsHelper = new TTSHelper(core);
+        this.logger = core.mainLogger.getChildLogger({ name: 'Discord'});
+        this._lang = core.lang;
+        this._ttsHelper = core.ttsHelper;
 
         if (this.config.discord.botToken === '') throw ERR_MISSING_TOKEN;
 

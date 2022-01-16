@@ -1,5 +1,5 @@
 import { existsSync, readFileSync, writeFileSync } from 'fs';
-import { Category } from 'logging-ts';
+import { Logger } from 'tslog-helper';
 import { Core } from '..';
 
 export class Config {
@@ -8,10 +8,10 @@ export class Config {
     private _googleTTS: { apiKey: string };
     private _mongodb: { host: string, name: string };
     private _debug: boolean;
-    private logger: Category;
+    private logger: Logger;
 
     constructor(core: Core) {
-        this.logger = new Category('Config', core.mainLogger);
+        this.logger = core.mainLogger.getChildLogger({ name: 'Config'});
         this.logger.info('Loading Config...');
 
         const discordDefault = { botToken: '', applicationID: '', publicKey: '', admins: [] };
@@ -25,7 +25,7 @@ export class Config {
 
             if (!config.configVersion || config.configVersion < this.configVersion) versionChanged = true;
             if (config.configVersion > this.configVersion) {
-                this.logger.fatal('This config version is newer than me! Consider upgrading to the latest version or reset your configuration.', null);
+                this.logger.fatal('This config version is newer than me! Consider upgrading to the latest version or reset your configuration.');
                 process.exit(1);
             }
 
@@ -58,7 +58,7 @@ export class Config {
                 process.exit(1);
             }
         } else {
-            this.logger.fatal('Can\'t load config.json: File not found.', null);
+            this.logger.fatal('Can\'t load config.json: File not found.');
             this.logger.info('Generating empty config...');
             this._discord = discordDefault;
             this._googleTTS = googleTTSDefault;

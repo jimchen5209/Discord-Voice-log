@@ -10,7 +10,8 @@
     "not_enough_argument": "參數不足",
     "join_success": "語音已連線",
     "leave_success": "語音已中斷連線",
-    "bot_not_connected": "Bot 沒有在語音頻道內"
+    "bot_not_connected": "Bot 沒有在語音頻道內",
+    "error": "語音連線失敗"
   },
   "config": {
     "exist": "我已經正在把語音頻道的狀態記錄到這個頻道啦",

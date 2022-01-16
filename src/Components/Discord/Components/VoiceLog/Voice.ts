@@ -1,7 +1,7 @@
 import waitUntil from 'async-wait-until';
 import { Client, VoiceChannel } from 'eris';
 import { readdirSync, readFileSync, unlinkSync } from 'fs';
-import { Category } from 'logging-ts';
+import { Logger } from 'tslog-helper';
 import path from 'path';
 import Queue from 'promise-queue';
 import { CommandContext, MessageEmbedOptions } from 'slash-create';
@@ -10,21 +10,24 @@ import { ServerConfigManager } from '../../../MongoDB/db/ServerConfig';
 import { TTSHelper } from '../../../../Core/TTSHelper';
 import { Discord } from '../../Core';
 import { DiscordVoice } from '../Voice';
+import { PluginManager } from '../../../Plugin/Core';
 
 export class VoiceLogVoice {
     private bot: Client;
     private audios: { [key: string]: DiscordVoice } = {};
-    private logger: Category;
-    private voiceLogger: Category;
+    private logger: Logger;
+    private voiceLogger: Logger;
     private data: ServerConfigManager;
     private ttsHelper: TTSHelper;
+    private plugins: PluginManager;
 
-    constructor(core: Core, discord: Discord, bot: Client, logger: Category) {
+    constructor(core: Core, discord: Discord, bot: Client, logger: Logger) {
         this.bot = bot;
-        this.logger = new Category('VoiceLog/Voice', logger);
-        this.voiceLogger = new Category('Discord/Voice', logger);
+        this.logger = logger.getChildLogger({ name: 'VoiceLog/Voice'});
+        this.voiceLogger = logger.getChildLogger({ name: 'Discord/Voice'});
         this.data = core.data;
         this.ttsHelper = discord.ttsHelper;
+        this.plugins = core.plugins;
     }
 
     public getCurrentVoice(guildId: string): DiscordVoice | undefined {
@@ -32,7 +35,7 @@ export class VoiceLogVoice {
         if (!voice) {
             const botVoice = this.bot.voiceConnections.get(guildId);
             if (botVoice && botVoice.ready) {
-                if (botVoice.channelID) this.audios[guildId] = new DiscordVoice(this.bot, this.voiceLogger, this.ttsHelper, botVoice.channelID, botVoice);
+                if (botVoice.channelID) this.audios[guildId] = new DiscordVoice(this.bot, this.voiceLogger, this.plugins, this.ttsHelper, botVoice.channelID, botVoice);
                 return this.audios[guildId];
             }
             return undefined;
@@ -44,7 +47,7 @@ export class VoiceLogVoice {
         return this.audios[guildId];
     }
 
-    public async join(guildId: string, channelId: string, updateDatabase = false, playJoin = false): Promise<DiscordVoice> {
+    public async join(guildId: string, channelId: string, updateDatabase = false, playJoin = false): Promise<DiscordVoice | undefined> {
         if (this.audios[guildId]) {
             if (!this.audios[guildId].isReady() && !this.audios[guildId].init) {
                 this.destroy(guildId);
@@ -63,8 +66,13 @@ export class VoiceLogVoice {
             }
         }
 
-        this.audios[guildId] = new DiscordVoice(this.bot, this.voiceLogger, this.ttsHelper, channelId);
-        await waitUntil(() => this.audios[guildId] && this.audios[guildId].isReady());
+        this.audios[guildId] = new DiscordVoice(this.bot, this.voiceLogger, this.plugins, this.ttsHelper, channelId);
+        try {
+            await waitUntil(() => this.audios[guildId] && this.audios[guildId].isReady());
+        } catch (error) {
+            this.logger.error('Voice timed out:', error);
+            return;
+        }
         if (updateDatabase) {
             this.data.updateLastVoiceChannel(guildId, '');
             this.data.updateCurrentVoiceChannel(guildId, channelId);
@@ -249,8 +257,19 @@ export class VoiceLogVoice {
             }
             return;
         } else {
-            await this.join(guildId, channelToCheck.id, true);
-            return channelToCheck.id;
+            let connection = await this.join(guildId, channelToCheck.id, true);
+            for (let i = 0; i < 5; ++i){
+                if (!connection) {
+                    this.logger.warn(`Auto reconnect failed, retrying (${i + 1} / 5)...`);
+                    await this.destroy(guildId);
+                    connection = await this.join(guildId, channelToCheck.id, true);
+                } else {
+                    return channelToCheck.id;
+                }
+            }
+
+            this.logger.error('Auto reconnect fails after 5 tries');
+            return;
         }
     }
 }

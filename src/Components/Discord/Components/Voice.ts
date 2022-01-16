@@ -2,22 +2,25 @@ import { waitUntil } from 'async-wait-until';
 import { Client, Member, VoiceConnection  } from 'eris';
 import FFmpeg from 'fluent-ffmpeg';
 import fs from 'fs';
-import { Category } from 'logging-ts';
+import { Logger } from 'tslog-helper';
 import Queue from 'promise-queue';
 import { TTSHelper } from '../../../Core/TTSHelper';
+import { PluginManager } from '../../Plugin/Core';
 
 export class DiscordVoice {
     private _init = true;
     private _channelId: string;
     private bot: Client;
     private voice: VoiceConnection | undefined;
-    private logger: Category;
+    private logger: Logger;
     private queue: Queue = new Queue(1, Infinity);
+    private plugins: PluginManager;
     private ttsHelper: TTSHelper;
 
     constructor(
         bot: Client,
-        logger: Category,
+        logger: Logger,
+        plugins: PluginManager,
         ttsHelper: TTSHelper,
         channel: string,
         voice: VoiceConnection | undefined = undefined
@@ -25,6 +28,7 @@ export class DiscordVoice {
         this.bot = bot;
         this.logger = logger;
         this.ttsHelper = ttsHelper;
+        this.plugins = plugins;
 
         this._channelId = channel;
 
@@ -72,6 +76,19 @@ export class DiscordVoice {
     }
 
     public async playVoice(member: Member, type: string) {
+        let overwritten = false;
+
+        for (const voice of this.plugins.voiceOverwrites) {
+            const overwrittenFile = await voice.playVoice(member, type);
+            if (overwrittenFile) {
+                this.queue.add(() => this.play(overwrittenFile));
+                overwritten = true;
+                return;
+            }
+        }
+
+        if (overwritten) return;
+
         let voiceFile = '';
         if (fs.existsSync(`assets/${member.id}.json`)) {
             const tts = JSON.parse(fs.readFileSync(`assets/${member.id}.json`, { encoding: 'utf-8' }));
@@ -117,7 +134,7 @@ export class DiscordVoice {
                 this.logger.error(`Error from voice connection ${channelID}: ${err.message}`, err);
             });
             connection.once('ready', () => {
-                this.logger.error('Voice connection reconnected.', null);
+                this.logger.error('Voice connection reconnected.');
                 const channelId = connection.channelID;
                 if (channelId) {
                     if (channelId !== this._channelId) {
@@ -128,7 +145,7 @@ export class DiscordVoice {
                 }
             });
             connection.once('disconnect', err => {
-                this.logger.error(`Error from voice connection ${channelID}: ${err?.message}`, null);
+                this.logger.error(`Error from voice connection ${channelID}: ${err?.message}`, err);
                 connection.stopPlaying();
                 this.bot.leaveVoiceChannel(channelID);
                 setTimeout(() => {
@@ -154,7 +171,12 @@ export class DiscordVoice {
                 return;
             }
             this.logger.info(`Playing ${file}`);
-            await waitUntil(() => this.voice && this.voice.ready);
+            try {
+                await waitUntil(() => this.voice && this.voice.ready);
+            } catch (error) {
+                this.logger.error('Voice timed out, trying to reconnect', error);
+                return;
+            }
             this.voice?.once('end', () => res());
             FFmpeg.ffprobe(file, (__, data) => {
                 this.voice?.play(file);
