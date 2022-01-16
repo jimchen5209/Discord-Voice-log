@@ -606,8 +606,8 @@ __metadata:
     promise-queue: ^2.2.5
     slash-create: ^4.4.2
     sprintf-js: ^1.1.2
-    status-client: "https://github.com/jimchen5209/StatusClient_JS#2.0.0"
-    tslog-helper: "https://github.com/jimchen5209/Logging-TS#dev"
+    status-client: "jimchen5209/StatusClient_JS#2.0.0"
+    tslog-helper: "jimchen5209/TSLog-Helper#2.1.0"
     typescript: ^4.5.4
   languageName: unknown
   linkType: soft
@@ -1586,7 +1586,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"status-client@https://github.com/jimchen5209/StatusClient_JS#2.0.0":
+"status-client@jimchen5209/StatusClient_JS#2.0.0":
   version: 2.0.0
   resolution: "status-client@https://github.com/jimchen5209/StatusClient_JS.git#commit=07db0dd7fdfa4b87beb8619a10c961fa0f1f5bc2"
   checksum: e778dd63f7679ed9525a0ab4fcd2a305019ce0e12141200a4868fbb86d5e5a2002e000f8994592099d32f253868df8b7a72d42712c06dbe71d32f12a751d12ef
@@ -1657,13 +1657,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tslog-helper@https://github.com/jimchen5209/Logging-TS#dev":
-  version: 1.0.0
-  resolution: "tslog-helper@https://github.com/jimchen5209/Logging-TS.git#commit=326251b7d0358c4c1bdd303fbe537809cd41bb41"
+"tslog-helper@jimchen5209/TSLog-Helper#2.1.0":
+  version: 2.1.0
+  resolution: "tslog-helper@https://github.com/jimchen5209/TSLog-Helper.git#commit=7f03ff1d96672649a4bcd0b78c19af4e3ee21153"
   dependencies:
     dayjs: ^1.10.7
     tslog: ^3.2.2
-  checksum: 48e3743fd34bb5ff37bfbcdeb3c6a7b871a4e9280f282f95a3a290f9dd2d4bc8a574a5029ea69a4939b1731e33f869251f58272671c69174508a0ccd5bebcdc2
+  checksum: bec4fab118f4662a7ea0c39347375b31535bde2b1a966e936e5c1e23ae9268206b58a84fd9c9b5f2acef10f68fad2be2bfc06a44efe58306a153effca94e5236
   languageName: node
   linkType: hard
 
