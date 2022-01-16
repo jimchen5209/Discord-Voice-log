@@ -1,6 +1,6 @@
 {
   "name": "discord_voice_log",
-  "version": "4.1.5",
+  "version": "4.1.6",
   "main": "dist/index.js",
   "repository": {
     "type": "git",
