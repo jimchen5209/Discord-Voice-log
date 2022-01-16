@@ -261,6 +261,7 @@ export class VoiceLogVoice {
             for (let i = 0; i < 5; ++i){
                 if (!connection) {
                     this.logger.warn(`Auto reconnect failed, retrying (${i + 1} / 5)...`);
+                    await this.destroy(guildId);
                     connection = await this.join(guildId, channelToCheck.id, true);
                 } else {
                     return channelToCheck.id;
