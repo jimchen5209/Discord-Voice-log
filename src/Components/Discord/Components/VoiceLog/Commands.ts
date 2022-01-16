@@ -110,7 +110,7 @@ export class VoiceLogCommands {
         }
     }
 
-    public async commandsetVlog(context: CommandContext) {
+    public async commandSetVoiceLog(context: CommandContext) {
         if (!context.guildID || !context.member) return;
         const member = await this.bot.getRESTGuildMember(context.guildID, context.member.id);
         if (!member) return;
@@ -262,7 +262,7 @@ export class VoiceLogCommands {
         }
     }
 
-    public async commandUnsetVlog(context: CommandContext) {
+    public async commandUnsetVoiceLog(context: CommandContext) {
         if (!context.guildID || !context.member) return;
         const member = await this.bot.getRESTGuildMember(context.guildID, context.member.id);
         if (!member) return;
