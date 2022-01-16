@@ -15,13 +15,13 @@ jobs:
       with:
         node-version: 16.x
 
-      - name: Restore cache
-        uses: actions/cache@v2.1.4
-        with:
-          path: |
-            .yarn/cache
-            node_modules
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: ${{ runner.os }}-yarn-
+    - name: Restore cache
+      uses: actions/cache@v2.1.4
+      with:
+        path: |
+          .yarn/cache
+          node_modules
+        key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+        restore-keys: ${{ runner.os }}-yarn-
 
     - run: yarn install
