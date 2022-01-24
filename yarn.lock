@@ -586,7 +586,7 @@ __metadata:
     eslint: ^8.7.0
     fluent-ffmpeg: ^2.1.2
     md5: ^2.3.0
-    mongodb: ^4.3.0
+    mongodb: ^4.3.1
     node-fetch: ^2.6.7
     node-schedule: ^2.1.0
     promise-queue: ^2.2.5
@@ -1227,7 +1227,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"mongodb-connection-string-url@npm:^2.3.2":
+"mongodb-connection-string-url@npm:^2.4.1":
   version: 2.4.1
   resolution: "mongodb-connection-string-url@npm:2.4.1"
   dependencies:
@@ -1237,19 +1237,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"mongodb@npm:^4.3.0":
-  version: 4.3.0
-  resolution: "mongodb@npm:4.3.0"
+"mongodb@npm:^4.3.1":
+  version: 4.3.1
+  resolution: "mongodb@npm:4.3.1"
   dependencies:
     bson: ^4.6.1
     denque: ^2.0.1
-    mongodb-connection-string-url: ^2.3.2
+    mongodb-connection-string-url: ^2.4.1
     saslprep: ^1.0.3
     socks: ^2.6.1
   dependenciesMeta:
     saslprep:
       optional: true
-  checksum: c1772ebf1d78076e998817c9fc49bdcb8f2b006e88ca31fa72e2d8c4cfcc15e0ce5f545e3523e240d2706cf482faaa0443939799c6a0880ec19566fa7cea6fa6
+  checksum: 5684b5481bfbf73e4628b8bad7018cd4436fdb23b9548fb38dece3e079b1716fe870d41070a505d13ae4d86c107315afaf34891ba2b64925eb4fa4cd5bb70300
   languageName: node
   linkType: hard
 
