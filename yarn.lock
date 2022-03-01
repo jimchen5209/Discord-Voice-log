@@ -5,9 +5,9 @@ __metadata:
   version: 5
   cacheKey: 8
 
-"@eslint/eslintrc@npm:^1.1.0":
-  version: 1.1.0
-  resolution: "@eslint/eslintrc@npm:1.1.0"
+"@eslint/eslintrc@npm:^1.2.0":
+  version: 1.2.0
+  resolution: "@eslint/eslintrc@npm:1.2.0"
   dependencies:
     ajv: ^6.12.4
     debug: ^4.3.2
@@ -18,7 +18,7 @@ __metadata:
     js-yaml: ^4.1.0
     minimatch: ^3.0.4
     strip-json-comments: ^3.1.1
-  checksum: 784aa2157e2808b52bbbaf1d1cfca9a6ba0b2faaa3696eb7a1229d4b357400fbd8a6aa09a16e7ae0868ea075d3a8f365cf5928b6d05a1df47f40a1167423a4fa
+  checksum: a5e51dcf02627363567094456d7880b46b6a14a285d7a057f083ca903bdd862483bb6314cbc9fb6fa2d2c4537d50e0d28bd5e39650840241ae4796faaec65d2e
   languageName: node
   linkType: hard
 
@@ -109,14 +109,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:*":
-  version: 16.11.21
-  resolution: "@types/node@npm:16.11.21"
-  checksum: 75b679dc6375cf09bc14a2d1b344be6f3fd8ea50f212b0d60970dc9e175cef45e44c284c716eb9e766ffa52d0c83b689adb3d1911b6dd8649c560b8f77442a22
-  languageName: node
-  linkType: hard
-
-"@types/node@npm:^16.11.25":
+"@types/node@npm:*, @types/node@npm:^16.11.25":
   version: 16.11.25
   resolution: "@types/node@npm:16.11.25"
   checksum: 0b6e25a81364be89256ad1a36341e27b387e646d3186e270108a8bb7b6ecdfdf5ae037aa1c75a5117b8a7509c80093b75431cd5cfcfbc4d553b52e7db2ca272e
@@ -588,7 +581,7 @@ __metadata:
     "@typescript-eslint/parser": ^5.12.1
     async-wait-until: ^2.0.12
     eris: ^0.16.1
-    eslint: ^8.9.0
+    eslint: ^8.10.0
     fluent-ffmpeg: ^2.1.2
     md5: ^2.3.0
     mongodb: ^4.4.0
@@ -673,25 +666,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-visitor-keys@npm:^3.0.0":
-  version: 3.2.0
-  resolution: "eslint-visitor-keys@npm:3.2.0"
-  checksum: fdadbb26f9e6417d3db7ad4f00bb0d573b6031c32fa72e8cdae32d038223faaeddff2ee443c90cb489bf774e75bff765c00912b8f9106d65e4f202ccd78c1b18
-  languageName: node
-  linkType: hard
-
-"eslint-visitor-keys@npm:^3.3.0":
+"eslint-visitor-keys@npm:^3.0.0, eslint-visitor-keys@npm:^3.3.0":
   version: 3.3.0
   resolution: "eslint-visitor-keys@npm:3.3.0"
   checksum: d59e68a7c5a6d0146526b0eec16ce87fbf97fe46b8281e0d41384224375c4e52f5ffb9e16d48f4ea50785cde93f766b0c898e31ab89978d88b0e1720fbfb7808
   languageName: node
   linkType: hard
 
-"eslint@npm:^8.9.0":
-  version: 8.9.0
-  resolution: "eslint@npm:8.9.0"
+"eslint@npm:^8.10.0":
+  version: 8.10.0
+  resolution: "eslint@npm:8.10.0"
   dependencies:
-    "@eslint/eslintrc": ^1.1.0
+    "@eslint/eslintrc": ^1.2.0
     "@humanwhocodes/config-array": ^0.9.2
     ajv: ^6.10.0
     chalk: ^4.0.0
@@ -728,7 +714,7 @@ __metadata:
     v8-compile-cache: ^2.0.3
   bin:
     eslint: bin/eslint.js
-  checksum: 8efecdb9752ee6cb4d2787a14e00cbeab29562ed95dd71c6f3f8ac410426a067d5aa659416d2290e46ca44bc5607e6a6e6c62f814694d8639f80666f522022a7
+  checksum: 8b31ab3de5b48b6828bf13c09c9e62ee0045fa0afa017efaa73eedcf4dc33bc204ee4c467d4677e37967d1645f73816ddef4271422e691fded352040f8f83093
   languageName: node
   linkType: hard
 
