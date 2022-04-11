@@ -18,8 +18,8 @@ export class PlayTime_mmis1000 implements IVoiceOverwrite{
             const nowTime = new Date();
             if (nowTime.getHours() >=0 && nowTime.getHours() < 18) return;
             const nineOClock = new Date(nowTime.getFullYear(), nowTime.getMonth(), nowTime.getDate(), 21, 0, 0);
-            const time = Math.round((nowTime.getTime() - nineOClock.getTime()) / 60000);
-            const text = `9 點 ${time} 分到了`;
+            const time = (nowTime.getTime() - nineOClock.getTime()) / 60000;
+            const text = `9 點 ${(time > 0)? Math.floor(time) : Math.ceil(time)} 分到了`;
             const lang = 'zh_tw';
 
             const file = await this.ttsHelper.getTTSFile(text, lang);
