@@ -17,7 +17,7 @@ export class PlayTime_mmis1000 implements IVoiceOverwrite{
         if (member.id === '275570140794322946' && (type === 'switched_in' || type === 'join')) {
             const nowTime = new Date();
             if (nowTime.getHours() >=2 && nowTime.getHours() < 18) return;
-            const nineOClock = new Date(nowTime.getFullYear(), nowTime.getMonth(), nowTime.getDate(), 11, 0, 0);
+            const nineOClock = new Date(nowTime.getFullYear(), nowTime.getMonth(), nowTime.getDate(), 23, 0, 0);
             const time = (nowTime.getTime() - nineOClock.getTime()) / 60000;
             const timeInt = Math.floor(time);
 
