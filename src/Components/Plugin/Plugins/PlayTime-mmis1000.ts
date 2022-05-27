@@ -54,12 +54,12 @@ export class PlayTime_mmis1000 implements IVoiceOverwrite{
         }
 
         if (parseNumber >= 10) {
-            text += (splittedText[1] != '1') ? `${this.digitToString(splittedText[1])}十` : '十';
+            text += (splittedText[1] != '1' || parseNumber >= 100) ? `${this.digitToString(splittedText[1])}十` : '十';
             text += (splittedText[0] != '0') ? `${this.digitToString(splittedText[0])}` : '';
         } else if (parseNumber == 0) {
             text += '零';
         } else {
-            text += `${(addZero ? '零' : '')}${this.digitToString(splittedText[0])}`;
+            text += `${((addZero && number > 0) ? '零' : '')}${this.digitToString(splittedText[0])}`;
         }
         
         return text;
