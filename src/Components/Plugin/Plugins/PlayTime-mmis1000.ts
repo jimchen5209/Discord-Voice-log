@@ -59,7 +59,7 @@ export class PlayTime_mmis1000 implements IVoiceOverwrite{
         } else if (parseNumber == 0) {
             text += '零';
         } else {
-            text += `${((addZero && number > 0) ? '零' : '')}${this.digitToString(splittedText[0])}`;
+            text += `${(((addZero && number > 0) || parseNumber >= 100) ? '零' : '')}${this.digitToString(splittedText[0])}`;
         }
         
         return text;
