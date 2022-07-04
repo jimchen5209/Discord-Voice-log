@@ -23,7 +23,7 @@
     "node-fetch": "^2.6.7",
     "node-schedule": "^2.1.0",
     "promise-queue": "^2.2.5",
-    "slash-create": "^5.4.1",
+    "slash-create": "^5.7.0",
     "sprintf-js": "^1.1.2",
     "status-client": "jimchen5209/StatusClient_JS#2.0.0",
     "tslog-helper": "jimchen5209/TSLog-Helper#2.1.0"
