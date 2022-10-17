@@ -595,7 +595,7 @@ __metadata:
     node-fetch: ^2.6.7
     node-schedule: ^2.1.0
     promise-queue: ^2.2.5
-    slash-create: ^5.4.1
+    slash-create: ^5.10.0
     sprintf-js: ^1.1.2
     status-client: "jimchen5209/StatusClient_JS#2.0.0"
     tslog-helper: "jimchen5209/TSLog-Helper#2.1.0"
@@ -1469,22 +1469,22 @@ __metadata:
   languageName: node
   linkType: hard
 
-"slash-create@npm:^5.4.1":
-  version: 5.4.1
-  resolution: "slash-create@npm:5.4.1"
+"slash-create@npm:^5.10.0":
+  version: 5.10.0
+  resolution: "slash-create@npm:5.10.0"
   dependencies:
     eventemitter3: ^4.0.7
     lodash.isequal: ^4.5.0
     tweetnacl: ^1.0.3
   peerDependencies:
-    express: ^4.17.1
-    fastify: ^3.9.1
+    express: ^4
+    fastify: ^3 || ^4
   peerDependenciesMeta:
     express:
       optional: true
     fastify:
       optional: true
-  checksum: 3de8fc57c7450921a3d3f47f192441ce14d0bb0292f325d35e79d550736dc83e651b6125129dbed9d35ec43779ff73a50e64c499b93125d3cb7b35a7057c5cf4
+  checksum: 24057f8f136ea1d87ebbbc58ee7a2a7f3d946d40456b6b3807f264120532d356f50bd3df2e7738306011e16f04c84eadea35a7810b99d1f8443363b68b4d6294
   languageName: node
   linkType: hard
 
