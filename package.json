@@ -11,7 +11,8 @@
   "scripts": {
     "lint": "tslint --project . --fix",
     "build": "tsc --pretty",
-    "build:prod": "tsc --pretty --sourceMap false"
+    "build:prod": "tsc --pretty --sourceMap false",
+    "postinstall": "patch-package"
   },
   "keywords": [],
   "dependencies": {
@@ -22,6 +23,8 @@
     "mongodb": "^5.1.0",
     "node-fetch": "^2.6.9",
     "node-schedule": "^2.1.1",
+    "patch-package": "^6.5.1",
+    "postinstall-postinstall": "^2.1.0",
     "promise-queue": "^2.2.5",
     "slash-create": "^5.11.0",
     "sprintf-js": "^1.1.2",
