@@ -17,7 +17,7 @@
   "keywords": [],
   "dependencies": {
     "async-wait-until": "^2.0.12",
-    "eris": "^0.17.1",
+    "eris": "^0.17.2",
     "fluent-ffmpeg": "^2.1.2",
     "md5": "^2.3.0",
     "mongodb": "^5.1.0",

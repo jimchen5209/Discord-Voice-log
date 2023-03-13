@@ -612,7 +612,7 @@ __metadata:
     "@typescript-eslint/eslint-plugin": ^5.54.0
     "@typescript-eslint/parser": ^5.54.0
     async-wait-until: ^2.0.12
-    eris: ^0.17.1
+    eris: ^0.17.2
     eslint: ^8.35.0
     fluent-ffmpeg: ^2.1.2
     md5: ^2.3.0
@@ -639,9 +639,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eris@npm:^0.17.1":
-  version: 0.17.1
-  resolution: "eris@npm:0.17.1"
+"eris@npm:^0.17.2":
+  version: 0.17.2
+  resolution: "eris@npm:0.17.2"
   dependencies:
     opusscript: ^0.0.8
     tweetnacl: ^1.0.3
@@ -651,7 +651,7 @@ __metadata:
       optional: true
     tweetnacl:
       optional: true
-  checksum: 1ec654a2e3c2e0b3957c5fd21648622a101c1d7f829d23825bb27c04b72790659f651fb7d702d9cdaa3bd721378cb4f197cf7dfb39401a16719d2af56dd9639b
+  checksum: 0af9ea9284fb3f63a34aeafb13d3de5402752c115fe8dcaa56d512e25aa959b90bd4dcedeedabaa87b13eef5535ef9097b4d278cfad05d698943371ac15438e3
   languageName: node
   linkType: hard
 
