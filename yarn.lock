@@ -148,10 +148,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:^18.15.3":
-  version: 18.15.3
-  resolution: "@types/node@npm:18.15.3"
-  checksum: 31b1d92475a82c30de29aa6c0771b18a276552d191283b4423ba2d61b3f01159bf0d02576c0b7cc834b043997893800db6bb47f246083ed85aa45e79c80875d7
+"@types/node@npm:^20.1.0":
+  version: 20.1.0
+  resolution: "@types/node@npm:20.1.0"
+  checksum: c6d9afa9aa78b4b4348c69ece94975be70346b144c278f1395694a10ef919d7db300018101b6f9245e6bdd76674a5327d2d14829092f3d5295e858cff5f22a66
   languageName: node
   linkType: hard
 
@@ -621,7 +621,7 @@ __metadata:
   dependencies:
     "@types/fluent-ffmpeg": ^2.1.21
     "@types/md5": ^2.3.2
-    "@types/node": ^18.15.3
+    "@types/node": ^20.1.0
     "@types/node-fetch": ^2.6.2
     "@types/node-schedule": ^2.1.0
     "@types/promise-queue": ^2.2.0
