@@ -1,6 +1,5 @@
 import { waitUntil } from 'async-wait-until';
-import { Client, Member, VoiceConnection  } from 'eris';
-import FFmpeg from 'fluent-ffmpeg';
+import { Client, Member, VoiceConnection } from 'eris';
 import fs from 'fs';
 import { Logger } from 'tslog-helper';
 import Queue from 'promise-queue';
@@ -178,14 +177,7 @@ export class DiscordVoice {
                 return;
             }
             this.voice?.once('end', () => res());
-            FFmpeg.ffprobe(file, (__, data) => {
-                this.voice?.play(file);
-                const time = data.format.duration || 0;
-                setTimeout(() => {
-                    this.voice?.stopPlaying();
-                    res();
-                }, time * 1200);
-            });
+            this.voice?.play(file, { format: 'ogg' });
         });
     }
 }
