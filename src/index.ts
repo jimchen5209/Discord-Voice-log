@@ -23,6 +23,9 @@ export class Core extends EventEmitter {
         super();
         this.mainLogger.info('Starting...');
 
+        if (this.config.debug)
+            this.mainLogger.setSettings({ minLevel: 'silly' });
+
         this.emit('init', this);
 
         // Wait DB connect
