@@ -89,10 +89,12 @@ export class DiscordVoice {
         if (overwritten) return;
 
         let voiceFile = '';
+        let isOgg = false;
         if (fs.existsSync(`assets/${member.id}.json`)) {
             const tts = JSON.parse(fs.readFileSync(`assets/${member.id}.json`, { encoding: 'utf-8' }));
             if (tts.use_wave_tts && tts.lang && tts.voice && tts[type]) {
                 voiceFile = await this.ttsHelper.getWaveTTS(tts[type], tts.lang, tts.voice);
+                isOgg = true;
             } else if (tts.lang && tts[type]) {
                 const file = await this.ttsHelper.getTTSFile(tts[type], tts.lang);
                 if (file !== null) {
@@ -106,7 +108,7 @@ export class DiscordVoice {
         } else if (fs.existsSync(`assets/${member.id}_${type}.wav`)) {
             voiceFile = `assets/${member.id}_${type}.wav`;
         }
-        if (voiceFile !== '') this.queue.add(() => this.play(voiceFile));
+        if (voiceFile !== '') this.queue.add(() => this.play(voiceFile, isOgg));
     }
 
     public isReady(): boolean {
@@ -132,6 +134,7 @@ export class DiscordVoice {
             connection.on('error', err => {
                 this.logger.error(`Error from voice connection ${channelID}: ${err.message}`, err);
             });
+            connection.on('debug', (message) => this.logger.debug(message));
             connection.once('ready', () => {
                 this.logger.error('Voice connection reconnected.');
                 const channelId = connection.channelID;
@@ -162,7 +165,7 @@ export class DiscordVoice {
         return;
     }
 
-    private play(file: string) {
+    private play(file: string, isOgg = false) {
         // eslint-disable-next-line no-async-promise-executor
         return new Promise<void>(async (res) => {
             if (file === '') {
@@ -177,7 +180,10 @@ export class DiscordVoice {
                 return;
             }
             this.voice?.once('end', () => res());
-            this.voice?.play(file, { format: 'ogg' });
+            if (isOgg)
+                this.voice?.play(file, { format: 'ogg' });
+            else
+                this.voice?.play(file);
         });
     }
 }
