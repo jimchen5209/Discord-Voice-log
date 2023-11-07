@@ -22,7 +22,7 @@
     "fluent-ffmpeg": "^2.1.2",
     "md5": "^2.3.0",
     "mongodb": "^5.9.1",
-    "mpg123-decoder": "^0.4.8",
+    "mpg123-decoder": "^0.4.10",
     "node-fetch": "^2.7.0",
     "node-schedule": "^2.1.1",
     "patch-package": "^6.5.1",

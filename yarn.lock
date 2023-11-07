@@ -691,12 +691,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@wasm-audio-decoders/common@npm:9.0.1":
-  version: 9.0.1
-  resolution: "@wasm-audio-decoders/common@npm:9.0.1"
+"@wasm-audio-decoders/common@npm:9.0.2":
+  version: 9.0.2
+  resolution: "@wasm-audio-decoders/common@npm:9.0.2"
   dependencies:
     "@eshaz/web-worker": 1.2.1
-  checksum: 69cdd2e422f2792c21ca836ead308f7f7c778a3451d741aa3aba7c07f721995c3b870c7d25deec6559a4ce0d8d372b2688e5ec3a0b0193e8cd0149564704172f
+  checksum: 87624bd887bc2999a169a5f1f23570aa7f4bdd523f72574b3cabc96f6604688508131621ef799d50b08459c0dcc1f10b34c9155ddb53bf42ae9992e91ef1562c
   languageName: node
   linkType: hard
 
@@ -1077,7 +1077,7 @@ __metadata:
     fluent-ffmpeg: ^2.1.2
     md5: ^2.3.0
     mongodb: ^5.9.1
-    mpg123-decoder: ^0.4.8
+    mpg123-decoder: ^0.4.10
     node-fetch: ^2.7.0
     node-schedule: ^2.1.1
     patch-package: ^6.5.1
@@ -1921,12 +1921,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"mpg123-decoder@npm:^0.4.8":
-  version: 0.4.8
-  resolution: "mpg123-decoder@npm:0.4.8"
+"mpg123-decoder@npm:^0.4.10":
+  version: 0.4.10
+  resolution: "mpg123-decoder@npm:0.4.10"
   dependencies:
-    "@wasm-audio-decoders/common": 9.0.1
-  checksum: 66d02e91d8b68c2f66ef3740f7288d08f0cdbfed466b9966ad0f3374a6054b2e5b1c2481b3e872e16aa09cfe822859ff1d64d7bdd74347138a2105508953c771
+    "@wasm-audio-decoders/common": 9.0.2
+  checksum: a64aa3444a9c98d18571f8cfb4e4bebc9ea47ace51e2f65a5d1b153a103dc9e75d138c739226d800efab997dbe816c3c23661c890944c2684753e258dec5f417
   languageName: node
   linkType: hard
 
