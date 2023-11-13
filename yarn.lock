@@ -476,10 +476,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"bson@npm:^5.5.0":
-  version: 5.5.1
-  resolution: "bson@npm:5.5.1"
-  checksum: f49730504e8362e2c8d1eb0c272e5e125392c41fb7196fc35ccbc39718ee62569a1d197bd2342c3334cd420073d3fd5dc7dea764a7f219dcd79e0ce473dd2772
+"bson@npm:^6.2.0":
+  version: 6.2.0
+  resolution: "bson@npm:6.2.0"
+  checksum: 950fccd2abd0ff5a1bd3637f4697631298f1538314994ab8c9e13f1c9851d0fd042b54fe8340e00151c2acee43917ea40e64b800ceeea811b00f2de3e900c77e
   languageName: node
   linkType: hard
 
@@ -666,7 +666,7 @@ __metadata:
     eslint: ^8.53.0
     fluent-ffmpeg: ^2.1.2
     md5: ^2.3.0
-    mongodb: ^5.9.1
+    mongodb: ^6.2.0
     node-fetch: ^2.7.0
     node-schedule: ^2.1.1
     patch-package: ^6.5.1
@@ -1112,13 +1112,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ip@npm:^2.0.0":
-  version: 2.0.0
-  resolution: "ip@npm:2.0.0"
-  checksum: cfcfac6b873b701996d71ec82a7dd27ba92450afdb421e356f44044ed688df04567344c36cbacea7d01b1c39a4c732dc012570ebe9bebfb06f27314bca625349
-  languageName: node
-  linkType: hard
-
 "is-buffer@npm:~1.1.6":
   version: 1.1.6
   resolution: "is-buffer@npm:1.1.6"
@@ -1391,27 +1384,27 @@ __metadata:
   languageName: node
   linkType: hard
 
-"mongodb@npm:^5.9.1":
-  version: 5.9.1
-  resolution: "mongodb@npm:5.9.1"
+"mongodb@npm:^6.2.0":
+  version: 6.2.0
+  resolution: "mongodb@npm:6.2.0"
   dependencies:
     "@mongodb-js/saslprep": ^1.1.0
-    bson: ^5.5.0
+    bson: ^6.2.0
     mongodb-connection-string-url: ^2.6.0
-    socks: ^2.7.1
   peerDependencies:
     "@aws-sdk/credential-providers": ^3.188.0
-    "@mongodb-js/zstd": ^1.0.0
-    kerberos: ^1.0.0 || ^2.0.0
-    mongodb-client-encryption: ">=2.3.0 <3"
+    "@mongodb-js/zstd": ^1.1.0
+    gcp-metadata: ^5.2.0
+    kerberos: ^2.0.1
+    mongodb-client-encryption: ">=6.0.0 <7"
     snappy: ^7.2.2
-  dependenciesMeta:
-    "@mongodb-js/saslprep":
-      optional: true
+    socks: ^2.7.1
   peerDependenciesMeta:
     "@aws-sdk/credential-providers":
       optional: true
     "@mongodb-js/zstd":
+      optional: true
+    gcp-metadata:
       optional: true
     kerberos:
       optional: true
@@ -1419,7 +1412,9 @@ __metadata:
       optional: true
     snappy:
       optional: true
-  checksum: a827937120cd7eecafc0ad5657b40536774f0b09582a9363db0a192149ba20eae80a33fccf573f5ce69a20aca6759c40b4961d9d1d4de2a350c543030055e0f6
+    socks:
+      optional: true
+  checksum: dca058e497e4d70f84509b863db33a1126f182757bc389893b31086c49ff429257e62de06f7099aba8cef8790a497f50c98fdcead6e66c451c057ed1453b2049
   languageName: node
   linkType: hard
 
@@ -1785,23 +1780,6 @@ __metadata:
   version: 3.0.0
   resolution: "slash@npm:3.0.0"
   checksum: 94a93fff615f25a999ad4b83c9d5e257a7280c90a32a7cb8b4a87996e4babf322e469c42b7f649fd5796edd8687652f3fb452a86dc97a816f01113183393f11c
-  languageName: node
-  linkType: hard
-
-"smart-buffer@npm:^4.2.0":
-  version: 4.2.0
-  resolution: "smart-buffer@npm:4.2.0"
-  checksum: b5167a7142c1da704c0e3af85c402002b597081dd9575031a90b4f229ca5678e9a36e8a374f1814c8156a725d17008ae3bde63b92f9cfd132526379e580bec8b
-  languageName: node
-  linkType: hard
-
-"socks@npm:^2.7.1":
-  version: 2.7.1
-  resolution: "socks@npm:2.7.1"
-  dependencies:
-    ip: ^2.0.0
-    smart-buffer: ^4.2.0
-  checksum: 259d9e3e8e1c9809a7f5c32238c3d4d2a36b39b83851d0f573bfde5f21c4b1288417ce1af06af1452569cd1eb0841169afd4998f0e04ba04656f6b7f0e46d748
   languageName: node
   linkType: hard
 
