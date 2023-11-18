@@ -17,23 +17,25 @@ export class ServerConfigManager {
     // private cache: { [key: string]: IServerConfig } = {};
 
     constructor(core: Core) {
-        core.on('ready', async () => {
-            if (!core.database.client) throw Error('Database client not init');
-            this.database = core.database.client.collection('serverConfig');
-            this.database.createIndex({ serverID: 1 });
-            if (existsSync('./vlogdata.json')) {
-                core.mainLogger.info('Old data found. Migrating to db...');
-                const dataRaw = JSON.parse(readFileSync('./vlogdata.json', { encoding: 'utf-8' }));
-                for (const key of Object.keys(dataRaw)) {
-                    if (dataRaw[key] === undefined) continue;
-                    await this.create(key, dataRaw[key].channel, dataRaw[key].lang, dataRaw[key].lastVoiceChannel);
-                }
-                renameSync('./vlogdata.json', './vlogdata.json.bak');
-            }
+        core.on('ready', () => {this.init(core).catch(core.mainLogger.error);});
+    }
 
-            // Add field admin to old lists
-            this.database.updateMany({ currentVoiceChannel: { $exists: false } }, { $set: { currentVoiceChannel: '' } });
-        });
+    private async init(core: Core) {
+        if (!core.database.client) throw Error('Database client not init');
+        this.database = core.database.client.collection('serverConfig');
+        this.database.createIndex({ serverID: 1 });
+        if (existsSync('./vlogdata.json')) {
+            core.mainLogger.info('Old data found. Migrating to db...');
+            const dataRaw = JSON.parse(readFileSync('./vlogdata.json', { encoding: 'utf-8' }));
+            for (const key of Object.keys(dataRaw)) {
+                if (dataRaw[key] === undefined) continue;
+                await this.create(key, dataRaw[key].channel, dataRaw[key].lang, dataRaw[key].lastVoiceChannel);
+            }
+            renameSync('./vlogdata.json', './vlogdata.json.bak');
+        }
+
+        // Add field admin to old lists
+        this.database.updateMany({ currentVoiceChannel: { $exists: false } }, { $set: { currentVoiceChannel: '' } });
     }
 
     public async create(serverID: string, channelID = '', lang = 'en_US', lastVoiceChannel = '', currentVoiceChannel = '') {
@@ -77,7 +79,7 @@ export class ServerConfigManager {
             { serverID },
             { $set: { channelID } },
             { returnDocument: ReturnDocument.AFTER }
-        )).value;
+        ));
     }
 
     public async updateLang(serverID: string, lang: string) {
@@ -87,7 +89,7 @@ export class ServerConfigManager {
             { serverID },
             { $set: { lang } },
             { returnDocument: ReturnDocument.AFTER }
-        )).value;
+        ));
     }
 
     public async updateLastVoiceChannel(serverID: string, lastVoiceChannel: string) {
@@ -97,7 +99,7 @@ export class ServerConfigManager {
             { serverID },
             { $set: { lastVoiceChannel } },
             { returnDocument: ReturnDocument.AFTER }
-        )).value;
+        ));
     }
 
     public async updateCurrentVoiceChannel(serverID: string, currentVoiceChannel: string) {
@@ -107,6 +109,6 @@ export class ServerConfigManager {
             { serverID },
             { $set: { currentVoiceChannel } },
             { returnDocument: ReturnDocument.AFTER }
-        )).value;
+        ));
     }
 }
