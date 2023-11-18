@@ -19,7 +19,7 @@
     "eris": "^0.17.2",
     "fluent-ffmpeg": "^2.1.2",
     "md5": "^2.3.0",
-    "mongodb": "^5.9.1",
+    "mongodb": "^6.3.0",
     "node-fetch": "^2.7.0",
     "node-schedule": "^2.1.1",
     "promise-queue": "^2.2.5",
