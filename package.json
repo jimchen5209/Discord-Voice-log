@@ -11,8 +11,7 @@
   "scripts": {
     "lint": "tslint --project . --fix",
     "build": "tsc --pretty",
-    "build:prod": "tsc --pretty --sourceMap false",
-    "postinstall": "patch-package"
+    "build:prod": "tsc --pretty --sourceMap false"
   },
   "keywords": [],
   "dependencies": {
@@ -23,8 +22,6 @@
     "mongodb": "^5.9.1",
     "node-fetch": "^2.7.0",
     "node-schedule": "^2.1.1",
-    "patch-package": "^6.5.1",
-    "postinstall-postinstall": "^2.1.0",
     "promise-queue": "^2.2.5",
     "slash-create": "^5.14.0",
     "sprintf-js": "^1.1.3",
@@ -45,5 +42,8 @@
     "eslint": "^8.53.0",
     "typescript": "^4.9.5"
   },
-  "packageManager": "yarn@3.1.1"
+  "packageManager": "yarn@3.1.1",
+  "resolutions": {
+    "eris@^0.17.2": "patch:eris@npm%3A0.17.2#./.yarn/patches/eris-npm-0.17.2-40f32b9a18.patch"
+  }
 }
