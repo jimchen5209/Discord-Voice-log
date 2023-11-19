@@ -9,6 +9,7 @@ export const ERR_INSERT_FAILURE = Error('Data insert failed.');
 // tslint:disable-next-line:interface-name
 export declare interface MongoDB {
     on(event: 'connect', listen: (database: Db) => void): this;
+    on(event: 'error', listen: (error: Error) => void): this;
 }
 
 export class MongoDB extends EventEmitter {
@@ -18,18 +19,36 @@ export class MongoDB extends EventEmitter {
     constructor(core: Core) {
         super();
 
-        this.logger = core.mainLogger.getChildLogger({ name: 'MongoDB'});
+        this.logger = core.mainLogger.getChildLogger({ name: 'MongoDB' });
         this.logger.info('Loading MongoDB...');
 
         const config = core.config.mongodb;
 
-        MongoClient.connect(config.host).then(client => {
-            this.logger.info('Successfully connected to mongoDB');
+        let connectTryCount = 0;
+        const maxConnectTryCount = 5;
+        const tryConnect = () => {
+            this.logger.info(`Trying to connect to mongoDB...`);
+            MongoClient.connect(config.host)
+                .then(client => {
+                    this.logger.info('Successfully connected to mongoDB');
 
-            this._client = client.db(config.name);
+                    this._client = client.db(config.name);
 
-            this.emit('connect', this._client);
-        });
+                    this.emit('connect', this._client);
+                })
+                .catch((reason) => {
+                    this.logger.error(`Failed to connect to mongoDB: ${reason}`);
+                    connectTryCount++;
+                    if (connectTryCount > maxConnectTryCount) {
+                        this.logger.error('Unable to connect to mongoDB.');
+                        this.emit('error', reason);
+                    }
+                    this.logger.warn(`Retrying to in 5 seconds... (try ${connectTryCount} / ${maxConnectTryCount} )`);
+                    setTimeout(tryConnect, 5 * 1000);
+                });
+        }
+
+        tryConnect();
     }
 
     public get client() {
