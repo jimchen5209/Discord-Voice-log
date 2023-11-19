@@ -30,6 +30,10 @@ export class Core extends EventEmitter {
 
         // Wait DB connect
         this.database.on('connect', () => this.emit('ready'));
+        this.database.on('error', () => {
+            this.mainLogger.error('Unable to connect to database. Quitting...');
+            process.exit(1);
+        });
         this.on('ready', async () => {
             try {
                 new Discord(this);
