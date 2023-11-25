@@ -8,7 +8,7 @@ jobs:
 
     steps:
     - name: Check out code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
 
     - name: Use Node.js 20.x
       uses: actions/setup-node@v4
@@ -16,13 +16,13 @@ jobs:
         node-version: '20'
         # cache: 'yarn'
 
-    - name: Cache NPM dependencies
-      uses: actions/cache@v2
+    - name: Cache dependencies
+      uses: actions/cache@v3
       with:
-        path: node_modules
-        key: ${{ runner.OS }}-npm-cache
-        restore-keys: |
-          ${{ runner.OS }}-npm-cache
+        path: |
+          node_modules
+        key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+        restore-keys: ${{ runner.os }}-yarn-
 
     - name: Use corepack
       run: corepack enable
