@@ -1,6 +1,5 @@
 import { waitUntil } from 'async-wait-until';
-import { Client, Member, VoiceConnection  } from 'eris';
-import FFmpeg from 'fluent-ffmpeg';
+import { Client, Member, VoiceConnection } from 'eris';
 import fs from 'fs';
 import { Logger } from 'tslog-helper';
 import Queue from 'promise-queue';
@@ -67,12 +66,12 @@ export class DiscordVoice {
 
     public async playReady() {
         const voiceFile = await this.ttsHelper.getWaveTTS('VoiceLog is ready.', 'en-US', 'en-US-Wavenet-D');
-        if (voiceFile !== null) this.queue.add(() => this.play(voiceFile));
+        if (voiceFile !== null) this.queue.add(() => this.play(voiceFile, 'ogg'));
     }
 
     public async playMoved() {
         const voiceFile = await this.ttsHelper.getWaveTTS('VoiceLog is moved to your channel.', 'en-US', 'en-US-Wavenet-D');
-        if (voiceFile !== null) this.queue.add(() => this.play(voiceFile));
+        if (voiceFile !== null) this.queue.add(() => this.play(voiceFile, 'ogg'));
     }
 
     public async playVoice(member: Member, type: string) {
@@ -81,23 +80,26 @@ export class DiscordVoice {
         for (const voice of this.plugins.voiceOverwrites) {
             const overwrittenFile = await voice.playVoice(member, type);
             if (overwrittenFile) {
-                this.queue.add(() => this.play(overwrittenFile));
+                this.queue.add(() => this.play(overwrittenFile, 'pcm'));
                 overwritten = true;
-                return;
+                break;
             }
         }
 
         if (overwritten) return;
 
         let voiceFile = '';
+        let format: string| undefined;
         if (fs.existsSync(`assets/${member.id}.json`)) {
             const tts = JSON.parse(fs.readFileSync(`assets/${member.id}.json`, { encoding: 'utf-8' }));
             if (tts.use_wave_tts && tts.lang && tts.voice && tts[type]) {
                 voiceFile = await this.ttsHelper.getWaveTTS(tts[type], tts.lang, tts.voice);
+                format = 'ogg';
             } else if (tts.lang && tts[type]) {
                 const file = await this.ttsHelper.getTTSFile(tts[type], tts.lang);
                 if (file !== null) {
                     voiceFile = file;
+                    format = 'pcm';
                 } else if (fs.existsSync(`assets/${member.id}_${type}.wav`)) {
                     voiceFile = `assets/${member.id}_${type}.wav`;
                 }
@@ -107,7 +109,7 @@ export class DiscordVoice {
         } else if (fs.existsSync(`assets/${member.id}_${type}.wav`)) {
             voiceFile = `assets/${member.id}_${type}.wav`;
         }
-        if (voiceFile !== '') this.queue.add(() => this.play(voiceFile));
+        if (voiceFile !== '') this.queue.add(() => this.play(voiceFile, format));
     }
 
     public isReady(): boolean {
@@ -133,6 +135,7 @@ export class DiscordVoice {
             connection.on('error', err => {
                 this.logger.error(`Error from voice connection ${channelID}: ${err.message}`, err);
             });
+            connection.on('debug', (message) => this.logger.debug(message));
             connection.once('ready', () => {
                 this.logger.error('Voice connection reconnected.');
                 const channelId = connection.channelID;
@@ -163,7 +166,7 @@ export class DiscordVoice {
         return;
     }
 
-    private play(file: string) {
+    private play(file: string, format: string | undefined = undefined) {
         // eslint-disable-next-line no-async-promise-executor
         return new Promise<void>(async (res) => {
             if (file === '') {
@@ -178,14 +181,7 @@ export class DiscordVoice {
                 return;
             }
             this.voice?.once('end', () => res());
-            FFmpeg.ffprobe(file, (__, data) => {
-                this.voice?.play(file);
-                const time = data.format.duration || 0;
-                setTimeout(() => {
-                    this.voice?.stopPlaying();
-                    res();
-                }, time * 1200);
-            });
+            this.voice?.play(file, { format, inlineVolume: true });
         });
     }
 }
