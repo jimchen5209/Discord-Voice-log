@@ -20,7 +20,7 @@
     "fix-esm": "^1.0.1",
     "md5": "^2.3.0",
     "mongodb": "^6.3.0",
-    "mpg123-decoder": "0.4.10",
+    "mpg123-decoder": "^0.4.11",
     "node-fetch": "^2.7.0",
     "node-schedule": "^2.1.1",
     "promise-queue": "^2.2.5",
