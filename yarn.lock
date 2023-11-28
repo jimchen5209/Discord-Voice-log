@@ -290,10 +290,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@eshaz/web-worker@npm:1.2.1":
-  version: 1.2.1
-  resolution: "@eshaz/web-worker@npm:1.2.1"
-  checksum: 0813dbf74c48e1abe6655321ebb83a8e660fc2a4152b0ff8b3b6cd4ab86e5c4f00223305e17239986d4071efeb810cb3e0e16fd8f8a9793c89de76c3dfdcf1fe
+"@eshaz/web-worker@npm:1.2.2":
+  version: 1.2.2
+  resolution: "@eshaz/web-worker@npm:1.2.2"
+  checksum: 4f1ad8287587d294af3c9dabfa88f7ffea54b958cf89ee50d928406436f10b7c4d733bf47e6566a57988c24f3773144fc1ba540dc4a7dd8031e6abb85ba76ba2
   languageName: node
   linkType: hard
 
@@ -666,12 +666,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@wasm-audio-decoders/common@npm:9.0.2":
-  version: 9.0.2
-  resolution: "@wasm-audio-decoders/common@npm:9.0.2"
+"@wasm-audio-decoders/common@npm:9.0.3":
+  version: 9.0.3
+  resolution: "@wasm-audio-decoders/common@npm:9.0.3"
   dependencies:
-    "@eshaz/web-worker": "npm:1.2.1"
-  checksum: 4c4ed54336e44fc6e026f4dee58e536f6704ed1f0148a205da0fce8ba1e5ee2de9cecb4f391f0377bd63e6472b1f2e686aafd28b8e8bd55d679127c645288fc0
+    "@eshaz/web-worker": "npm:1.2.2"
+  checksum: 0fa68c844842adb1cab69ebbc8135a1e4493e8a04aee44736ae8d4510727e8770ec324893ad134665fa3ed873a275f54e09208f96df798f36fa67ff0ee9f384d
   languageName: node
   linkType: hard
 
@@ -997,7 +997,7 @@ __metadata:
     fix-esm: "npm:^1.0.1"
     md5: "npm:^2.3.0"
     mongodb: "npm:^6.3.0"
-    mpg123-decoder: "npm:0.4.10"
+    mpg123-decoder: "npm:0.4.11"
     node-fetch: "npm:^2.7.0"
     node-schedule: "npm:^2.1.1"
     promise-queue: "npm:^2.2.5"
@@ -1721,12 +1721,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"mpg123-decoder@npm:0.4.10":
-  version: 0.4.10
-  resolution: "mpg123-decoder@npm:0.4.10"
+"mpg123-decoder@npm:0.4.11":
+  version: 0.4.11
+  resolution: "mpg123-decoder@npm:0.4.11"
   dependencies:
-    "@wasm-audio-decoders/common": "npm:9.0.2"
-  checksum: a1d85de9bef6c04f623db0ef97d2080107b501e5dbdd3ce51ae55d18afc54365dd72f1d6db4b03948a9698ffd8f0b758aa852f181b48d354b8d5b5121ab80702
+    "@wasm-audio-decoders/common": "npm:9.0.3"
+  checksum: b162513fc3f696dd06857f2a9819b10606a5c9e6161f2768e639d660f2cdb5bc575a6ca9a6a1fa9e48860b7681103678f4f5659afab7fe5eddfef2e3741a0909
   languageName: node
   linkType: hard
 
