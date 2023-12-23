@@ -24,7 +24,7 @@
     "node-fetch": "^2.7.0",
     "node-schedule": "^2.1.1",
     "promise-queue": "^2.2.5",
-    "slash-create": "^6.0.1",
+    "slash-create": "^6.0.2",
     "sprintf-js": "^1.1.3",
     "status-client": "jimchen5209/StatusClient_JS#v2.2.0",
     "tslog-helper": "jimchen5209/TSLog-Helper#v2.3.0"
