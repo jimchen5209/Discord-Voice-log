@@ -667,12 +667,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@wasm-audio-decoders/common@npm:9.0.4":
-  version: 9.0.4
-  resolution: "@wasm-audio-decoders/common@npm:9.0.4"
+"@wasm-audio-decoders/common@npm:9.0.5":
+  version: 9.0.5
+  resolution: "@wasm-audio-decoders/common@npm:9.0.5"
   dependencies:
     "@eshaz/web-worker": "npm:1.2.2"
-  checksum: 7226f584c60c383709d1aae56b732453b33276050c6e2c6da1fb14a7ece3e8d5687beaa6a97f9cdf9fa2959db0315cec7910c694266530c6f39922e376552391
+    simple-yenc: "npm:^1.0.4"
+  checksum: 59e72231bee7ba5f01fd4f812b626248a1772b5a0fa1e602bbeb66745ee7618209ee9d35e93fb4c1ac586cde6bf00aeb6c5adcb69db9644dc82fd6673c808f52
   languageName: node
   linkType: hard
 
@@ -1007,7 +1008,7 @@ __metadata:
     fix-esm: "npm:^1.0.1"
     md5: "npm:^2.3.0"
     mongodb: "npm:^6.3.0"
-    mpg123-decoder: "npm:^0.4.12"
+    mpg123-decoder: "npm:^1.0.0"
     node-fetch: "npm:^2.7.0"
     node-schedule: "npm:^2.1.1"
     promise-queue: "npm:^2.2.5"
@@ -1740,12 +1741,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"mpg123-decoder@npm:^0.4.12":
-  version: 0.4.12
-  resolution: "mpg123-decoder@npm:0.4.12"
+"mpg123-decoder@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "mpg123-decoder@npm:1.0.0"
   dependencies:
-    "@wasm-audio-decoders/common": "npm:9.0.4"
-  checksum: 5863e893716c570503a2e037359313dab3ce40cd696ec47d371466037e528a6b080dc0a2554cd115f71a16a3dd19d3ab14aa73da247295b6ee311b3acb9c2c06
+    "@wasm-audio-decoders/common": "npm:9.0.5"
+  checksum: 69e79ccebb8b7f2ec09bf4e3c2ffc149fc4bf7462014fb95443e3f25c2be0ac3c9c6b3179775eee8fe1a4277393b8711bd5b48f994c1482e139eb0c0171e5396
   languageName: node
   linkType: hard
 
@@ -1989,6 +1990,13 @@ __metadata:
   version: 3.0.0
   resolution: "shebang-regex@npm:3.0.0"
   checksum: 1dbed0726dd0e1152a92696c76c7f06084eb32a90f0528d11acd764043aacf76994b2fb30aa1291a21bd019d6699164d048286309a278855ee7bec06cf6fb690
+  languageName: node
+  linkType: hard
+
+"simple-yenc@npm:^1.0.4":
+  version: 1.0.4
+  resolution: "simple-yenc@npm:1.0.4"
+  checksum: 5a476cf328e5e5b6006ac44af01daeda8a9832d3d2205c80d71fbdf3a9ff1ee5092ed41b909c77532c80b9f6db65b577e2c1283fcbb5a9b194f1e96b0077de73
   languageName: node
   linkType: hard
 
