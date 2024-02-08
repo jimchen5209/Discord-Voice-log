@@ -463,7 +463,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node-fetch@npm:^2.6.10":
+"@types/node-fetch@npm:^2.6.11":
   version: 2.6.11
   resolution: "@types/node-fetch@npm:2.6.11"
   dependencies:
@@ -994,7 +994,7 @@ __metadata:
   dependencies:
     "@types/md5": "npm:^2.3.5"
     "@types/node": "npm:^20.11.16"
-    "@types/node-fetch": "npm:^2.6.10"
+    "@types/node-fetch": "npm:^2.6.11"
     "@types/node-schedule": "npm:^2.1.6"
     "@types/promise-queue": "npm:^2.2.3"
     "@types/sprintf-js": "npm:^1.1.4"
