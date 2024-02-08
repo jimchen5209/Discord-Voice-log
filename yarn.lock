@@ -473,12 +473,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node-schedule@npm:^2.1.5":
-  version: 2.1.5
-  resolution: "@types/node-schedule@npm:2.1.5"
+"@types/node-schedule@npm:^2.1.6":
+  version: 2.1.6
+  resolution: "@types/node-schedule@npm:2.1.6"
   dependencies:
     "@types/node": "npm:*"
-  checksum: 4b079b7f386a63c2571e5ba3710f98df095f5a5025d7b0ac3afe4d365023e1b94bd2d608e7b30ad5b31a3e23e8bc78c29ce9f2d58f2df01c052f774446c8d87c
+  checksum: 5b8f810abf1738f4114c771434ebd17b6ec4f5e29d9f4ca4085b7b5d016f88dd6d99c7fa5c9e0d8583a52781e7ab579f34adfd6927071aa03168b44d9d75e7fd
   languageName: node
   linkType: hard
 
@@ -1004,7 +1004,7 @@ __metadata:
     "@types/md5": "npm:^2.3.5"
     "@types/node": "npm:^20.11.16"
     "@types/node-fetch": "npm:^2.6.10"
-    "@types/node-schedule": "npm:^2.1.5"
+    "@types/node-schedule": "npm:^2.1.6"
     "@types/promise-queue": "npm:^2.2.3"
     "@types/sprintf-js": "npm:^1.1.4"
     "@types/ws": "npm:^8.5.10"
