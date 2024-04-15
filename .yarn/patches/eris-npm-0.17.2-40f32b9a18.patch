@@ -67,3 +67,17 @@ index 0c8ff0e12e647afbb1bf4e9b1b9d868306e7cfa0..6c3f707e700dd984f17d7b1c16b0b7d1
          this.ready = false;
          this.speaking = false;
          this.timestamp = 0;
+diff --git a/lib/voice/streams/OggOpusTransformer.js b/lib/voice/streams/OggOpusTransformer.js
+index 6c4baed362327ff8f14101a963f75a5346c2cbeb..c970b6377b3c3e9375e7eb3a70cac889f2518cb4 100644
+--- a/lib/voice/streams/OggOpusTransformer.js
++++ b/lib/voice/streams/OggOpusTransformer.js
+@@ -95,8 +95,7 @@ class OggOpusTransformer extends BaseTransformer {
+                 if(ret instanceof Error) {
+                     this.emit("error", ret);
+                 }
+-                cb();
+-                return;
++                break;
+             }
+         }
+ 

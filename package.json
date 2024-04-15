@@ -16,7 +16,7 @@
   "keywords": [],
   "dependencies": {
     "async-wait-until": "^2.0.12",
-    "eris": "^0.17.2",
+    "eris": "patch:eris@npm%3A0.17.2#~/.yarn/patches/eris-npm-0.17.2-40f32b9a18.patch",
     "fix-esm": "^1.0.1",
     "md5": "^2.3.0",
     "mongodb": "^6.5.0",

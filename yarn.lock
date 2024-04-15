@@ -1004,7 +1004,7 @@ __metadata:
     "@typescript-eslint/eslint-plugin": "npm:^7.6.0"
     "@typescript-eslint/parser": "npm:^7.6.0"
     async-wait-until: "npm:^2.0.12"
-    eris: "npm:^0.17.2"
+    eris: "patch:eris@npm%3A0.17.2#~/.yarn/patches/eris-npm-0.17.2-40f32b9a18.patch"
     eslint: "npm:^8.57.0"
     fix-esm: "npm:^1.0.1"
     md5: "npm:^2.3.0"
@@ -1053,9 +1053,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eris@patch:eris@npm%3A0.17.2#./.yarn/patches/eris-npm-0.17.2-40f32b9a18.patch::locator=discord_voice_log%40workspace%3A.":
+"eris@patch:eris@npm%3A0.17.2#~/.yarn/patches/eris-npm-0.17.2-40f32b9a18.patch":
   version: 0.17.2
-  resolution: "eris@patch:eris@npm%3A0.17.2#./.yarn/patches/eris-npm-0.17.2-40f32b9a18.patch::version=0.17.2&hash=eb9818&locator=discord_voice_log%40workspace%3A."
+  resolution: "eris@patch:eris@npm%3A0.17.2#~/.yarn/patches/eris-npm-0.17.2-40f32b9a18.patch::version=0.17.2&hash=9f267d"
   dependencies:
     opusscript: "npm:^0.0.8"
     tweetnacl: "npm:^1.0.3"
@@ -1065,7 +1065,7 @@ __metadata:
       optional: true
     tweetnacl:
       optional: true
-  checksum: 10c0/122212291c383b355604bd0ee2aa209c0763d75cf78ea554d595981bacd912d56d887bcb5318469f14db57eb346eb48d53c5e717c006527f6ce5449636cfc387
+  checksum: 10c0/030df41ae35ffdd986748e1cbe7eb66daecab6582fb4b013b86358abd22ae0a40fadbafd70cb74c23a2d6919e2480b8494afa1254f49c75e0b2d6e748535f062
   languageName: node
   linkType: hard
 
