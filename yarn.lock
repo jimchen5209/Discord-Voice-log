@@ -1055,7 +1055,7 @@ __metadata:
 
 "eris@patch:eris@npm%3A0.17.2#~/.yarn/patches/eris-npm-0.17.2-40f32b9a18.patch":
   version: 0.17.2
-  resolution: "eris@patch:eris@npm%3A0.17.2#~/.yarn/patches/eris-npm-0.17.2-40f32b9a18.patch::version=0.17.2&hash=9f267d"
+  resolution: "eris@patch:eris@npm%3A0.17.2#~/.yarn/patches/eris-npm-0.17.2-40f32b9a18.patch::version=0.17.2&hash=462371"
   dependencies:
     opusscript: "npm:^0.0.8"
     tweetnacl: "npm:^1.0.3"
@@ -1065,7 +1065,7 @@ __metadata:
       optional: true
     tweetnacl:
       optional: true
-  checksum: 10c0/030df41ae35ffdd986748e1cbe7eb66daecab6582fb4b013b86358abd22ae0a40fadbafd70cb74c23a2d6919e2480b8494afa1254f49c75e0b2d6e748535f062
+  checksum: 10c0/7c527e25e2cfb6b75956f438b314bb19f7025d8edf594661aee03e5f6240b0cac645edd4eb8c1096ffdf85d2e4e05403852c73a7cb5b994345536ea921ad350f
   languageName: node
   linkType: hard
 
