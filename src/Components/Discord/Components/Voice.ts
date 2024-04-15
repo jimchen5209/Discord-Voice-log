@@ -99,7 +99,7 @@ export class DiscordVoice {
                 const file = await this.ttsHelper.getTTSFile(tts[type], tts.lang);
                 if (file !== null) {
                     voiceFile = file;
-                    format = 'pcm';
+                    // format = 'pcm';
                 } else if (fs.existsSync(`assets/${member.id}_${type}.wav`)) {
                     voiceFile = `assets/${member.id}_${type}.wav`;
                 }
