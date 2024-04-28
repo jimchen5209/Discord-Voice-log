@@ -67,3 +67,29 @@ index 0c8ff0e12e647afbb1bf4e9b1b9d868306e7cfa0..6c3f707e700dd984f17d7b1c16b0b7d1
          this.ready = false;
          this.speaking = false;
          this.timestamp = 0;
+diff --git a/lib/voice/streams/BaseTransformer.js b/lib/voice/streams/BaseTransformer.js
+index 7160c6ce2715cafccad27b521f1f69ba9a09bdd5..4d4917c27e3c83b7196743865bd5f71b62a052fb 100644
+--- a/lib/voice/streams/BaseTransformer.js
++++ b/lib/voice/streams/BaseTransformer.js
+@@ -10,7 +10,7 @@ class BaseTransformer extends TransformStream {
+             options.allowHalfOpen = true;
+         }
+         if(options.highWaterMark === undefined) {
+-            options.highWaterMark = 0;
++            options.highWaterMark = 1;
+         }
+         super(options);
+         this.manualCB = false;
+diff --git a/lib/voice/streams/OggOpusTransformer.js b/lib/voice/streams/OggOpusTransformer.js
+index 6c4baed362327ff8f14101a963f75a5346c2cbeb..755cea061e6f46589497ffa02f7b330e67a72c55 100644
+--- a/lib/voice/streams/OggOpusTransformer.js
++++ b/lib/voice/streams/OggOpusTransformer.js
+@@ -74,7 +74,7 @@ class OggOpusTransformer extends BaseTransformer {
+     }
+ 
+     _final() {
+-        if(!this._bitstream) {
++        if(!this._bitstream === undefined) {
+             this.emit("error", new Error("No Opus stream was found"));
+         }
+     }
