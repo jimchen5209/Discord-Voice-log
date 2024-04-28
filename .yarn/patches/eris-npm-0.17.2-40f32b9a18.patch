@@ -80,3 +80,16 @@ index 7160c6ce2715cafccad27b521f1f69ba9a09bdd5..4d4917c27e3c83b7196743865bd5f71b
          }
          super(options);
          this.manualCB = false;
+diff --git a/lib/voice/streams/OggOpusTransformer.js b/lib/voice/streams/OggOpusTransformer.js
+index 6c4baed362327ff8f14101a963f75a5346c2cbeb..755cea061e6f46589497ffa02f7b330e67a72c55 100644
+--- a/lib/voice/streams/OggOpusTransformer.js
++++ b/lib/voice/streams/OggOpusTransformer.js
+@@ -74,7 +74,7 @@ class OggOpusTransformer extends BaseTransformer {
+     }
+ 
+     _final() {
+-        if(!this._bitstream) {
++        if(!this._bitstream === undefined) {
+             this.emit("error", new Error("No Opus stream was found"));
+         }
+     }
