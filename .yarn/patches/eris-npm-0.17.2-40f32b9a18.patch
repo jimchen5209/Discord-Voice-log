@@ -82,15 +82,16 @@ index 6c4baed362327ff8f14101a963f75a5346c2cbeb..c970b6377b3c3e9375e7eb3a70cac889
          }
  
 diff --git a/lib/voice/streams/PCMOpusTransformer.js b/lib/voice/streams/PCMOpusTransformer.js
-index ba7cd38e7b045d3013e2d88bf7bf5546aa7fbaf5..8fae1fdb10bc950863de81daeb4236b18199e771 100644
+index ba7cd38e7b045d3013e2d88bf7bf5546aa7fbaf5..d0fb44f225032a62ae9ca7ab23e31f0575630ee5 100644
 --- a/lib/voice/streams/PCMOpusTransformer.js
 +++ b/lib/voice/streams/PCMOpusTransformer.js
-@@ -40,7 +40,7 @@ class PCMOpusTransformer extends BaseTransformer {
+@@ -40,7 +40,8 @@ class PCMOpusTransformer extends BaseTransformer {
  
          if(chunk.length < this.pcmSize) {
              this._remainder = chunk;
 -            return cb();
-+            cb();
++            this.setTransformCB(cb);
++            return;
          }
  
          chunk._index = 0;
