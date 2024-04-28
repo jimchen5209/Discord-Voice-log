@@ -1048,7 +1048,7 @@ __metadata:
 
 "eris@patch:eris@npm%3A0.17.2#./.yarn/patches/eris-npm-0.17.2-40f32b9a18.patch::locator=discord_voice_log%40workspace%3A.":
   version: 0.17.2
-  resolution: "eris@patch:eris@npm%3A0.17.2#./.yarn/patches/eris-npm-0.17.2-40f32b9a18.patch::version=0.17.2&hash=eb9818&locator=discord_voice_log%40workspace%3A."
+  resolution: "eris@patch:eris@npm%3A0.17.2#./.yarn/patches/eris-npm-0.17.2-40f32b9a18.patch::version=0.17.2&hash=022347&locator=discord_voice_log%40workspace%3A."
   dependencies:
     opusscript: "npm:^0.0.8"
     tweetnacl: "npm:^1.0.3"
@@ -1058,7 +1058,7 @@ __metadata:
       optional: true
     tweetnacl:
       optional: true
-  checksum: 10c0/122212291c383b355604bd0ee2aa209c0763d75cf78ea554d595981bacd912d56d887bcb5318469f14db57eb346eb48d53c5e717c006527f6ce5449636cfc387
+  checksum: 10c0/b5138289038672891fd21fe5fad18ad052627b4dc71eff53dcc5477bbbf4739c7643f03562a0a7e818ad30d639b0f1b81f6aa2c3545d8da5780d5c08130a2026
   languageName: node
   linkType: hard
 
