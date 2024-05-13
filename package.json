@@ -19,7 +19,7 @@
     "eris": "^0.17.2",
     "fix-esm": "^1.0.1",
     "md5": "^2.3.0",
-    "mongodb": "^6.6.0",
+    "mongodb": "^6.6.1",
     "mpg123-decoder": "^1.0.0",
     "node-fetch": "^2.7.0",
     "node-schedule": "^2.1.1",
@@ -31,7 +31,7 @@
   },
   "devDependencies": {
     "@types/md5": "^2.3.5",
-    "@types/node": "^20.12.10",
+    "@types/node": "^20.12.11",
     "@types/node-fetch": "^2.6.11",
     "@types/node-schedule": "^2.1.7",
     "@types/promise-queue": "^2.2.3",
