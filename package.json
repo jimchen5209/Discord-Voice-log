@@ -9,7 +9,8 @@
   "author": "Jim Chen <jimchen5209@gmail.com>",
   "license": "AGPL-3.0-only",
   "scripts": {
-    "lint": "tslint --project . --fix",
+    "lint": "eslint . --fix",
+    "lint:check": "eslint . --max-warnings 0",
     "build": "tsc --pretty",
     "build:prod": "tsc --pretty --sourceMap false"
   },
@@ -30,6 +31,8 @@
     "tslog-helper": "jimchen5209/TSLog-Helper#v2.3.1"
   },
   "devDependencies": {
+    "@eslint/js": "^9.16.0",
+    "@stylistic/eslint-plugin": "^2.12.1",
     "@types/md5": "^2.3.5",
     "@types/node": "^22.10.2",
     "@types/node-fetch": "^2.6.12",
@@ -37,10 +40,10 @@
     "@types/promise-queue": "^2.2.3",
     "@types/sprintf-js": "^1.1.4",
     "@types/ws": "^8.5.13",
-    "@typescript-eslint/eslint-plugin": "^8.18.0",
-    "@typescript-eslint/parser": "^8.18.0",
     "eslint": "^9.16.0",
-    "typescript": "^5.7.2"
+    "globals": "^15.13.0",
+    "typescript": "^5.7.2",
+    "typescript-eslint": "^8.18.0"
   },
   "packageManager": "yarn@4.5.3"
 }
