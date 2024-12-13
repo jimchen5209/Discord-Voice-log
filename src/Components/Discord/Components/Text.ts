@@ -1,14 +1,14 @@
 import { Client, TextChannel } from 'eris'
-import { Logger } from 'tslog-helper'
+import { ILogObj, Logger } from 'tslog'
 import { Core } from '../../..'
 
 export class DiscordText {
   private bot: Client
-  private logger: Logger
+  private logger: Logger<ILogObj>
 
-  constructor(_core: Core, bot: Client, logger: Logger) {
+  constructor(_core: Core, bot: Client, logger: Logger<ILogObj>) {
     this.bot = bot
-    this.logger = logger.getChildLogger({ name: 'Discord/Text'})
+    this.logger = logger.getSubLogger({ name: 'Discord/Text'})
 
     this.bot.on('messageCreate', msg => {
 
@@ -36,4 +36,3 @@ export class DiscordText {
     })
   }
 }
-

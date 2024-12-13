@@ -1,5 +1,5 @@
 import { Client } from 'eris'
-import { Logger } from 'tslog-helper'
+import { ILogObj, Logger } from 'tslog'
 import { AnyRequestData, GatewayServer, SlashCommand, SlashCreator } from 'slash-create'
 import { Core } from '../../..'
 import { Config } from '../../../Core/Config'
@@ -14,7 +14,7 @@ export class Command {
   private config: Config
   private bot: Client
   private creator: SlashCreator
-  private logger: Logger
+  private logger: Logger<ILogObj>
   private voiceLog: VoiceLog
   private lang: Lang
   private registered = false
@@ -22,7 +22,7 @@ export class Command {
   constructor(voiceLog: VoiceLog, core: Core, discord: Discord, bot: Client) {
     this.config = core.config
     this.bot = bot
-    this.logger = core.mainLogger.getChildLogger({ name: 'Command'})
+    this.logger = core.mainLogger.getSubLogger({ name: 'Command'})
     this.voiceLog = voiceLog
     this.lang = discord.lang
 

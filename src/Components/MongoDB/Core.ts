@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events'
-import { Logger } from 'tslog-helper'
+import { ILogObj, Logger } from 'tslog'
 import { Db, MongoClient } from 'mongodb'
 import { Core } from '../..'
 
@@ -16,12 +16,12 @@ export declare interface MongoDB {
 // eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging -- definition
 export class MongoDB extends EventEmitter {
   private _client?: Db
-  private logger: Logger
+  private logger: Logger<ILogObj>
 
   constructor(core: Core) {
     super()
 
-    this.logger = core.mainLogger.getChildLogger({ name: 'MongoDB' })
+    this.logger = core.mainLogger.getSubLogger({ name: 'MongoDB' })
     this.logger.info('Loading MongoDB...')
 
     const config = core.config.mongodb

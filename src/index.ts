@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events'
-import { LogHelper } from 'tslog-helper'
+import { ILogObj, Logger } from 'tslog'
 import { Discord } from './Components/Discord/Core'
 import { Config } from './Core/Config'
 import { MongoDB } from './Components/MongoDB/Core'
@@ -10,8 +10,12 @@ import { TTSHelper } from './Core/TTSHelper'
 import { Lang } from './Core/Lang'
 
 export class Core extends EventEmitter {
-  private readonly logHelper = new LogHelper()
-  public readonly mainLogger = this.logHelper.logger
+  public readonly mainLogger: Logger<ILogObj> = new Logger({
+    name: 'Main',
+    prettyLogTimeZone: 'local',
+    hideLogPositionForProduction: true,
+    minLevel: 3 // Info
+  })
   public readonly config = new Config(this)
   public readonly database = new MongoDB(this)
   public readonly data = new ServerConfigManager(this)
@@ -23,8 +27,7 @@ export class Core extends EventEmitter {
     super()
     this.mainLogger.info('Starting...')
 
-    if (this.config.debug)
-      this.mainLogger.setSettings({ minLevel: 'silly' })
+    if (this.config.debug) this.mainLogger.settings.minLevel = 0 // Silly
 
     this.emit('init', this)
 

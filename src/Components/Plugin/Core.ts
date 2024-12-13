@@ -1,5 +1,5 @@
 import { readdirSync, existsSync } from 'fs'
-import { Logger } from 'tslog-helper'
+import { ILogObj, Logger } from 'tslog'
 import path from 'path'
 import { Core } from '../..'
 import { IPluginBase } from './Base/PluginBase'
@@ -7,13 +7,13 @@ import { IVoiceOverwrite } from './Base/VoiceOverwrite'
 
 export class PluginManager {
   private core: Core
-  private logger: Logger
+  private logger: Logger<ILogObj>
   private loadedPlugins: { [key: string]: IPluginBase } = {}
   private _voiceOverwrites: { [key: string]: IVoiceOverwrite } = {}
 
   constructor(core: Core) {
     this.core = core
-    this.logger = core.mainLogger.getChildLogger({ name: 'Plugin'})
+    this.logger = core.mainLogger.getSubLogger({ name: 'Plugin'})
 
     this.reloadPluginList().then(() => {
       this.enablePlugins()

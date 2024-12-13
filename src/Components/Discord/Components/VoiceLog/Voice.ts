@@ -1,7 +1,7 @@
 import waitUntil from 'async-wait-until'
 import { Client, VoiceChannel } from 'eris'
 import { readdirSync, readFileSync, unlinkSync } from 'fs'
-import { Logger } from 'tslog-helper'
+import { ILogObj, Logger } from 'tslog'
 import path from 'path'
 import Queue from 'promise-queue'
 import { CommandContext, MessageEmbedOptions } from 'slash-create'
@@ -15,17 +15,17 @@ import { PluginManager } from '../../../Plugin/Core'
 export class VoiceLogVoice {
   private bot: Client
   private audios: { [key: string]: DiscordVoice } = {}
-  private logger: Logger
-  private voiceLogger: Logger
+  private logger: Logger<ILogObj>
+  private voiceLogger: Logger<ILogObj>
   private data: ServerConfigManager
   private ttsHelper: TTSHelper
   private plugins: PluginManager
   private updateLock = false
 
-  constructor(core: Core, discord: Discord, bot: Client, logger: Logger) {
+  constructor(core: Core, discord: Discord, bot: Client, logger: Logger<ILogObj>) {
     this.bot = bot
-    this.logger = logger.getChildLogger({ name: 'VoiceLog/Voice'})
-    this.voiceLogger = logger.getChildLogger({ name: 'Discord/Voice'})
+    this.logger = logger.getSubLogger({ name: 'VoiceLog/Voice'})
+    this.voiceLogger = logger.getSubLogger({ name: 'Discord/Voice'})
     this.data = core.data
     this.ttsHelper = discord.ttsHelper
     this.plugins = core.plugins

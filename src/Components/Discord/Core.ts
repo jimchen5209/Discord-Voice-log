@@ -1,5 +1,5 @@
 import { Client } from 'eris'
-import { Logger } from 'tslog-helper'
+import { ILogObj, Logger } from 'tslog'
 import { Core } from '../..'
 import { Config } from '../../Core/Config'
 import { Lang } from '../../Core/Lang'
@@ -17,11 +17,11 @@ export class Discord {
   private config: Config
   private bot: Client
   private command: Command
-  private logger: Logger
+  private logger: Logger<ILogObj>
 
   constructor(core: Core) {
     this.config = core.config
-    this.logger = core.mainLogger.getChildLogger({ name: 'Discord'})
+    this.logger = core.mainLogger.getSubLogger({ name: 'Discord'})
     this._lang = core.lang
     this._ttsHelper = core.ttsHelper
 

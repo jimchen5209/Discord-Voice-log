@@ -1,7 +1,7 @@
 import { waitUntil } from 'async-wait-until'
 import { Client, Member, VoiceConnection } from 'eris'
 import fs from 'fs'
-import { Logger } from 'tslog-helper'
+import { ILogObj, Logger } from 'tslog'
 import Queue from 'promise-queue'
 import { TTSHelper } from '../../../Core/TTSHelper'
 import { PluginManager } from '../../Plugin/Core'
@@ -11,14 +11,14 @@ export class DiscordVoice {
   private _channelId: string
   private bot: Client
   private voice: VoiceConnection | undefined
-  private logger: Logger
+  private logger: Logger<ILogObj>
   private queue: Queue = new Queue(1, Infinity)
   private plugins: PluginManager
   private ttsHelper: TTSHelper
 
   constructor(
     bot: Client,
-    logger: Logger,
+    logger: Logger<ILogObj>,
     plugins: PluginManager,
     ttsHelper: TTSHelper,
     channel: string,
