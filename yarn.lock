@@ -910,7 +910,7 @@ __metadata:
     "@typescript-eslint/eslint-plugin": "npm:^8.18.0"
     "@typescript-eslint/parser": "npm:^8.18.0"
     async-wait-until: "npm:^2.0.18"
-    eris: "npm:^0.17.2"
+    eris: "patch:eris@npm%3A0.18.0#~/.yarn/patches/eris-npm-0.18.0-57724b4df9.patch"
     eslint: "npm:^9.16.0"
     fix-esm: "npm:^1.0.1"
     md5: "npm:^2.3.0"
@@ -934,9 +934,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eris@npm:0.17.2":
-  version: 0.17.2
-  resolution: "eris@npm:0.17.2"
+"eris@npm:0.18.0":
+  version: 0.18.0
+  resolution: "eris@npm:0.18.0"
   dependencies:
     opusscript: "npm:^0.0.8"
     tweetnacl: "npm:^1.0.3"
@@ -946,13 +946,13 @@ __metadata:
       optional: true
     tweetnacl:
       optional: true
-  checksum: 10c0/74608d0daea43c34baffc1a44000703e06e37ed6fb26388c5f8e84aee7e635efceb1871af0bb8fcb523df2a7ed5577975db9cef08f173406f8d5e57bd43fc697
+  checksum: 10c0/76104ded92e8c2b94b9b1abe89a20d4643175c0f96e1082c9e637f53cbc8c310569a1b13bd414a48872ec4f041a757e3a8cd8ad9ce1ee260a02716fdfc0473a9
   languageName: node
   linkType: hard
 
-"eris@patch:eris@npm%3A0.17.2#./.yarn/patches/eris-npm-0.17.2-40f32b9a18.patch::locator=discord_voice_log%40workspace%3A.":
-  version: 0.17.2
-  resolution: "eris@patch:eris@npm%3A0.17.2#./.yarn/patches/eris-npm-0.17.2-40f32b9a18.patch::version=0.17.2&hash=f980e8&locator=discord_voice_log%40workspace%3A."
+"eris@patch:eris@npm%3A0.18.0#~/.yarn/patches/eris-npm-0.18.0-57724b4df9.patch":
+  version: 0.18.0
+  resolution: "eris@patch:eris@npm%3A0.18.0#~/.yarn/patches/eris-npm-0.18.0-57724b4df9.patch::version=0.18.0&hash=6647b1"
   dependencies:
     opusscript: "npm:^0.0.8"
     tweetnacl: "npm:^1.0.3"
@@ -962,7 +962,7 @@ __metadata:
       optional: true
     tweetnacl:
       optional: true
-  checksum: 10c0/97537d6cc68e639804635457ecfce812f589eb4cf58c5f3e4b67516f122eb8b4074a62eeeec56736da3513305322291559d01ee5b774b74fb6ea7438422542ec
+  checksum: 10c0/9117c7752784c77b2c623d4b390caf006d113afe87e2ca2a90ea5599a04afab0d57fb8561efc6b046748c5d4582ac673db52c554dfc15f4f7f6486551b05f6b6
   languageName: node
   linkType: hard
 
