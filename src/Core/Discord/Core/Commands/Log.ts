@@ -1,6 +1,6 @@
 import { CommandContext, CommandOptionType, SlashCommand, SlashCreator } from 'slash-create'
-import { VoiceLog } from '../VoiceLog'
-import { Lang } from '../../../../Core/Lang'
+import { VoiceLog } from '../../VoiceLog/VoiceLog'
+import { Lang } from '../../../Lang'
 
 export class LogCommand extends SlashCommand {
   private voiceLog: VoiceLog

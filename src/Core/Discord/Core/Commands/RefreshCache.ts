@@ -1,5 +1,5 @@
 import { CommandContext, SlashCommand, SlashCreator } from 'slash-create'
-import { VoiceLog } from '../VoiceLog'
+import { VoiceLog } from '../../VoiceLog/VoiceLog'
 
 export class RefreshCacheCommand extends SlashCommand {
   private voiceLog: VoiceLog

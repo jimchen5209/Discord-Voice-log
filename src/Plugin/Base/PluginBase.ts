@@ -1,5 +1,3 @@
-/* eslint-disable no-unused-vars -- definition file*/
-import { Core } from '../../..'
 
 export interface IPluginBase {
   pluginName:string;
@@ -7,7 +5,7 @@ export interface IPluginBase {
 }
 
 interface IPluginConstructor {
-  new(core: Core): void;
+  new(): void;
 }
 
 declare const IPluginBase: IPluginConstructor

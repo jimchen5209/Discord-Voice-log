@@ -3,37 +3,37 @@ import { Client } from 'eris'
 import { CommandContext, MessageEmbedOptions } from 'slash-create'
 import { vsprintf } from 'sprintf-js'
 import { ILogObj, Logger } from 'tslog'
-import { Core } from '../../../..'
-import { Config } from '../../../../Core/Config'
-import { Lang } from '../../../../Core/Lang'
-import { ServerConfigManager } from '../../../MongoDB/db/ServerConfig'
+import { Config } from '../../../Config'
+import { Lang } from '../../../Lang'
+import { DbServerConfigManager } from '../../../MongoDB/db/ServerConfig'
 import { Discord } from '../../Core'
 import { VoiceLog } from '../VoiceLog'
 import { VoiceLogSetStatus } from './Text'
+import { instances } from '../../../../Utils/Instances'
 
 const ERR_MISSING_LANG = 'Language not exist.'
 const ERR_MISSING_LANG_DEFAULT = 'Language not exist, will not change your language.'
 
 export class VoiceLogCommands {
-  private bot: Client
+  private client: Client
   private voiceLog: VoiceLog
   private logger: Logger<ILogObj>
   private config: Config
-  private data: ServerConfigManager
+  private data: DbServerConfigManager
   private lang: Lang
 
-  constructor(voiceLog: VoiceLog, core: Core, discord: Discord, bot: Client, logger: Logger<ILogObj>) {
-    this.config = core.config
-    this.data = core.data
-    this.logger = logger.getSubLogger({ name: 'VoiceLog/Voice' })
-    this.lang = discord.lang
+  constructor(voiceLog: VoiceLog, discord: Discord, logger: Logger<ILogObj>) {
+    this.config = instances.config
+    this.data = voiceLog.serverConfig
+    this.logger = logger.getSubLogger({ name: 'Voice' })
+    this.lang = instances.lang
     this.voiceLog = voiceLog
-    this.bot = bot
+    this.client = discord.client
   }
 
   public async commandJoin(context: CommandContext) {
     if (!context.guildID || !context.member) return
-    const member = await this.bot.getRESTGuildMember(context.guildID, context.member.id)
+    const member = await this.client.getRESTGuildMember(context.guildID, context.member.id)
     if (!member) return
 
     const data = await this.data.getOrCreate(member.guild.id)
@@ -81,7 +81,7 @@ export class VoiceLogCommands {
 
   public async commandLeave(context: CommandContext) {
     if (!context.guildID || !context.member) return
-    const member = await this.bot.getRESTGuildMember(context.guildID, context.member.id)
+    const member = await this.client.getRESTGuildMember(context.guildID, context.member.id)
     if (!member) return
 
     const data = await this.data.getOrCreate(member.guild.id)
@@ -112,7 +112,7 @@ export class VoiceLogCommands {
 
   public async commandSetVoiceLog(context: CommandContext) {
     if (!context.guildID || !context.member) return
-    const member = await this.bot.getRESTGuildMember(context.guildID, context.member.id)
+    const member = await this.client.getRESTGuildMember(context.guildID, context.member.id)
     if (!member) return
 
     const data = await this.data.getOrCreate(member.guild.id)
@@ -219,7 +219,7 @@ export class VoiceLogCommands {
 
   public async commandLang(context: CommandContext) {
     if (!context.guildID || !context.member) return
-    const member = await this.bot.getRESTGuildMember(context.guildID, context.member.id)
+    const member = await this.client.getRESTGuildMember(context.guildID, context.member.id)
     if (!member) return
 
     const data = await this.data.getOrCreate(member.guild.id)
@@ -264,7 +264,7 @@ export class VoiceLogCommands {
 
   public async commandUnsetVoiceLog(context: CommandContext) {
     if (!context.guildID || !context.member) return
-    const member = await this.bot.getRESTGuildMember(context.guildID, context.member.id)
+    const member = await this.client.getRESTGuildMember(context.guildID, context.member.id)
     if (!member) return
 
     const data = await this.data.getOrCreate(member.guild.id)
@@ -285,7 +285,7 @@ export class VoiceLogCommands {
 
   public async commandRefreshCache(context: CommandContext) {
     if (!context.guildID || !context.member) return
-    const member = await this.bot.getRESTGuildMember(context.guildID, context.member.id)
+    const member = await this.client.getRESTGuildMember(context.guildID, context.member.id)
     if (!member) return
 
     const data = await this.data.getOrCreate(member.guild.id)

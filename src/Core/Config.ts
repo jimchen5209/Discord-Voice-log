@@ -1,6 +1,11 @@
 import { existsSync, readFileSync, writeFileSync } from 'fs'
-import { ILogObj, Logger } from 'tslog'
-import { Core } from '..'
+import { ILogObj, ISettingsParam, Logger } from 'tslog'
+export const loggerOptions: ISettingsParam<ILogObj> = {
+  name: 'Main',
+  prettyLogTimeZone: 'local',
+  hideLogPositionForProduction: true,
+  minLevel: 3 // Info
+}
 
 export class Config {
   private configVersion = 2
@@ -10,8 +15,8 @@ export class Config {
   private _debug: boolean
   private logger: Logger<ILogObj>
 
-  constructor(core: Core) {
-    this.logger = core.mainLogger.getSubLogger({ name: 'Config'})
+  constructor(mainLogger: Logger<ILogObj>) {
+    this.logger = mainLogger.getSubLogger({ name: 'Config' })
     this.logger.info('Loading Config...')
 
     const discordDefault = { botToken: '', applicationID: '', publicKey: '', admins: [] }

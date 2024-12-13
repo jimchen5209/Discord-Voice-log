@@ -3,7 +3,6 @@ import { ILogObj, Logger } from 'tslog'
 import md5 from 'md5'
 import fetch, { RequestInit } from 'node-fetch'
 import { Readable } from 'stream'
-import { Core } from '..'
 import { Config } from './Config'
 import { MPEGDecoderWebWorker } from 'mpg123-decoder'
 import { writeFile } from 'fs/promises'
@@ -13,9 +12,9 @@ export class TTSHelper {
   private config: Config
   private mp3Decoder: MPEGDecoderWebWorker
 
-  constructor(core: Core) {
-    this.logger = core.mainLogger.getSubLogger({ name: 'TTSHelper' })
-    this.config = core.config
+  constructor(config: Config, mainLogger: Logger<ILogObj>) {
+    this.logger = mainLogger.getSubLogger({ name: 'TTSHelper' })
+    this.config = config
 
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     this.mp3Decoder = new (require('fix-esm').require(

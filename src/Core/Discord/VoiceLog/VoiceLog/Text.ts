@@ -1,10 +1,11 @@
 import { Member, VoiceChannel, MessageContent, Client, TextChannel } from 'eris'
 import { ILogObj, Logger } from 'tslog'
 import { vsprintf } from 'sprintf-js'
-import { Core } from '../../../..'
-import { Lang } from '../../../../Core/Lang'
-import { ServerConfigManager } from '../../../MongoDB/db/ServerConfig'
+import { Lang } from '../../../Lang'
+import { DbServerConfigManager } from '../../../MongoDB/db/ServerConfig'
 import { Discord } from '../../Core'
+import { instances } from '../../../../Utils/Instances'
+import { VoiceLog } from '../VoiceLog'
 
 const ERR_UNEXPECTED_LANG_STATUS = new Error('Unexpected lang set status')
 const ERR_NO_PERMISSION = new Error('Not enough permissions to send message')
@@ -21,32 +22,32 @@ export enum VoiceLogSetStatus {
 /* eslint-enable no-unused-vars */
 
 export class VoiceLogText {
-  private bot: Client
+  private client: Client
   private logger: Logger<ILogObj>
-  private data: ServerConfigManager
+  private serverConfig: DbServerConfigManager
   private lang: Lang
 
-  constructor(core: Core, discord: Discord, bot: Client, logger: Logger<ILogObj>) {
-    this.bot = bot
+  constructor(voiceLog: VoiceLog, discord: Discord, logger: Logger<ILogObj>) {
+    this.client = discord.client
     this.logger = logger.getSubLogger({ name: 'VoiceLog/Text'})
-    this.data = core.data
-    this.lang = discord.lang
+    this.serverConfig = voiceLog.serverConfig
+    this.lang = instances.lang
   }
 
   public async setVoiceLog(guildId: string, channelId: string, lang: string | undefined = undefined): Promise<VoiceLogSetStatus> {
-    const permissionCheck = ((this.bot.getChannel(channelId)) as TextChannel).permissionsOf(this.bot.user.id)
+    const permissionCheck = ((this.client.getChannel(channelId)) as TextChannel).permissionsOf(this.client.user.id)
     if (!permissionCheck.has('sendMessages') || !permissionCheck.has('embedLinks')) {
       this.logger.error('Not enough permissions to send message')
       throw ERR_NO_PERMISSION
     }
 
-    const data = await this.data.getOrCreate(guildId)
+    const data = await this.serverConfig.getOrCreate(guildId)
     if (lang) {
       if (data.channelID === channelId && data.lang === lang) return VoiceLogSetStatus.NotChanged
       if (data.channelID === channelId) {
         return await this.setLang(guildId, lang)
       }
-      await this.data.updateChannel(guildId, channelId)
+      await this.serverConfig.updateChannel(guildId, channelId)
       switch (await this.setLang(guildId, lang)) {
         case VoiceLogSetStatus.LangSuccess:
           return VoiceLogSetStatus.AllSuccess
@@ -62,7 +63,7 @@ export class VoiceLogText {
     } else {
       if (data.channelID === channelId) return VoiceLogSetStatus.NotChanged
 
-      await this.data.updateChannel(guildId, channelId)
+      await this.serverConfig.updateChannel(guildId, channelId)
       return VoiceLogSetStatus.ChannelSuccess
     }
   }
@@ -70,16 +71,16 @@ export class VoiceLogText {
   public async setLang(guildId: string, lang: string): Promise<VoiceLogSetStatus> {
     if (!this.lang.isExist(lang)) return VoiceLogSetStatus.MissingLang
 
-    const data = await this.data.getOrCreate(guildId)
+    const data = await this.serverConfig.getOrCreate(guildId)
 
     if (data.lang === lang) return VoiceLogSetStatus.NotChanged
 
-    await this.data.updateLang(guildId, lang)
+    await this.serverConfig.updateLang(guildId, lang)
     return VoiceLogSetStatus.LangSuccess
   }
 
   public async unsetVoiceLog(guildId: string) {
-    await this.data.updateChannel(guildId, '')
+    await this.serverConfig.updateChannel(guildId, '')
   }
 
   public genVoiceLogEmbed(member: Member, lang: string, type: string, oldChannel: VoiceChannel | undefined, newChannel: VoiceChannel | undefined) {

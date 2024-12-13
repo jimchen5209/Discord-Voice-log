@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, renameSync } from 'fs'
-import { Collection, ObjectId, ReturnDocument } from 'mongodb'
-import { Core } from '../../..'
+import { Collection, Db, ObjectId, ReturnDocument } from 'mongodb'
 import { ERR_DB_NOT_INIT, ERR_INSERT_FAILURE } from '../Core'
+import { instances } from '../../../Utils/Instances'
 
 export interface IServerConfig {
   _id: ObjectId;
@@ -12,33 +12,50 @@ export interface IServerConfig {
   currentVoiceChannel: string;
 }
 
-export class ServerConfigManager {
+export class DbServerConfigManager {
   private database?: Collection<IServerConfig>
-  // private cache: { [key: string]: IServerConfig } = {};
 
-  constructor(core: Core) {
-    core.on('ready', () => {this.init(core).catch(core.mainLogger.error)})
+  constructor(db: Db) {
+    if (!db) throw Error('Database client not init')
+
+    this.database = db.collection('serverConfig')
+    this.database.createIndex({ serverID: 1 })
+
+    this.migrateData()
   }
 
-  private async init(core: Core) {
-    if (!core.database.client) throw Error('Database client not init')
-    this.database = core.database.client.collection('serverConfig')
-    this.database.createIndex({ serverID: 1 })
+  private async migrateData() {
     if (existsSync('./vlogdata.json')) {
-      core.mainLogger.info('Old data found. Migrating to db...')
-      const dataRaw = JSON.parse(readFileSync('./vlogdata.json', { encoding: 'utf-8' }))
+      instances.mainLogger.info('Old data found. Migrating to db...')
+      const dataRaw = JSON.parse(
+        readFileSync('./vlogdata.json', { encoding: 'utf-8' })
+      )
       for (const key of Object.keys(dataRaw)) {
         if (dataRaw[key] === undefined) continue
-        await this.create(key, dataRaw[key].channel, dataRaw[key].lang, dataRaw[key].lastVoiceChannel)
+        await this.create(
+          key,
+          dataRaw[key].channel,
+          dataRaw[key].lang,
+          dataRaw[key].lastVoiceChannel
+        )
       }
       renameSync('./vlogdata.json', './vlogdata.json.bak')
     }
 
     // Add field admin to old lists
-    this.database.updateMany({ currentVoiceChannel: { $exists: false } }, { $set: { currentVoiceChannel: '' } })
+    this.database?.updateMany(
+      { currentVoiceChannel: { $exists: false } },
+      { $set: { currentVoiceChannel: '' } }
+    )
   }
 
-  public async create(serverID: string, channelID = '', lang = 'en_US', lastVoiceChannel = '', currentVoiceChannel = '') {
+  public async create(
+    serverID: string,
+    channelID = '',
+    lang = 'en_US',
+    lastVoiceChannel = '',
+    currentVoiceChannel = ''
+  ) {
     if (!this.database) throw ERR_DB_NOT_INIT
 
     const data = {
@@ -75,40 +92,46 @@ export class ServerConfigManager {
   public async updateChannel(serverID: string, channelID: string) {
     if (!this.database) throw ERR_DB_NOT_INIT
 
-    return (await this.database.findOneAndUpdate(
+    return await this.database.findOneAndUpdate(
       { serverID },
       { $set: { channelID } },
       { returnDocument: ReturnDocument.AFTER }
-    ))
+    )
   }
 
   public async updateLang(serverID: string, lang: string) {
     if (!this.database) throw ERR_DB_NOT_INIT
 
-    return (await this.database.findOneAndUpdate(
+    return await this.database.findOneAndUpdate(
       { serverID },
       { $set: { lang } },
       { returnDocument: ReturnDocument.AFTER }
-    ))
+    )
   }
 
-  public async updateLastVoiceChannel(serverID: string, lastVoiceChannel: string) {
+  public async updateLastVoiceChannel(
+    serverID: string,
+    lastVoiceChannel: string
+  ) {
     if (!this.database) throw ERR_DB_NOT_INIT
 
-    return (await this.database.findOneAndUpdate(
+    return await this.database.findOneAndUpdate(
       { serverID },
       { $set: { lastVoiceChannel } },
       { returnDocument: ReturnDocument.AFTER }
-    ))
+    )
   }
 
-  public async updateCurrentVoiceChannel(serverID: string, currentVoiceChannel: string) {
+  public async updateCurrentVoiceChannel(
+    serverID: string,
+    currentVoiceChannel: string
+  ) {
     if (!this.database) throw ERR_DB_NOT_INIT
 
-    return (await this.database.findOneAndUpdate(
+    return await this.database.findOneAndUpdate(
       { serverID },
       { $set: { currentVoiceChannel } },
       { returnDocument: ReturnDocument.AFTER }
-    ))
+    )
   }
 }

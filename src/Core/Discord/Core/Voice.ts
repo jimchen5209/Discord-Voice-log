@@ -3,13 +3,13 @@ import { Client, Member, VoiceConnection } from 'eris'
 import fs from 'fs'
 import { ILogObj, Logger } from 'tslog'
 import Queue from 'promise-queue'
-import { TTSHelper } from '../../../Core/TTSHelper'
-import { PluginManager } from '../../Plugin/Core'
+import { TTSHelper } from '../../TTSHelper'
+import { PluginManager } from '../../../Plugin/Core'
 
 export class DiscordVoice {
   private _init = true
   private _channelId: string
-  private bot: Client
+  private client: Client
   private voice: VoiceConnection | undefined
   private logger: Logger<ILogObj>
   private queue: Queue = new Queue(1, Infinity)
@@ -17,14 +17,14 @@ export class DiscordVoice {
   private ttsHelper: TTSHelper
 
   constructor(
-    bot: Client,
+    client: Client,
     logger: Logger<ILogObj>,
     plugins: PluginManager,
     ttsHelper: TTSHelper,
     channel: string,
     voice: VoiceConnection | undefined = undefined
   ) {
-    this.bot = bot
+    this.client = client
     this.logger = logger
     this.ttsHelper = ttsHelper
     this.plugins = plugins
@@ -120,7 +120,7 @@ export class DiscordVoice {
     if (this.voice) {
       this.voice.stopPlaying()
       this.voice.removeAllListeners()
-      if (this.voice.channelID) this.bot.leaveVoiceChannel(this.voice.channelID)
+      if (this.voice.channelID) this.client.leaveVoiceChannel(this.voice.channelID)
       this.voice = undefined
     }
   }
@@ -128,7 +128,7 @@ export class DiscordVoice {
   private async joinVoiceChannel(channelID: string): Promise<VoiceConnection | undefined> {
     this.logger.info(`Connecting to ${channelID}...`)
     try {
-      const connection = await this.bot.joinVoiceChannel(channelID)
+      const connection = await this.client.joinVoiceChannel(channelID)
       connection.on('warn', (message: string) => {
         this.logger.warn(`Warning from ${channelID}: ${message}`)
       })
@@ -150,7 +150,7 @@ export class DiscordVoice {
       connection.once('disconnect', err => {
         this.logger.error(`Error from voice connection ${channelID}: ${err?.message}`, err)
         connection.stopPlaying()
-        this.bot.leaveVoiceChannel(channelID)
+        this.client.leaveVoiceChannel(channelID)
         setTimeout(() => {
           this.joinVoiceChannel(this._channelId || channelID).then(newConnection => {
             this.voice = newConnection

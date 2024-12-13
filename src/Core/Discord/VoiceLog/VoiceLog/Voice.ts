@@ -5,38 +5,39 @@ import { ILogObj, Logger } from 'tslog'
 import path from 'path'
 import Queue from 'promise-queue'
 import { CommandContext, MessageEmbedOptions } from 'slash-create'
-import { Core } from '../../../..'
-import { ServerConfigManager } from '../../../MongoDB/db/ServerConfig'
-import { TTSHelper } from '../../../../Core/TTSHelper'
+import { DbServerConfigManager } from '../../../MongoDB/db/ServerConfig'
+import { TTSHelper } from '../../../TTSHelper'
 import { Discord } from '../../Core'
-import { DiscordVoice } from '../Voice'
-import { PluginManager } from '../../../Plugin/Core'
+import { DiscordVoice } from '../../Core/Voice'
+import { PluginManager } from '../../../../Plugin/Core'
+import { VoiceLog } from '../VoiceLog'
+import { instances } from '../../../../Utils/Instances'
 
 export class VoiceLogVoice {
-  private bot: Client
+  private client: Client
   private audios: { [key: string]: DiscordVoice } = {}
   private logger: Logger<ILogObj>
   private voiceLogger: Logger<ILogObj>
-  private data: ServerConfigManager
+  private data: DbServerConfigManager
   private ttsHelper: TTSHelper
   private plugins: PluginManager
   private updateLock = false
 
-  constructor(core: Core, discord: Discord, bot: Client, logger: Logger<ILogObj>) {
-    this.bot = bot
+  constructor(voiceLog: VoiceLog, discord: Discord, logger: Logger<ILogObj>) {
+    this.client = discord.client
     this.logger = logger.getSubLogger({ name: 'VoiceLog/Voice'})
     this.voiceLogger = logger.getSubLogger({ name: 'Discord/Voice'})
-    this.data = core.data
-    this.ttsHelper = discord.ttsHelper
-    this.plugins = core.plugins
+    this.data = voiceLog.serverConfig
+    this.ttsHelper = instances.ttsHelper
+    this.plugins = instances.pluginManager
   }
 
   public getCurrentVoice(guildId: string): DiscordVoice | undefined {
     const voice = this.audios[guildId]
     if (!voice) {
-      const botVoice = this.bot.voiceConnections.get(guildId)
+      const botVoice = this.client.voiceConnections.get(guildId)
       if (botVoice && botVoice.ready) {
-        if (botVoice.channelID) this.audios[guildId] = new DiscordVoice(this.bot, this.voiceLogger, this.plugins, this.ttsHelper, botVoice.channelID, botVoice)
+        if (botVoice.channelID) this.audios[guildId] = new DiscordVoice(this.client, this.voiceLogger, this.plugins, this.ttsHelper, botVoice.channelID, botVoice)
         return this.audios[guildId]
       }
       return undefined
@@ -67,7 +68,7 @@ export class VoiceLogVoice {
       }
     }
 
-    this.audios[guildId] = new DiscordVoice(this.bot, this.voiceLogger, this.plugins, this.ttsHelper, channelId)
+    this.audios[guildId] = new DiscordVoice(this.client, this.voiceLogger, this.plugins, this.ttsHelper, channelId)
     try {
       await waitUntil(() => this.audios[guildId] && this.audios[guildId].isReady())
     } catch (error) {
@@ -97,6 +98,12 @@ export class VoiceLogVoice {
     this.destroy(guildId)
     this.data.updateLastVoiceChannel(guildId, channelId)
     this.data.updateCurrentVoiceChannel(guildId, '')
+  }
+
+  public async end() {
+    for (const guildId in this.audios) {
+      this.destroy(guildId)
+    }
   }
 
   public async refreshCache(context: CommandContext | undefined) {
