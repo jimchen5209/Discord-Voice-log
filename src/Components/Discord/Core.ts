@@ -1,67 +1,67 @@
-import { Client } from 'eris';
-import { Logger } from 'tslog-helper';
-import { Core } from '../..';
-import { Config } from '../../Core/Config';
-import { Lang } from '../../Core/Lang';
-import { TTSHelper } from '../../Core/TTSHelper';
-import { Command } from './Components/Command';
-import { DiscordText } from './Components/Text';
-import { VoiceLog } from './Components/VoiceLog';
+import { Client } from 'eris'
+import { Logger } from 'tslog-helper'
+import { Core } from '../..'
+import { Config } from '../../Core/Config'
+import { Lang } from '../../Core/Lang'
+import { TTSHelper } from '../../Core/TTSHelper'
+import { Command } from './Components/Command'
+import { DiscordText } from './Components/Text'
+import { VoiceLog } from './Components/VoiceLog'
 
-const ERR_MISSING_TOKEN = Error('Discord token missing');
+const ERR_MISSING_TOKEN = Error('Discord token missing')
 
 export class Discord {
-    private _lang: Lang;
-    private _ttsHelper: TTSHelper;
-    private _voiceLog: VoiceLog;
-    private config: Config;
-    private bot: Client;
-    private command: Command;
-    private logger: Logger;
+  private _lang: Lang
+  private _ttsHelper: TTSHelper
+  private _voiceLog: VoiceLog
+  private config: Config
+  private bot: Client
+  private command: Command
+  private logger: Logger
 
-    constructor(core: Core) {
-        this.config = core.config;
-        this.logger = core.mainLogger.getChildLogger({ name: 'Discord'});
-        this._lang = core.lang;
-        this._ttsHelper = core.ttsHelper;
+  constructor(core: Core) {
+    this.config = core.config
+    this.logger = core.mainLogger.getChildLogger({ name: 'Discord'})
+    this._lang = core.lang
+    this._ttsHelper = core.ttsHelper
 
-        if (this.config.discord.botToken === '') throw ERR_MISSING_TOKEN;
+    if (this.config.discord.botToken === '') throw ERR_MISSING_TOKEN
 
-        this.bot = new Client(
-            this.config.discord.botToken,
-            { restMode: true, intents: ['guilds','guildIntegrations', 'guildMessages', 'guildVoiceStates', 'guildMembers'] }
-        );
+    this.bot = new Client(
+      this.config.discord.botToken,
+      { restMode: true, intents: ['guilds','guildIntegrations', 'guildMessages', 'guildVoiceStates', 'guildMembers'] }
+    )
 
-        this._voiceLog = new VoiceLog(core, this, this.bot, this.logger);
+    this._voiceLog = new VoiceLog(core, this, this.bot, this.logger)
 
-        this.command = new Command(this._voiceLog, core, this, this.bot);
+    this.command = new Command(this._voiceLog, core, this, this.bot)
 
-        process.on('warning', e => {
-            this.logger.warn(e.message);
-        });
+    process.on('warning', e => {
+      this.logger.warn(e.message)
+    })
 
-        this.bot.on('ready', async () => {
-            this.logger.info(`Logged in as ${this.bot.user.username} (${this.bot.user.id})`);
-            this.command.refreshCommands();
-            this._voiceLog.start();
-        });
+    this.bot.on('ready', async () => {
+      this.logger.info(`Logged in as ${this.bot.user.username} (${this.bot.user.id})`)
+      this.command.refreshCommands()
+      this._voiceLog.start()
+    })
 
-        // tslint:disable-next-line:no-unused-expression
-        new DiscordText(core, this.bot, this.logger);
+    // tslint:disable-next-line:no-unused-expression
+    new DiscordText(core, this.bot, this.logger)
 
-        this.bot.connect();
-    }
+    this.bot.connect()
+  }
 
-    public get lang() {
-        return this._lang;
-    }
+  public get lang() {
+    return this._lang
+  }
 
-    public get ttsHelper() {
-        return this._ttsHelper;
-    }
+  public get ttsHelper() {
+    return this._ttsHelper
+  }
 
-    public get voiceLog() {
-        return this._voiceLog;
-    }
+  public get voiceLog() {
+    return this._voiceLog
+  }
 
 }

@@ -1,97 +1,98 @@
-import { createWriteStream, existsSync } from 'fs';
-import { Logger } from 'tslog-helper';
-import md5 from 'md5';
-import fetch, { RequestInit } from 'node-fetch';
-import { Readable } from 'stream';
-import { Core } from '..';
-import { Config } from './Config';
-import { MPEGDecoderWebWorker } from 'mpg123-decoder';
-import { writeFile } from 'fs/promises';
+import { createWriteStream, existsSync } from 'fs'
+import { Logger } from 'tslog-helper'
+import md5 from 'md5'
+import fetch, { RequestInit } from 'node-fetch'
+import { Readable } from 'stream'
+import { Core } from '..'
+import { Config } from './Config'
+import { MPEGDecoderWebWorker } from 'mpg123-decoder'
+import { writeFile } from 'fs/promises'
 
 export class TTSHelper {
-    private logger: Logger;
-    private config: Config;
-    private mp3Decoder: MPEGDecoderWebWorker;
+  private logger: Logger
+  private config: Config
+  private mp3Decoder: MPEGDecoderWebWorker
 
-    constructor(core: Core) {
-        this.logger = core.mainLogger.getChildLogger({ name: 'TTSHelper'});
-        this.config = core.config;
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        this.mp3Decoder = new (require('fix-esm').require('mpg123-decoder')).MPEGDecoderWebWorker();
-    }
+  constructor(core: Core) {
+    this.logger = core.mainLogger.getChildLogger({ name: 'TTSHelper'})
+    this.config = core.config
 
-    public async getTTSFile(text: string, lang: string): Promise<string | null> {
-        const filePath = `./caches/${md5(`${text}-${lang}`)}.pcm`;
-        if (!existsSync(filePath)) {
-            const ttsURL = encodeURI(`https://translate.google.com.tw/translate_tts?ie=UTF-8&q=${text}&tl=${lang}&client=tw-ob`);
-            try {
-                const res = await fetch(ttsURL);
-                if (res.ok) {
-                    const mp3 = res.arrayBuffer();
-                    await this.mp3Decoder.ready;
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    this.mp3Decoder = new (require('fix-esm').require('mpg123-decoder')).MPEGDecoderWebWorker()
+  }
 
-                    // Decode mp3 to PCM 24kHz mono f32
-                    const { channelData } = await this.mp3Decoder.decode(new Uint8Array(await mp3));
-                    await this.mp3Decoder.reset();
+  public async getTTSFile(text: string, lang: string): Promise<string | null> {
+    const filePath = `./caches/${md5(`${text}-${lang}`)}.pcm`
+    if (!existsSync(filePath)) {
+      const ttsURL = encodeURI(`https://translate.google.com.tw/translate_tts?ie=UTF-8&q=${text}&tl=${lang}&client=tw-ob`)
+      try {
+        const res = await fetch(ttsURL)
+        if (res.ok) {
+          const mp3 = res.arrayBuffer()
+          await this.mp3Decoder.ready
 
-                    // Covent to 48kHz stereo s16
-                    const pcm = new Int16Array(channelData[0].length * 4);
-                    let temp = 0;
-                    channelData[0].forEach((v, index) => {
-                        const i = v < 0 ? v * 0x8000 : v * 0x7FFF; // f32 to s16
+          // Decode mp3 to PCM 24kHz mono f32
+          const { channelData } = await this.mp3Decoder.decode(new Uint8Array(await mp3))
+          await this.mp3Decoder.reset()
 
-                        // Linear interpolation
-                        const i1 = Math.round((temp + i) / 2);
-                        const i2 = Math.round(i);
-                        temp = i;
+          // Covent to 48kHz stereo s16
+          const pcm = new Int16Array(channelData[0].length * 4)
+          let temp = 0
+          channelData[0].forEach((v, index) => {
+            const i = v < 0 ? v * 0x8000 : v * 0x7FFF // f32 to s16
 
-                        pcm.set([i1, i1, i2, i2], index * 4); // 24kHz mono to 48kHz stereo
-                    });
-                    await writeFile(filePath, pcm);
-                } else {
-                    this.logger.error(`TTS ${text} in ${lang} download failed. response code: ${res.status}`);
-                }
-            } catch (error) {
-                if (error instanceof Error) {
-                    this.logger.error(`TTS ${text} in ${lang} download failed: ${error.message}`, error);
-                }
-                return null;
-            }
+            // Linear interpolation
+            const i1 = Math.round((temp + i) / 2)
+            const i2 = Math.round(i)
+            temp = i
+
+            pcm.set([i1, i1, i2, i2], index * 4) // 24kHz mono to 48kHz stereo
+          })
+          await writeFile(filePath, pcm)
+        } else {
+          this.logger.error(`TTS ${text} in ${lang} download failed. response code: ${res.status}`)
         }
-        return filePath;
-    }
-
-    public async getWaveTTS(text: string, lang: string, voice: string): Promise<string> {
-        const filePath = `./caches/${md5(`${text}-${lang}-${voice}`)}.opus`;
-        if (!existsSync(filePath)) {
-            const key = this.config.googleTTS.apiKey;
-            const url = `https://content-texttospeech.googleapis.com/v1/text:synthesize?alt=json&key=${key}`;
-            const options = {
-                body: `{"input":{"text":"${text}"},"voice":{"name":"${voice}","languageCode":"${lang}"},"audioConfig":{"audioEncoding":"OGG_OPUS"}}`,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Origin': 'https://explorer.apis.google.com',
-                    'X-Referer': 'https://explorer.apis.google.com',
-                },
-                method: 'POST',
-            };
-            await this.downloadWaveTTS(url, options, filePath);
+      } catch (error) {
+        if (error instanceof Error) {
+          this.logger.error(`TTS ${text} in ${lang} download failed: ${error.message}`, error)
         }
-        return filePath;
+        return null
+      }
     }
+    return filePath
+  }
 
-    private async downloadWaveTTS(url: string, options: RequestInit, path: string) {
-        await fetch(url, options)
-            .then(response => response.json())
-            .then(data => {
-                const imgBuffer = Buffer.from(data.audioContent, 'base64');
-
-                const s = new Readable();
-
-                s.push(imgBuffer);
-                s.push(null);
-
-                s.pipe(createWriteStream(path));
-            });
+  public async getWaveTTS(text: string, lang: string, voice: string): Promise<string> {
+    const filePath = `./caches/${md5(`${text}-${lang}-${voice}`)}.opus`
+    if (!existsSync(filePath)) {
+      const key = this.config.googleTTS.apiKey
+      const url = `https://content-texttospeech.googleapis.com/v1/text:synthesize?alt=json&key=${key}`
+      const options = {
+        body: `{"input":{"text":"${text}"},"voice":{"name":"${voice}","languageCode":"${lang}"},"audioConfig":{"audioEncoding":"OGG_OPUS"}}`,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Origin': 'https://explorer.apis.google.com',
+          'X-Referer': 'https://explorer.apis.google.com'
+        },
+        method: 'POST'
+      }
+      await this.downloadWaveTTS(url, options, filePath)
     }
+    return filePath
+  }
+
+  private async downloadWaveTTS(url: string, options: RequestInit, path: string) {
+    await fetch(url, options)
+      .then(response => response.json())
+      .then(data => {
+        const imgBuffer = Buffer.from(data.audioContent, 'base64')
+
+        const s = new Readable()
+
+        s.push(imgBuffer)
+        s.push(null)
+
+        s.pipe(createWriteStream(path))
+      })
+  }
 }
