@@ -1,22 +1,21 @@
-import fs from 'fs'
-import { resolve } from 'path'
+import { existsSync, readFileSync } from 'fs'
 import { ApplicationCommandOption, ApplicationCommandOptionChoice, CommandOptionType } from 'slash-create'
 import { Core } from '..'
 
 export class Lang {
   private lang: { [key: string]: { display: { [key: string]: { [key: string]: string } }, displayName: string } } = {}
   constructor(core: Core) {
-    if (!fs.existsSync('./langs')) {
+    if (!existsSync('./langs')) {
       core.mainLogger.error('Directory langs/ not found. Try re-pulling source code.')
       process.exit(1)
     }
-    if (!fs.existsSync('./langs/list.json')) {
+    if (!existsSync('./langs/list.json')) {
       core.mainLogger.error('Directory langs/list.json not found. Try re-pulling source code.')
       process.exit(1)
     }
     let listRaw: { [key: string]: { file: string, display_name: string } }
     try {
-      listRaw = require(resolve('./langs/list.json'))
+      listRaw = JSON.parse(readFileSync('./langs/list.json', { encoding: 'utf-8' }))
     } catch (error) {
       core.mainLogger.error(`Error when loading langs/list.json: ${error}`)
       process.exit(1)
@@ -24,7 +23,7 @@ export class Lang {
     for (const key of Object.keys(listRaw)) {
       try {
         this.lang[key] = {
-          display: require(resolve(listRaw[key].file)),
+          display: JSON.parse(readFileSync(listRaw[key].file, { encoding: 'utf-8' })),
           displayName: listRaw[key].display_name
         }
       } catch (error) {
