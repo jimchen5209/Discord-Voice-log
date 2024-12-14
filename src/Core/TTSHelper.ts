@@ -112,5 +112,13 @@ export class TTSHelper {
 
         s.pipe(createWriteStream(path))
       })
+      .catch((error) => {
+        if (error instanceof Error) {
+          this.logger.error(
+            `Download TTS failed: ${error.message}`,
+            error
+          )
+        }
+      })
   }
 }
