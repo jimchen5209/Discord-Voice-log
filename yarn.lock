@@ -923,7 +923,7 @@ __metadata:
     promise-queue: "npm:^2.2.5"
     slash-create: "npm:^6.3.0"
     sprintf-js: "npm:^1.1.3"
-    status-client: "jimchen5209/StatusClient_JS#v2.2.1"
+    status-client: "jimchen5209/StatusClient_JS#v2.3.0"
     tslog: "npm:^4.9.3"
     typescript: "npm:^5.7.2"
     typescript-eslint: "npm:^8.18.0"
@@ -1845,10 +1845,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"status-client@jimchen5209/StatusClient_JS#v2.2.1":
-  version: 2.2.0
-  resolution: "status-client@https://github.com/jimchen5209/StatusClient_JS.git#commit=70bb3e70dcf094bb10ebc4d44ad40de43954538a"
-  checksum: 10c0/2827a8f767211a8a9352c5d8da4028037b8f02fbafeca1e48561b953bba80d1e651b2542af79f0b3905f1fb2e89c06ac8859ebb852ef1a4526a6c29af191101f
+"status-client@jimchen5209/StatusClient_JS#v2.3.0":
+  version: 2.3.0
+  resolution: "status-client@https://github.com/jimchen5209/StatusClient_JS.git#commit=be7568ff41c68bf6a87b892698145af7c8a8c983"
+  checksum: 10c0/a350046f703de98cd47cac6ba82c950df8a25d9f8ddb48dd76d45911c2b32cb846b8e6769ccb2e8773ee3ac83215505d8adefef41fe2453dd8a093771a3e7e54
   languageName: node
   linkType: hard
 
