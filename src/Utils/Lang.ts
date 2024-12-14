@@ -1,21 +1,21 @@
-import { existsSync, readFileSync } from 'fs'
+import { existsSync as exists, readFileSync as readFile } from 'fs'
 import { ApplicationCommandOption, ApplicationCommandOptionChoice, CommandOptionType } from 'slash-create'
 import { Logger, ILogObj } from 'tslog'
 
 export class Lang {
   private lang: { [key: string]: { display: { [key: string]: { [key: string]: string } }, displayName: string } } = {}
   constructor(mainLogger: Logger<ILogObj>) {
-    if (!existsSync('./langs')) {
+    if (!exists('./langs')) {
       mainLogger.error('Directory langs/ not found. Try re-pulling source code.')
       process.exit(1)
     }
-    if (!existsSync('./langs/list.json')) {
+    if (!exists('./langs/list.json')) {
       mainLogger.error('Directory langs/list.json not found. Try re-pulling source code.')
       process.exit(1)
     }
     let listRaw: { [key: string]: { file: string, display_name: string } }
     try {
-      listRaw = JSON.parse(readFileSync('./langs/list.json', { encoding: 'utf-8' }))
+      listRaw = JSON.parse(readFile('./langs/list.json', { encoding: 'utf-8' }))
     } catch (error) {
       mainLogger.error(`Error when loading langs/list.json: ${error}`)
       process.exit(1)
@@ -23,7 +23,7 @@ export class Lang {
     for (const key of Object.keys(listRaw)) {
       try {
         this.lang[key] = {
-          display: JSON.parse(readFileSync(listRaw[key].file, { encoding: 'utf-8' })),
+          display: JSON.parse(readFile(listRaw[key].file, { encoding: 'utf-8' })),
           displayName: listRaw[key].display_name
         }
       } catch (error) {

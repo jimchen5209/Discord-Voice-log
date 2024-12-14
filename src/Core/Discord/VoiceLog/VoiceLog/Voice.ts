@@ -1,30 +1,27 @@
 import waitUntil from 'async-wait-until'
 import { VoiceChannel } from 'eris'
-import { readdirSync, readFileSync, unlinkSync } from 'fs'
+import { readdirSync as readDir, readFileSync as readFile, unlinkSync as deleteFile } from 'fs'
 import { ILogObj, Logger } from 'tslog'
-import path from 'path'
+import { extname } from 'path'
 import Queue from 'promise-queue'
 import { CommandContext, MessageEmbedOptions } from 'slash-create'
 import { DbServerConfigManager } from '../../../MongoDB/db/ServerConfig'
-import { TTSHelper } from '../../../../Utils/TTSHelper'
 import { Discord } from '../../Core'
 import { DiscordVoice } from '../../Core/Voice'
 import { VoiceLog } from '../VoiceLog'
 import { instances } from '../../../../Utils/Instances'
 
 export class VoiceLogVoice {
+  private updateLock = false
   private discord: Discord
   private audios: { [key: string]: DiscordVoice } = {}
   private logger: Logger<ILogObj>
-  private data: DbServerConfigManager
-  private ttsHelper: TTSHelper
-  private updateLock = false
+  private serverConfig: DbServerConfigManager
 
   constructor(voiceLog: VoiceLog, discord: Discord) {
     this.discord = discord
     this.logger = voiceLog.logger.getSubLogger({ name: 'Voice' })
-    this.data = voiceLog.serverConfig
-    this.ttsHelper = instances.ttsHelper
+    this.serverConfig = voiceLog.serverConfig
   }
 
   public getCurrentVoice(guildId: string): DiscordVoice | undefined {
@@ -52,8 +49,8 @@ export class VoiceLogVoice {
         this.audios[guildId].switchChannel(channelId)
 
         if (updateDatabase) {
-          this.data.updateLastVoiceChannel(guildId, '')
-          this.data.updateCurrentVoiceChannel(guildId, channelId)
+          this.serverConfig.updateLastVoiceChannel(guildId, '')
+          this.serverConfig.updateCurrentVoiceChannel(guildId, channelId)
         }
 
         if (playJoin) this.audios[guildId].playMoved()
@@ -71,8 +68,8 @@ export class VoiceLogVoice {
       return
     }
     if (updateDatabase) {
-      this.data.updateLastVoiceChannel(guildId, '')
-      this.data.updateCurrentVoiceChannel(guildId, channelId)
+      this.serverConfig.updateLastVoiceChannel(guildId, '')
+      this.serverConfig.updateCurrentVoiceChannel(guildId, channelId)
     }
 
     if (playJoin) this.audios[guildId].playReady()
@@ -84,16 +81,16 @@ export class VoiceLogVoice {
     this.audios[guildId].destroy()
     delete this.audios[guildId]
     if (updateDatabase) {
-      this.data.updateLastVoiceChannel(guildId, '')
-      this.data.updateCurrentVoiceChannel(guildId, '')
+      this.serverConfig.updateLastVoiceChannel(guildId, '')
+      this.serverConfig.updateCurrentVoiceChannel(guildId, '')
     }
   }
 
   private async sleep(guildId: string, channelId: string) {
     this.logger.info(`No user in ${channelId}, sleeping...`)
     this.destroy(guildId)
-    this.data.updateLastVoiceChannel(guildId, channelId)
-    this.data.updateCurrentVoiceChannel(guildId, '')
+    this.serverConfig.updateLastVoiceChannel(guildId, channelId)
+    this.serverConfig.updateCurrentVoiceChannel(guildId, '')
   }
 
   public async end() {
@@ -140,7 +137,7 @@ export class VoiceLogVoice {
         }
         progressMessage = this.genProgressMessage(title, [seekField, progressField])
         await context?.editOriginal({ embeds: [progressMessage] })
-        this.ttsHelper.getTTSFile(text, lang).then(fileName => {
+        instances.ttsHelper.getTTSFile(text, lang).then(fileName => {
           this.logger.info(`(${progressCount}/${progressTotal}) ${text} in ${lang} -> ${fileName}`)
           if (fileName !== null) ttsList.push(fileName)
           setTimeout(() => { res() }, 500)
@@ -157,7 +154,7 @@ export class VoiceLogVoice {
         }
         progressMessage = this.genProgressMessage(title, [seekField, progressField])
         await context?.editOriginal({ embeds: [progressMessage] })
-        this.ttsHelper.getWaveTTS(text, lang, voice).then(fileName => {
+        instances.ttsHelper.getWaveTTS(text, lang, voice).then(fileName => {
           this.logger.info(`(${progressCount}/${progressTotal}) ${text} in ${lang} with voice ${voice} -> ${fileName}`)
           if (fileName !== null) ttsList.push(fileName)
           setTimeout(() => { res() }, 500)
@@ -169,16 +166,16 @@ export class VoiceLogVoice {
     queue.add(() => getWaveTTS('VoiceLog is ready.', 'en-US', 'en-US-Wavenet-D'))
     progressTotal += 2
     const typeList = ['join', 'left', 'switched_out', 'switched_in']
-    const files = readdirSync('assets/')
+    const files = readDir('assets/')
     files.forEach(file => {
-      if (path.extname(file) === '.json') {
+      if (extname(file) === '.json') {
         seekCounter++
         seekFilename = file
         seekField = {
           name: `${seekDone ? '✅' : '➡️'} Seeking for files ...${seekDone ? ' Done' : ''}`,
           value: `${(seekDone || seekCounter === 0) ? '' : `Current ${seekFilename}, `} Seeked ${seekCounter} files. `
         }
-        const tts = JSON.parse(readFileSync(`assets/${file}`, { encoding: 'utf-8' }))
+        const tts = JSON.parse(readFile(`assets/${file}`, { encoding: 'utf-8' }))
         if (tts.use_wave_tts && tts.lang && tts.voice) {
           typeList.forEach(type => {
             if (tts[type]) {
@@ -215,10 +212,10 @@ export class VoiceLogVoice {
         }
         progressMessage = this.genProgressMessage(title, [seekField, progressField, cacheField])
         await context?.editOriginal({ embeds: [progressMessage] })
-        const cacheFiles = readdirSync('caches/')
+        const cacheFiles = readDir('caches/')
         cacheFiles.forEach(async file => {
           if (!ttsList.includes(`./caches/${file}`)) {
-            unlinkSync(`./caches/${file}`)
+            deleteFile(`./caches/${file}`)
             this.logger.info(`Deleted unused file ./caches/${file}`)
             cacheRemoveCount++
             progressMessage = this.genProgressMessage(title, [seekField, progressField, cacheField])
@@ -250,7 +247,7 @@ export class VoiceLogVoice {
     let channelToCheck: VoiceChannel | undefined
 
     const voice = this.getCurrentVoice(guildId)
-    const data = await this.data.get(guildId)
+    const data = await this.serverConfig.get(guildId)
 
     if (voice?.isReady()) {
       channelToCheck = (oldChannel?.id === voice?.channelId) ? oldChannel : ((newChannel?.id === voice?.channelId) ? newChannel : undefined)

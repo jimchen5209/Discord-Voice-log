@@ -1,22 +1,18 @@
 import { waitUntil } from 'async-wait-until'
 import { Client, Member, VoiceConnection } from 'eris'
-import fs from 'fs'
+import { existsSync as exists, readFileSync as readFile } from 'fs'
 import { ILogObj, Logger } from 'tslog'
 import Queue from 'promise-queue'
-import { TTSHelper } from '../../../Utils/TTSHelper'
-import { PluginManager } from '../../../Plugin/Core'
 import { instances } from '../../../Utils/Instances'
 import { Discord } from '../Core'
 
 export class DiscordVoice {
   private _init = true
   private _channelId: string
+  private queue: Queue = new Queue(1, Infinity)
   private client: Client
   private voice: VoiceConnection | undefined
   private logger: Logger<ILogObj>
-  private queue: Queue = new Queue(1, Infinity)
-  private plugins: PluginManager
-  private ttsHelper: TTSHelper
 
   constructor(
     discord: Discord,
@@ -28,8 +24,6 @@ export class DiscordVoice {
       name: 'Voice',
       prefix: [`[${channel}]`]
     })
-    this.ttsHelper = instances.ttsHelper
-    this.plugins = instances.pluginManager
 
     this._channelId = channel
 
@@ -67,19 +61,19 @@ export class DiscordVoice {
   }
 
   public async playReady() {
-    const voiceFile = await this.ttsHelper.getWaveTTS('VoiceLog is ready.', 'en-US', 'en-US-Wavenet-D')
+    const voiceFile = await instances.ttsHelper.getWaveTTS('VoiceLog is ready.', 'en-US', 'en-US-Wavenet-D')
     if (voiceFile !== null) this.queue.add(() => this.play(voiceFile, 'ogg'))
   }
 
   public async playMoved() {
-    const voiceFile = await this.ttsHelper.getWaveTTS('VoiceLog is moved to your channel.', 'en-US', 'en-US-Wavenet-D')
+    const voiceFile = await instances.ttsHelper.getWaveTTS('VoiceLog is moved to your channel.', 'en-US', 'en-US-Wavenet-D')
     if (voiceFile !== null) this.queue.add(() => this.play(voiceFile, 'ogg'))
   }
 
   public async playVoice(member: Member, type: string) {
     let overwritten = false
 
-    for (const voice of this.plugins.voiceOverwrites) {
+    for (const voice of instances.pluginManager.voiceOverwrites) {
       const overwrittenFile = await voice.playVoice(member, type)
       if (overwrittenFile) {
         this.queue.add(() => this.play(overwrittenFile, 'pcm'))
@@ -92,23 +86,23 @@ export class DiscordVoice {
 
     let voiceFile = ''
     let format: string| undefined
-    if (fs.existsSync(`assets/${member.id}.json`)) {
-      const tts = JSON.parse(fs.readFileSync(`assets/${member.id}.json`, { encoding: 'utf-8' }))
+    if (exists(`assets/${member.id}.json`)) {
+      const tts = JSON.parse(readFile(`assets/${member.id}.json`, { encoding: 'utf-8' }))
       if (tts.use_wave_tts && tts.lang && tts.voice && tts[type]) {
-        voiceFile = await this.ttsHelper.getWaveTTS(tts[type], tts.lang, tts.voice)
+        voiceFile = await instances.ttsHelper.getWaveTTS(tts[type], tts.lang, tts.voice)
         format = 'ogg'
       } else if (tts.lang && tts[type]) {
-        const file = await this.ttsHelper.getTTSFile(tts[type], tts.lang)
+        const file = await instances.ttsHelper.getTTSFile(tts[type], tts.lang)
         if (file !== null) {
           voiceFile = file
           format = 'pcm'
-        } else if (fs.existsSync(`assets/${member.id}_${type}.wav`)) {
+        } else if (exists(`assets/${member.id}_${type}.wav`)) {
           voiceFile = `assets/${member.id}_${type}.wav`
         }
-      } else if (fs.existsSync(`assets/${member.id}_${type}.wav`)) {
+      } else if (exists(`assets/${member.id}_${type}.wav`)) {
         voiceFile = `assets/${member.id}_${type}.wav`
       }
-    } else if (fs.existsSync(`assets/${member.id}_${type}.wav`)) {
+    } else if (exists(`assets/${member.id}_${type}.wav`)) {
       voiceFile = `assets/${member.id}_${type}.wav`
     }
     if (voiceFile !== '') this.queue.add(() => this.play(voiceFile, format))

@@ -1,5 +1,5 @@
 import { Client, Member, VoiceChannel } from 'eris'
-import fs from 'fs'
+import { existsSync as exists, mkdirSync as mkDir } from 'fs'
 import { ILogObj, Logger } from 'tslog'
 import { scheduleJob } from 'node-schedule'
 import Queue from 'promise-queue'
@@ -12,13 +12,13 @@ import { instances } from '../../../Utils/Instances'
 import { ERR_DB_NOT_INIT } from '../../MongoDB/Core'
 
 export class VoiceLog {
-  private client: Client
   private _voice: VoiceLogVoice
   private _text: VoiceLogText
   private _command: VoiceLogCommands
-  private queue: Queue = new Queue(1, Infinity)
   private _logger: Logger<ILogObj>
   private _serverConfig: DbServerConfigManager
+  private client: Client
+  private queue: Queue = new Queue(1, Infinity)
 
   constructor(discord: Discord) {
     this.client = discord.client
@@ -127,8 +127,8 @@ export class VoiceLog {
   }
 
   public async start() {
-    if (!fs.existsSync('./assets')) fs.mkdirSync('./assets')
-    if (!fs.existsSync('./caches')) fs.mkdirSync('./caches')
+    if (!exists('./assets')) mkDir('./assets')
+    if (!exists('./caches')) mkDir('./caches')
     const channels = await this._serverConfig.getCurrentChannels()
     channels.forEach(element => {
       this._logger.info(`Reconnecting to ${element.currentVoiceChannel}...`)

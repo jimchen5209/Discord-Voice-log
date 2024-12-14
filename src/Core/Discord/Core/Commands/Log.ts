@@ -4,6 +4,7 @@ import { instances } from '../../../../Utils/Instances'
 
 export class LogCommand extends SlashCommand {
   private voiceLog: VoiceLog
+
   constructor(creator: SlashCreator) {
     super(creator, {
       name: 'log',

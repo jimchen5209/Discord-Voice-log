@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, writeFileSync } from 'fs'
+import { existsSync as exists, readFileSync as readFile, writeFileSync as writeFile } from 'fs'
 import { ILogObj, ISettingsParam, Logger } from 'tslog'
 export const loggerOptions: ISettingsParam<ILogObj> = {
   name: 'Main',
@@ -25,8 +25,8 @@ export class Config {
 
     let versionChanged = false
 
-    if (existsSync('./config.json')) {
-      const config = JSON.parse(readFileSync('config.json', { encoding: 'utf-8' }))
+    if (exists('./config.json')) {
+      const config = JSON.parse(readFile('config.json', { encoding: 'utf-8' }))
 
       if (!config.configVersion || config.configVersion < this.configVersion) versionChanged = true
       if (config.configVersion > this.configVersion) {
@@ -84,7 +84,7 @@ export class Config {
       mongodb: this._mongodb,
       debug: this._debug
     }, null, 4)
-    writeFileSync('./config.json', json, 'utf8')
+    writeFile('./config.json', json, 'utf8')
   }
 
   public get discord() {

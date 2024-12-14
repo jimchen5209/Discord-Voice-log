@@ -1,7 +1,6 @@
 import { Member, VoiceChannel, MessageContent, Client, TextChannel } from 'eris'
 import { ILogObj, Logger } from 'tslog'
 import { vsprintf } from 'sprintf-js'
-import { Lang } from '../../../../Utils/Lang'
 import { DbServerConfigManager } from '../../../MongoDB/db/ServerConfig'
 import { Discord } from '../../Core'
 import { instances } from '../../../../Utils/Instances'
@@ -25,13 +24,11 @@ export class VoiceLogText {
   private client: Client
   private logger: Logger<ILogObj>
   private serverConfig: DbServerConfigManager
-  private lang: Lang
 
   constructor(voiceLog: VoiceLog, discord: Discord) {
     this.client = discord.client
     this.logger = voiceLog.logger.getSubLogger({ name: 'Text' })
     this.serverConfig = voiceLog.serverConfig
-    this.lang = instances.lang
   }
 
   public async setVoiceLog(guildId: string, channelId: string, lang: string | undefined = undefined): Promise<VoiceLogSetStatus> {
@@ -69,7 +66,7 @@ export class VoiceLogText {
   }
 
   public async setLang(guildId: string, lang: string): Promise<VoiceLogSetStatus> {
-    if (!this.lang.isExist(lang)) return VoiceLogSetStatus.MissingLang
+    if (!instances.lang.isExist(lang)) return VoiceLogSetStatus.MissingLang
 
     const data = await this.serverConfig.getOrCreate(guildId)
 
@@ -89,11 +86,11 @@ export class VoiceLogText {
     switch (type) {
       case 'join':
         color = 4289797
-        content = vsprintf(this.lang.get(lang).display.voice_log.joined, [newChannel?.name])
+        content = vsprintf(instances.lang.get(lang).display.voice_log.joined, [newChannel?.name])
         break
       case 'leave':
         color = 8454161
-        content = vsprintf(this.lang.get(lang).display.voice_log.left, [oldChannel?.name])
+        content = vsprintf(instances.lang.get(lang).display.voice_log.left, [oldChannel?.name])
         break
       case 'move':
         color = 10448150

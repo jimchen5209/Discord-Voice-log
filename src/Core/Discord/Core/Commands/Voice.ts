@@ -3,6 +3,7 @@ import { VoiceLog } from '../../VoiceLog/VoiceLog'
 
 export class VoiceCommand extends SlashCommand {
   private voiceLog: VoiceLog
+
   constructor(creator: SlashCreator) {
     super(creator, {
       name: 'voice',

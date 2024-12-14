@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, renameSync } from 'fs'
+import { existsSync as exists, readFileSync as readFile, renameSync as renameFile } from 'fs'
 import { Collection, Db, ObjectId, ReturnDocument } from 'mongodb'
 import { ERR_DB_NOT_INIT, ERR_INSERT_FAILURE } from '../Core'
 import { instances } from '../../../Utils/Instances'
@@ -25,10 +25,10 @@ export class DbServerConfigManager {
   }
 
   private async migrateData() {
-    if (existsSync('./vlogdata.json')) {
+    if (exists('./vlogdata.json')) {
       instances.mainLogger.info('Old data found. Migrating to db...')
       const dataRaw = JSON.parse(
-        readFileSync('./vlogdata.json', { encoding: 'utf-8' })
+        readFile('./vlogdata.json', { encoding: 'utf-8' })
       )
       for (const key of Object.keys(dataRaw)) {
         if (dataRaw[key] === undefined) continue
@@ -39,7 +39,7 @@ export class DbServerConfigManager {
           dataRaw[key].lastVoiceChannel
         )
       }
-      renameSync('./vlogdata.json', './vlogdata.json.bak')
+      renameFile('./vlogdata.json', './vlogdata.json.bak')
     }
 
     // Add field admin to old lists

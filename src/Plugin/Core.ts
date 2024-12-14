@@ -1,6 +1,6 @@
-import { readdirSync, existsSync } from 'fs'
+import { readdirSync as readDir, existsSync as exists } from 'fs'
 import { ILogObj, Logger } from 'tslog'
-import path from 'path'
+import { extname } from 'path'
 import { IPluginBase } from './Base/PluginBase'
 import { IVoiceOverwrite } from './Base/VoiceOverwrite'
 
@@ -19,14 +19,14 @@ export class PluginManager {
 
   public async reloadPluginList() {
     this.logger.info('Loading plugins...')
-    if (!existsSync(`${__dirname}/Plugins/`)) {
+    if (!exists(`${__dirname}/Plugins/`)) {
       this.logger.error(`${__dirname}/Plugins/ not found, skipping`)
       return
     }
-    const files = readdirSync(`${__dirname}/Plugins/`)
+    const files = readDir(`${__dirname}/Plugins/`)
 
     for (const file of files) {
-      if (path.extname(file) === '.js') {
+      if (extname(file) === '.js') {
         const value = await import(`${__dirname}/Plugins/${file}`)
         for (const className of Object.keys(value)) {
           if (!value[className]) continue

@@ -3,6 +3,7 @@ import { VoiceLog } from '../../VoiceLog/VoiceLog'
 
 export class RefreshCacheCommand extends SlashCommand {
   private voiceLog: VoiceLog
+
   constructor(creator: SlashCreator) {
     super(creator, {
       name: 'refresh_cache',
