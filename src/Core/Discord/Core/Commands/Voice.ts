@@ -3,11 +3,11 @@ import { VoiceLog } from '../../VoiceLog/VoiceLog'
 
 export class VoiceCommand extends SlashCommand {
   private voiceLog: VoiceLog
-  constructor(creator: SlashCreator, guildIDs: string[], voiceLog: VoiceLog) {
+  constructor(creator: SlashCreator) {
     super(creator, {
       name: 'voice',
       description: 'VoiceLog voice option',
-      guildIDs,
+      guildIDs: creator.client.guildIDs,
       options: [
         {
           name: 'join',
@@ -21,7 +21,7 @@ export class VoiceCommand extends SlashCommand {
         }
       ]
     })
-    this.voiceLog = voiceLog
+    this.voiceLog = creator.client.voiceLog
   }
 
   async run(ctx: CommandContext) {

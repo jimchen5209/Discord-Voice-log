@@ -2,7 +2,6 @@ import { Client } from 'eris'
 import { ILogObj, Logger } from 'tslog'
 import { AnyRequestData, GatewayServer, SlashCommand, SlashCreator } from 'slash-create'
 import { Config } from '../../Config'
-import { Lang } from '../../Lang'
 import { Discord } from '../Core'
 import { LogCommand } from './Commands/Log'
 import { RefreshCacheCommand } from './Commands/RefreshCache'
@@ -16,7 +15,6 @@ export class Command {
   private creator: SlashCreator
   private logger: Logger<ILogObj>
   private voiceLog: VoiceLog
-  private lang: Lang
   private registered = false
 
   constructor(discord: Discord) {
@@ -24,7 +22,6 @@ export class Command {
     this.client = discord.client
     this.logger = discord.logger.getSubLogger({ name: 'Command' })
     this.voiceLog = discord.voiceLog
-    this.lang = instances.lang
 
     this.creator = new SlashCreator({
       applicationID: this.config.discord.applicationID,
@@ -48,16 +45,18 @@ export class Command {
     this.logger.info('Refreshing commands to all guilds...')
 
     this.client.getRESTGuilds({ limit: 200 }).then((value) => {
-      const guildIDs: string[] = []
+      const guildIDs = value.map((value) => value.id)
 
-      value.forEach((value) => {
-        guildIDs.push(value.id)
-      })
+      this.creator.client = {
+        guildIDs,
+        voiceLog: this.voiceLog,
+        discord: this.client
+      }
 
       const commands: SlashCommand[] = [
-        new VoiceCommand(this.creator, guildIDs, this.voiceLog),
-        new LogCommand(this.creator, guildIDs, this.lang, this.voiceLog),
-        new RefreshCacheCommand(this.creator, guildIDs, this.voiceLog)
+        new VoiceCommand(this.creator),
+        new LogCommand(this.creator),
+        new RefreshCacheCommand(this.creator)
       ]
 
       this.creator.registerCommands(commands)
