@@ -1,5 +1,5 @@
 import waitUntil from 'async-wait-until'
-import { Client, VoiceChannel } from 'eris'
+import { VoiceChannel } from 'eris'
 import { readdirSync, readFileSync, unlinkSync } from 'fs'
 import { ILogObj, Logger } from 'tslog'
 import path from 'path'
@@ -9,35 +9,30 @@ import { DbServerConfigManager } from '../../../MongoDB/db/ServerConfig'
 import { TTSHelper } from '../../../TTSHelper'
 import { Discord } from '../../Core'
 import { DiscordVoice } from '../../Core/Voice'
-import { PluginManager } from '../../../../Plugin/Core'
 import { VoiceLog } from '../VoiceLog'
 import { instances } from '../../../../Utils/Instances'
 
 export class VoiceLogVoice {
-  private client: Client
+  private discord: Discord
   private audios: { [key: string]: DiscordVoice } = {}
   private logger: Logger<ILogObj>
-  private voiceLogger: Logger<ILogObj>
   private data: DbServerConfigManager
   private ttsHelper: TTSHelper
-  private plugins: PluginManager
   private updateLock = false
 
-  constructor(voiceLog: VoiceLog, discord: Discord, logger: Logger<ILogObj>) {
-    this.client = discord.client
-    this.logger = logger.getSubLogger({ name: 'VoiceLog/Voice'})
-    this.voiceLogger = logger.getSubLogger({ name: 'Discord/Voice'})
+  constructor(voiceLog: VoiceLog, discord: Discord) {
+    this.discord = discord
+    this.logger = voiceLog.logger.getSubLogger({ name: 'Voice' })
     this.data = voiceLog.serverConfig
     this.ttsHelper = instances.ttsHelper
-    this.plugins = instances.pluginManager
   }
 
   public getCurrentVoice(guildId: string): DiscordVoice | undefined {
     const voice = this.audios[guildId]
     if (!voice) {
-      const botVoice = this.client.voiceConnections.get(guildId)
+      const botVoice = this.discord.client.voiceConnections.get(guildId)
       if (botVoice && botVoice.ready) {
-        if (botVoice.channelID) this.audios[guildId] = new DiscordVoice(this.client, this.voiceLogger, this.plugins, this.ttsHelper, botVoice.channelID, botVoice)
+        if (botVoice.channelID) this.audios[guildId] = new DiscordVoice(this.discord, botVoice.channelID, botVoice)
         return this.audios[guildId]
       }
       return undefined
@@ -68,7 +63,7 @@ export class VoiceLogVoice {
       }
     }
 
-    this.audios[guildId] = new DiscordVoice(this.client, this.voiceLogger, this.plugins, this.ttsHelper, channelId)
+    this.audios[guildId] = new DiscordVoice(this.discord, channelId)
     try {
       await waitUntil(() => this.audios[guildId] && this.audios[guildId].isReady())
     } catch (error) {
@@ -95,6 +90,7 @@ export class VoiceLogVoice {
   }
 
   private async sleep(guildId: string, channelId: string) {
+    this.logger.info(`No user in ${channelId}, sleeping...`)
     this.destroy(guildId)
     this.data.updateLastVoiceChannel(guildId, channelId)
     this.data.updateCurrentVoiceChannel(guildId, '')
@@ -269,7 +265,6 @@ export class VoiceLogVoice {
     channelToCheck.voiceMembers?.forEach(user => {
       if (!user.bot) {
         noUser = false
-
       }
     })
 

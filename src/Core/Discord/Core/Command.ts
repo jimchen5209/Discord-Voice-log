@@ -19,10 +19,10 @@ export class Command {
   private lang: Lang
   private registered = false
 
-  constructor(discord: Discord, logger: Logger<ILogObj>) {
+  constructor(discord: Discord) {
     this.config = instances.config
     this.client = discord.client
-    this.logger = logger.getSubLogger({ name: 'Command' })
+    this.logger = discord.logger.getSubLogger({ name: 'Command' })
     this.voiceLog = discord.voiceLog
     this.lang = instances.lang
 

@@ -16,7 +16,7 @@ export class MongoDB extends EventEmitter {
   })
   private _db?: Db
   private _serverConfig?: DbServerConfigManager
-  private log = instances.mainLogger.getSubLogger({ name: 'MongoDB' })
+  private logger = instances.mainLogger.getSubLogger({ name: 'MongoDB' })
 
   constructor() {
     super()
@@ -24,11 +24,11 @@ export class MongoDB extends EventEmitter {
     let connectTryCount = 0
     const maxConnectTryCount = 5
     const tryConnect = () => {
-      this.log.info('Trying to connect to mongoDB...')
+      this.logger.info('Trying to connect to mongoDB...')
       this.client
         .connect()
         .then(() => {
-          this.log.info('Successfully connected to mongoDB')
+          this.logger.info('Successfully connected to mongoDB')
 
           this._db = this.client.db(instances.config.mongodb.name)
 
@@ -38,15 +38,15 @@ export class MongoDB extends EventEmitter {
           this.emit('connect', this.client)
         })
         .catch((err) => {
-          this.log.error('Failed to connect to mongoDB:', err)
+          this.logger.error('Failed to connect to mongoDB:', err)
 
           connectTryCount++
           if (connectTryCount > maxConnectTryCount) {
-            this.log.fatal('Unable to connect to mongoDB.')
+            this.logger.fatal('Unable to connect to mongoDB.')
             this.emit('error')
           }
 
-          this.log.warn(
+          this.logger.warn(
             `Retrying to in 5 seconds... (try ${connectTryCount} / ${maxConnectTryCount} )`
           )
           setTimeout(tryConnect, 5 * 1000)
@@ -57,7 +57,7 @@ export class MongoDB extends EventEmitter {
   }
 
   public close() {
-    this.log.info('Closing mongoDB connection...')
+    this.logger.info('Closing mongoDB connection...')
     this.client.close()
   }
 

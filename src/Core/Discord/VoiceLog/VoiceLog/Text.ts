@@ -27,9 +27,9 @@ export class VoiceLogText {
   private serverConfig: DbServerConfigManager
   private lang: Lang
 
-  constructor(voiceLog: VoiceLog, discord: Discord, logger: Logger<ILogObj>) {
+  constructor(voiceLog: VoiceLog, discord: Discord) {
     this.client = discord.client
-    this.logger = logger.getSubLogger({ name: 'VoiceLog/Text'})
+    this.logger = voiceLog.logger.getSubLogger({ name: 'Text' })
     this.serverConfig = voiceLog.serverConfig
     this.lang = instances.lang
   }

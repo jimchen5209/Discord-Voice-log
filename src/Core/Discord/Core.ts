@@ -12,7 +12,7 @@ export class Discord {
   private _client: Client
   private _voiceLog: VoiceLog
   private command: Command
-  private log = instances.mainLogger.getSubLogger({ name: 'Discord' })
+  private _logger = instances.mainLogger.getSubLogger({ name: 'Discord' })
 
   constructor() {
     this._client = new Client(token, {
@@ -25,15 +25,11 @@ export class Discord {
         'guildMembers'
       ]
     })
-    this._voiceLog = new VoiceLog(this, this.log)
-    this.command = new Command(this, this.log)
-
-    process.on('warning', (e) => {
-      this.log.warn(e.message)
-    })
+    this._voiceLog = new VoiceLog(this)
+    this.command = new Command(this)
 
     this._client.on('ready', async () => {
-      this.log.info(
+      this._logger.info(
         `Logged in as ${this._client.user.username} (${this._client.user.id})`
       )
       this.command.refreshCommands()
@@ -45,6 +41,10 @@ export class Discord {
     return this._client
   }
 
+  public get logger() {
+    return this._logger
+  }
+
   public get voiceLog() {
     return this._voiceLog
   }
@@ -54,7 +54,7 @@ export class Discord {
   }
 
   public stop() {
-    this.log.info('Logging out...')
+    this._logger.info('Logging out...')
     this._voiceLog.end().then(() => {
       this._client.disconnect({ reconnect: false })
     })

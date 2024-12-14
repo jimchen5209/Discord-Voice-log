@@ -22,10 +22,10 @@ export class VoiceLogCommands {
   private data: DbServerConfigManager
   private lang: Lang
 
-  constructor(voiceLog: VoiceLog, discord: Discord, logger: Logger<ILogObj>) {
+  constructor(voiceLog: VoiceLog, discord: Discord) {
     this.config = instances.config
     this.data = voiceLog.serverConfig
-    this.logger = logger.getSubLogger({ name: 'Voice' })
+    this.logger = voiceLog.logger.getSubLogger({ name: 'command' })
     this.lang = instances.lang
     this.voiceLog = voiceLog
     this.client = discord.client

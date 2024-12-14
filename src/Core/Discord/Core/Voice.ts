@@ -5,6 +5,8 @@ import { ILogObj, Logger } from 'tslog'
 import Queue from 'promise-queue'
 import { TTSHelper } from '../../TTSHelper'
 import { PluginManager } from '../../../Plugin/Core'
+import { instances } from '../../../Utils/Instances'
+import { Discord } from '../Core'
 
 export class DiscordVoice {
   private _init = true
@@ -17,30 +19,30 @@ export class DiscordVoice {
   private ttsHelper: TTSHelper
 
   constructor(
-    client: Client,
-    logger: Logger<ILogObj>,
-    plugins: PluginManager,
-    ttsHelper: TTSHelper,
+    discord: Discord,
     channel: string,
     voice: VoiceConnection | undefined = undefined
   ) {
-    this.client = client
-    this.logger = logger
-    this.ttsHelper = ttsHelper
-    this.plugins = plugins
+    this.client = discord.client
+    this.logger = discord.logger.getSubLogger({
+      name: 'Voice',
+      prefix: [`[${channel}]`]
+    })
+    this.ttsHelper = instances.ttsHelper
+    this.plugins = instances.pluginManager
 
     this._channelId = channel
 
     if (voice && voice.ready) {
       this.voice = voice
       this._init = false
-      this.logger.info(`Using the existing voice connection for ${this._channelId}`)
+      this.logger.info('Using the existing voice connection')
     } else {
       this.joinVoiceChannel(channel).then(connection => {
         this.voice = connection
         if (connection) {
           this._init = false
-          this.logger.info(`Connected to ${this._channelId}`)
+          this.logger.info('Connected')
         }
       })
     }
@@ -118,6 +120,7 @@ export class DiscordVoice {
 
   public destroy() {
     if (this.voice) {
+      this.logger.info('Ending voice connection...')
       this.voice.stopPlaying()
       this.voice.removeAllListeners()
       if (this.voice.channelID) this.client.leaveVoiceChannel(this.voice.channelID)
@@ -126,14 +129,14 @@ export class DiscordVoice {
   }
 
   private async joinVoiceChannel(channelID: string): Promise<VoiceConnection | undefined> {
-    this.logger.info(`Connecting to ${channelID}...`)
+    this.logger.info('Connecting...')
     try {
       const connection = await this.client.joinVoiceChannel(channelID)
       connection.on('warn', (message: string) => {
-        this.logger.warn(`Warning from ${channelID}: ${message}`)
+        this.logger.warn(message)
       })
       connection.on('error', err => {
-        this.logger.error(`Error from voice connection ${channelID}: ${err.message}`, err)
+        this.logger.error(err.message, err)
       })
       connection.on('debug', (message) => this.logger.debug(message))
       connection.once('ready', () => {
@@ -141,16 +144,18 @@ export class DiscordVoice {
         const channelId = connection.channelID
         if (channelId) {
           if (channelId !== this._channelId) {
-            this.logger.warn(`Voice channel changed from ${this._channelId} to ${channelId}`)
             this._channelId = channelId
+            this.logger.settings.prefix = [`[${channelId}]`]
+            this.logger.warn(`Voice channel changed from ${this._channelId} to ${channelId}`)
           }
           this.switchChannel(channelId)
         }
       })
       connection.once('disconnect', err => {
-        this.logger.error(`Error from voice connection ${channelID}: ${err?.message}`, err)
+        this.logger.error(err?.message, err)
         connection.stopPlaying()
         this.client.leaveVoiceChannel(channelID)
+        this.logger.warn('Trying to reconnect in 5 seconds...')
         setTimeout(() => {
           this.joinVoiceChannel(this._channelId || channelID).then(newConnection => {
             this.voice = newConnection
@@ -160,7 +165,7 @@ export class DiscordVoice {
       return connection
     } catch (e) {
       if (e instanceof Error) {
-        this.logger.error(`Error from ${channelID}: ${e.name} ${e.message}`, e)
+        this.logger.error(`${e.name} - ${e.message}`, e)
       }
     }
 
