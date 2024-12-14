@@ -1,9 +1,9 @@
 import { ILogObj, Logger } from 'tslog'
 import type { Discord } from '../Core/Discord/Core'
 import type { MongoDB } from '../Core/MongoDB/Core'
-import { Config, loggerOptions } from '../Core/Config'
-import { Lang } from '../Core/Lang'
-import { TTSHelper } from '../Core/TTSHelper'
+import { Config, loggerOptions } from './Config'
+import { Lang } from './Lang'
+import { TTSHelper } from './TTSHelper'
 import { PluginManager } from '../Plugin/Core'
 
 interface Instances {

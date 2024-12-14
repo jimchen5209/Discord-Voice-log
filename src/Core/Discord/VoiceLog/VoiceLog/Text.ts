@@ -1,7 +1,7 @@
 import { Member, VoiceChannel, MessageContent, Client, TextChannel } from 'eris'
 import { ILogObj, Logger } from 'tslog'
 import { vsprintf } from 'sprintf-js'
-import { Lang } from '../../../Lang'
+import { Lang } from '../../../../Utils/Lang'
 import { DbServerConfigManager } from '../../../MongoDB/db/ServerConfig'
 import { Discord } from '../../Core'
 import { instances } from '../../../../Utils/Instances'

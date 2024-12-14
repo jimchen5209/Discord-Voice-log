@@ -1,7 +1,7 @@
 import { Client } from 'eris'
 import { ILogObj, Logger } from 'tslog'
 import { AnyRequestData, GatewayServer, SlashCommand, SlashCreator } from 'slash-create'
-import { Config } from '../../Config'
+import { Config } from '../../../Utils/Config'
 import { Discord } from '../Core'
 import { LogCommand } from './Commands/Log'
 import { RefreshCacheCommand } from './Commands/RefreshCache'
