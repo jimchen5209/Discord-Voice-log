@@ -19,10 +19,7 @@ export class Discord {
       restMode: true,
       intents: [
         'guilds',
-        'guildIntegrations',
-        'guildMessages',
-        'guildVoiceStates',
-        'guildMembers'
+        'guildVoiceStates'
       ]
     })
     this._voiceLog = new VoiceLog(this)
