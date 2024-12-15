@@ -120,13 +120,14 @@ dist
 #liveshare
 .vsls.json
 
-# project
-logs/
+# IDE
 .vscode/
-config.json
-vlogdata.json
-__pycache__/
 .idea/
+
+# project
 assets/
-vlogdata.json.bak
+logs/
 caches/
+config*.json
+vlogdata.json
+vlogdata.json.bak
