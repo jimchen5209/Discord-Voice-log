@@ -1,49 +1,46 @@
-import { EventEmitter } from 'events';
-import { LogHelper } from 'tslog-helper';
-import { Discord } from './Components/Discord/Core';
-import { Config } from './Core/Config';
-import { MongoDB } from './Components/MongoDB/Core';
-import { ServerConfigManager } from './Components/MongoDB/db/ServerConfig';
-import { Status }from 'status-client';
-import { PluginManager } from './Components/Plugin/Core';
-import { TTSHelper } from './Core/TTSHelper';
-import { Lang } from './Core/Lang';
+import { Discord } from './Core/Discord/Core'
+import { MongoDB } from './Core/MongoDB/Core'
+import { Status }from 'status-client'
+import { instances } from './Utils/Instances'
 
-export class Core extends EventEmitter {
-    private readonly logHelper = new LogHelper();
-    public readonly mainLogger = this.logHelper.logger;
-    public readonly config = new Config(this);
-    public readonly database = new MongoDB(this);
-    public readonly data = new ServerConfigManager(this);
-    public readonly ttsHelper = new TTSHelper(this);
-    public readonly lang = new Lang(this);
-    public readonly plugins = new PluginManager(this);
-    private readonly status = new Status('VoiceLog');
-    constructor() {
-        super();
-        this.mainLogger.info('Starting...');
+const logger = instances.mainLogger
+logger.info('Starting...')
+if (instances.config.debug) instances.mainLogger.settings.minLevel = 0 // Silly
 
-        if (this.config.debug)
-            this.mainLogger.setSettings({ minLevel: 'silly' });
+const status = new Status('VoiceLog')
 
-        this.emit('init', this);
+// Initialize MongoDB
+const mongoDB = (instances.mongoDB = new MongoDB())
 
-        // Wait DB connect
-        this.database.on('connect', () => this.emit('ready'));
-        this.database.on('error', () => {
-            this.mainLogger.error('Unable to connect to database. Quitting...');
-            process.exit(1);
-        });
-        this.on('ready', async () => {
-            try {
-                new Discord(this);
-            } catch (error) {
-                console.error(error);
-            }
+mongoDB.once('connect', () => {
+  // Initialize the bot
+  const discord = (instances.discord = new Discord())
 
-            this.status.set_status();
-        });
-    }
+  discord.start()
+  status.set_status()
+})
+
+mongoDB.once('error', () => {
+  logger.error('Unable to connect to database. Quitting...')
+  process.exit(1)
+})
+
+process.on('warning', (e) => {
+  logger.warn(e.message)
+})
+
+// Graceful shutdown
+const stop = () => {
+  console.log()
+  logger.info('Shutting down...')
+  instances.discord?.stop()
+  instances.mongoDB?.close()
+
+  // Wait for 5 seconds before force quitting
+  setTimeout(() => {
+    logger.warn('Force quitting...')
+    process.exit(0)
+  }, 5 * 1000)
 }
-
-new Core();
+process.on('SIGINT', () => stop())
+process.on('SIGTERM', () => stop())
