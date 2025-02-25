@@ -111,6 +111,25 @@ export class DiscordVoice {
     if (voiceFile !== '') this.queue.add(() => this.play(voiceFile, format))
   }
 
+  public async playTTS(text: string, waveTTS: boolean, lang: string, voice: string) {
+    let voiceFile = ''
+    let format: string| undefined
+    if (waveTTS) {
+      const file = await instances.ttsHelper.getWaveTTS(text, lang, voice)
+      if (file !== null) {
+        voiceFile = file
+        format = 'ogg'
+      }
+    } else {
+      const file = await instances.ttsHelper.getTTSFile(text, lang)
+      if (file !== null) {
+        voiceFile = file
+        format = 'pcm'
+      }
+    }
+    if (voiceFile !== '') this.queue.add(() => this.play(voiceFile, format))
+  }
+
   public isReady(): boolean {
     return (this.voice !== undefined) && this.voice.ready
   }

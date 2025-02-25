@@ -32,6 +32,21 @@ export class VoiceLog {
     this._text = new VoiceLogText(this, discord)
     this._command = new VoiceLogCommands(this, discord)
 
+
+    this.client.on('messageCreate', async (message) => {
+      this._logger.debug(`Queue (${this.queue.getQueueLength() + 1}): Message from ${message.author.username} (${message.author.id}) to ${message.channel} in guild ${message.guildID}: ${message.content}`)
+      this.queue.add(async () => {
+        if (message.guildID === undefined) return
+        const guildId = message.guildID
+        const voice = this._voice.getCurrentVoice(guildId)
+
+        if (voice?.channelId === message.channel.id) {
+          voice.playTTS(`${message.member?.nick || message.author.globalName} 說：${message.content}`, true, 'cmn-TW', 'cmn-TW-Wavenet-B')
+        }
+
+      })
+    })
+
     this.client.on('voiceChannelJoin', async (member: Member, newChannel: VoiceChannel) => {
       if (member.id === this.client.user.id) return
       this.logger.debug(`Queue (${this.queue.getQueueLength() + 1}): User ${member.username} (${member.id}) joined voice channel ${newChannel.name} (${newChannel.id}) in guild ${member.guild.name} (${member.guild.id})`)
