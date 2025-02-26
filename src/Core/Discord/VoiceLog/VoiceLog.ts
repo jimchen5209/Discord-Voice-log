@@ -20,6 +20,7 @@ export class VoiceLog {
   private _serverConfig: DbServerConfigManager
   private client: Client
   private queue: Queue = new Queue(1, Infinity)
+  private continuousUser: { [key: string]: { user: string, timestamp: number} } = {}
 
   constructor(discord: Discord) {
     this.client = discord.client
@@ -46,12 +47,22 @@ export class VoiceLog {
       this.queue.add(async () => {
         const voice = this._voice.getCurrentVoice(guildId)
         if (voice?.channelId === message.channel.id) {
+          let text = ''
+          if (this.continuousUser[guildId] && this.continuousUser[guildId].user === message.author.id && (message.timestamp - this.continuousUser[guildId].timestamp) < 5* 1000) {
+            text = message.content
+          } else {
+            text = vsprintf(instances.lang.get(data.lang).display.voice_tts.message, [message.member?.nick || message.author.globalName, message.content])
+          }
           voice.playTTS(
-            vsprintf(instances.lang.get(data.lang).display.voice_tts.message, [message.member?.nick || message.author.globalName, message.content]),
+            text,
             data.voiceMessageTTS.type === VoiceMessageTTSType.waveNet,
             data.voiceMessageTTS.voiceLang,
             data.voiceMessageTTS.voiceName
           )
+          this.continuousUser[guildId] = {
+            user: message.author.id,
+            timestamp: message.timestamp
+          }
         }
 
       })
@@ -75,7 +86,13 @@ export class VoiceLog {
         }
 
         if (newChannel.id === channelID) {
-          if (voice) voice.playVoice(member, 'join')
+          if (voice) {
+            voice.playVoice(member, 'join')
+            this.continuousUser[guildId] = {
+              user: this.client.user.id,
+              timestamp: 0
+            }
+          }
         }
       })
     })
@@ -96,7 +113,13 @@ export class VoiceLog {
           }
         }
         if (oldChannel.id === channelID) {
-          if (voice) voice.playVoice(member, 'left')
+          if (voice) {
+            voice.playVoice(member, 'left')
+            this.continuousUser[guildId] = {
+              user: this.client.user.id,
+              timestamp: 0
+            }
+          }
         }
       })
     })
@@ -122,10 +145,22 @@ export class VoiceLog {
           }
         }
         if (oldChannel.id === channelID) {
-          if (voice) voice.playVoice(member, 'switched_out')
+          if (voice) {
+            voice.playVoice(member, 'switched_out')
+            this.continuousUser[guildId] = {
+              user: this.client.user.id,
+              timestamp: 0
+            }
+          }
         }
         if (newChannel.id === channelID) {
-          if (voice) voice.playVoice(member, 'switched_in')
+          if (voice) {
+            voice.playVoice(member, 'switched_in')
+            this.continuousUser[guildId] = {
+              user: this.client.user.id,
+              timestamp: 0
+            }
+          }
         }
       })
     })
