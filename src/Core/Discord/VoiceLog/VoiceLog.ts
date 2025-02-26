@@ -3,13 +3,14 @@ import { existsSync as exists, mkdirSync as mkDir } from 'fs'
 import { ILogObj, Logger } from 'tslog'
 import { scheduleJob } from 'node-schedule'
 import Queue from 'promise-queue'
-import { DbServerConfigManager } from '../../MongoDB/db/ServerConfig'
+import { DbServerConfigManager, VoiceMessageTTSType } from '../../MongoDB/db/ServerConfig'
 import { Discord } from '../Core'
 import { VoiceLogCommands } from './VoiceLog/Commands'
 import { VoiceLogText } from './VoiceLog/Text'
 import { VoiceLogVoice } from './VoiceLog/Voice'
 import { instances } from '../../../Utils/Instances'
 import { ERR_DB_NOT_INIT } from '../../MongoDB/Core'
+import { vsprintf } from 'sprintf-js'
 
 export class VoiceLog {
   private _voice: VoiceLogVoice
@@ -31,6 +32,30 @@ export class VoiceLog {
     this._voice = new VoiceLogVoice(this, discord)
     this._text = new VoiceLogText(this, discord)
     this._command = new VoiceLogCommands(this, discord)
+
+
+    this.client.on('messageCreate', async (message) => {
+      this._logger.debug(`Queue (${this.queue.getQueueLength() + 1}): Message from ${message.author.username} (${message.author.id}) to ${message.channel} in guild ${message.guildID}: ${message.content}`)
+
+      if (message.guildID === undefined) return
+      const guildId = message.guildID
+      const data = await this._serverConfig.get(guildId)
+
+      if (!data?.voiceMessageTTS.enabled) return
+
+      this.queue.add(async () => {
+        const voice = this._voice.getCurrentVoice(guildId)
+        if (voice?.channelId === message.channel.id) {
+          voice.playTTS(
+            vsprintf(instances.lang.get(data.lang).display.voice_tts.message, [message.member?.nick || message.author.globalName, message.content]),
+            data.voiceMessageTTS.type === VoiceMessageTTSType.waveNet,
+            data.voiceMessageTTS.voiceLang,
+            data.voiceMessageTTS.voiceName
+          )
+        }
+
+      })
+    })
 
     this.client.on('voiceChannelJoin', async (member: Member, newChannel: VoiceChannel) => {
       if (member.id === this.client.user.id) return

@@ -20,5 +20,8 @@
     "lang_exist": "The language has already been %s",
     "unset_success": "Voice state logging disabled",
     "error": "An error occurred while setting logging state"
+  },
+  "voice_tts": {
+    "message": "%0s says: %1s"
   }
 }
