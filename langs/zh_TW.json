@@ -20,5 +20,8 @@
     "lang_exist": "語言已經是 %s",
     "unset_success": "語音頻道狀態記錄已取消",
     "error": "設定語音頻道狀態時發生錯誤"
+  },
+  "voice_tts": {
+    "message": "%0s 說： %1s"
   }
 }
