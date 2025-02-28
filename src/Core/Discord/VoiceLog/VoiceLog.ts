@@ -10,7 +10,6 @@ import { VoiceLogText } from './VoiceLog/Text'
 import { VoiceLogVoice } from './VoiceLog/Voice'
 import { instances } from '../../../Utils/Instances'
 import { ERR_DB_NOT_INIT } from '../../MongoDB/Core'
-import { vsprintf } from 'sprintf-js'
 
 export class VoiceLog {
   private _voice: VoiceLogVoice
@@ -36,8 +35,6 @@ export class VoiceLog {
 
 
     this.client.on('messageCreate', async (message) => {
-      this._logger.debug(`Queue (${this.queue.getQueueLength() + 1}): Message from ${message.author.username} (${message.author.id}) to ${message.channel} in guild ${message.guildID}: ${message.content}`)
-
       if (message.guildID === undefined) return
       const guildId = message.guildID
       const data = await this._serverConfig.get(guildId)
@@ -47,12 +44,11 @@ export class VoiceLog {
       this.queue.add(async () => {
         const voice = this._voice.getCurrentVoice(guildId)
         if (voice?.channelId === message.channel.id) {
-          let text = ''
-          if (this.continuousUser[guildId] && this.continuousUser[guildId].user === message.author.id && (message.timestamp - this.continuousUser[guildId].timestamp) < 5* 1000) {
-            text = message.content
-          } else {
-            text = vsprintf(instances.lang.get(data.lang).display.voice_tts.message, [message.member?.nick || message.author.globalName, message.content])
-          }
+          const isContinuous = this.continuousUser[guildId]?.user === message.author.id && (message.timestamp - this.continuousUser[guildId]?.timestamp) < 5* 1000
+          const text = this._text.parseMessage(message, isContinuous, data.lang)
+
+          this._logger.debug(`${message.author} to ${message.channel} ${(isContinuous ? '(Continuous)' : '')}: ${text}`)
+
           voice.playTTS(
             text,
             data.voiceMessageTTS.type === VoiceMessageTTSType.waveNet,
