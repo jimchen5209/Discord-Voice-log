@@ -119,19 +119,29 @@ export class VoiceLogText {
 
     // Poll
     if (message.poll !== undefined) {
-      content = '一個投票'
+      content = instances.lang.get(lang).display.voice_tts.attachment_poll
     }
 
     // Attachments
     if (message.attachments.length > 0) {
-      content = vsprintf('%d 個附件', [message.attachments.length])
+      if (message.attachments.length === 1) {
+        content = vsprintf(instances.lang.get(lang).display.voice_tts.attachment_single, [message.attachments.length])
+      } else {
+        content = vsprintf(instances.lang.get(lang).display.voice_tts.attachment_multiple, [message.attachments.length])
+      }
     }
 
     // Stickers
     if (message.stickerItems && message.stickerItems.length > 0) {
-      const stickers = message.stickerItems.map((sticker) => vsprintf('[貼圖 %s]', [sticker.name])).join('、')
+      const stickers = message.stickerItems
+        .map((sticker) => vsprintf(instances.lang.get(lang).display.voice_tts.message_sticker, [sticker.name]))
+        .join(instances.lang.get(lang).display.voice_tts.multi_item_separator)
       if (content !== '') {
-        content = message.content !== '' ? [content, stickers].join('、') : vsprintf('%1s，以及%2s', [content, stickers])
+        if (message.content !== '') {
+          content = [content, stickers].join(instances.lang.get(lang).display.voice_tts.multi_item_separator)
+        } else {
+          content = vsprintf(instances.lang.get(lang).display.voice_tts.multi_item_last_separator, [content, stickers])
+        }
       } else {
         content = stickers
       }
@@ -141,34 +151,44 @@ export class VoiceLogText {
     if (message.messageSnapshots && message.messageSnapshots.length > 0) {
       const forwardContent = message.messageSnapshots.map((snapshot) => {
         return this.parseMessage(snapshot.message as unknown as Message<TextableChannel>, true, lang, true)
-      }).join('；')
-      content = vsprintf('%d 則轉發訊息，內容為：%s', [message.messageSnapshots.length, forwardContent])
+      }).join(instances.lang.get(lang).display.voice_tts.multi_item_separator)
+      if (message.messageSnapshots.length === 1) {
+        content = vsprintf(instances.lang.get(lang).display.voice_tts.forward_single, [message.messageSnapshots.length, forwardContent])
+      } else {
+        content = vsprintf(instances.lang.get(lang).display.voice_tts.forward_multiple, [message.messageSnapshots.length, forwardContent])
+      }
     }
 
     // Text
     if (content !== '') {
       if (message.content !== '') {
-        const text = vsprintf('文字內容：%s', [message.content])
-        content = vsprintf('%1s，以及%2s', [content, text])
+        const text = vsprintf(instances.lang.get(lang).display.voice_tts.attachment_text, [message.content])
+        content = vsprintf(instances.lang.get(lang).display.voice_tts.multi_item_last_separator, [content, text])
       }
-      content = isForward ? content : vsprintf('%1s 傳送了 %2s', [authorName, content])
+      content = isForward ? content : vsprintf(instances.lang.get(lang).display.voice_tts.attachment_message, [authorName, content])
     } else if (content === '') {
-      const text = (message.content.length !== 0) ? message.content : '[不明訊息]'
+      const text = (message.content.length !== 0) ? message.content : instances.lang.get(lang).display.voice_tts.message_unknown
       if (!isContinuous && !isForward) {
-        content = vsprintf(instances.lang.get(lang).display.voice_tts.message, [authorName, text])
+        content = vsprintf(instances.lang.get(lang).display.voice_tts.text_message, [authorName, text])
       } else {
         content = text
       }
     }
 
     // Emoji
-    content = content.replace(/<:([a-zA-Z0-9_]+):\d+>/g, vsprintf('[表情符號 %s]', ['$1']))
+    content = content.replace(/<:([a-zA-Z0-9_]+):\d+>/g, vsprintf(instances.lang.get(lang).display.voice_tts.message_emoji, ['$1']))
 
     // Mention Channel
     if (message.channelMentions.length > 0) {
       for (const channelId of message.channelMentions) {
         const channel = guild?.channels.get(channelId)
-        content = content.replace(`<#${channelId}>`, channel ? vsprintf('#[頻道 %s]', [channel.name]) : '#[不明頻道]')
+        let channelText = ''
+        if (channel) {
+          channelText = vsprintf(instances.lang.get(lang).display.voice_tts.message_channel_mention, [channel.name])
+        } else {
+          channelText = instances.lang.get(lang).display.voice_tts.message_channel_mention_unknown
+        }
+        content = content.replace(`<#${channelId}>`, channelText)
       }
     }
 
@@ -177,7 +197,13 @@ export class VoiceLogText {
       for (const roleId of message.roleMentions) {
         this.logger.debug(`Role ID: ${roleId}`)
         const role = guild?.roles.get(roleId)
-        content = content.replace(`<@&${roleId}>`, role ? vsprintf('@[身分組 %s]', [role.name]) : '@[不明身分組]')
+        let roleText = ''
+        if (role) {
+          roleText = vsprintf(instances.lang.get(lang).display.voice_tts.message_role_mention, [role.name])
+        } else {
+          roleText = instances.lang.get(lang).display.voice_tts.message_role_mention_unknown
+        }
+        content = content.replace(`<@&${roleId}>`, roleText)
       }
     }
 
@@ -190,7 +216,7 @@ export class VoiceLogText {
     }
 
     // Url
-    content = content.replace(/https?:\/\/(www\.)?([^/\s]+)(\/[^\s]*)?/g, vsprintf('[連結 %s]', ['$2']))
+    content = content.replace(/https?:\/\/(www\.)?([^/\s]+)(\/[^\s]*)?/g, vsprintf(instances.lang.get(lang).display.voice_tts.message_link, ['$2']))
 
     return content
   }

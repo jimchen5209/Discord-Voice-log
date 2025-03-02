@@ -22,6 +22,23 @@
     "error": "An error occurred while setting logging state"
   },
   "voice_tts": {
-    "message": "%0s says: %1s"
+    "text_message": "%0s says: %1s",
+    "attachment_message": "%0s sent %1s",
+    "attachment_single": "%d attachment",
+    "attachment_multiple": "%d attachments",
+    "attachment_poll": "a poll",
+    "attachment_text": "text content: %s",
+    "multi_item_separator": ", ",
+    "multi_item_last_separator": "%0s, and %1s",
+    "forward_single": "%d forwarded message, with content: %s",
+    "forward_multiple": "%d forwarded message, with content: %s",
+    "message_unknown": "[Unknown message]",
+    "message_sticker": "[Sticker %s]",
+    "message_emoji": "[Emoji %s]",
+    "message_channel_mention": "#[Channel %s]",
+    "message_channel_mention_unknown": "#[Unknown channel]",
+    "message_role_mention": "@[Role %s]",
+    "message_role_mention_unknown": "@[Unknown role]",
+    "message_link": "[Link %s]"
   }
 }
