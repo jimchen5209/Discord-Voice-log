@@ -1,18 +1,33 @@
 diff --git a/lib/structures/Message.js b/lib/structures/Message.js
-index 7eac7d3630f48fefda3667a6f2738d151ba8fae2..e6f7d9ba2602a6856898b6a6849a8e90fe0a8e58 100644
+index 7eac7d3630f48fefda3667a6f2738d151ba8fae2..deb28439bef28e388fd6500267ddda5d160d3eda 100644
 --- a/lib/structures/Message.js
 +++ b/lib/structures/Message.js
-@@ -87,6 +87,9 @@ class Message extends Base {
-         let message;
+@@ -83,20 +83,14 @@ class Message extends Base {
  
+     if (data.message_snapshots && this.messageReference) {
+       this.messageSnapshots = data.message_snapshots.map((snapshot) => {
+-        const channel = this._client.getChannel(this.messageReference.channelID);
+-        let message;
+-
          snapshot.message.id = this.messageReference.messageID;
+-
+-        if (channel) {
+-          message = channel.messages.update(snapshot.message, this._client);
+-        } else {
+-          message = new Message(snapshot.message, this._client);
+-        }
 +        snapshot.message.channel_id = this.messageReference.channelID;
 +        snapshot.message.guild_id = this.messageReference.guildID;
 +        snapshot.message.author = { id: "-1"}
  
-         if (channel) {
-           message = channel.messages.update(snapshot.message, this._client);
-@@ -147,7 +150,7 @@ class Message extends Base {
+         return {
+           guildID: this.messageReference.guildID,
+-          message: message,
++          message: new Message(snapshot.message, this._client),
+         };
+       });
+     }
+@@ -147,7 +141,7 @@ class Message extends Base {
      }
  
      if (this.channel.guild) {
@@ -21,7 +36,7 @@ index 7eac7d3630f48fefda3667a6f2738d151ba8fae2..e6f7d9ba2602a6856898b6a6849a8e90
          data.member.id = this.author.id;
          if (data.author) {
            data.member.user = data.author;
-@@ -183,7 +186,11 @@ class Message extends Base {
+@@ -183,7 +177,11 @@ class Message extends Base {
          return user;
        });
  
@@ -34,7 +49,7 @@ index 7eac7d3630f48fefda3667a6f2738d151ba8fae2..e6f7d9ba2602a6856898b6a6849a8e90
      }
      if (data.poll !== undefined) {
        this.poll = data.poll;
-@@ -256,7 +263,7 @@ class Message extends Base {
+@@ -256,7 +254,7 @@ class Message extends Base {
        return this._channelMentions;
      }
  
