@@ -115,15 +115,16 @@ export class VoiceLogText {
   public parseMessage(message: Message<PossiblyUncachedTextableChannel>, isContinuous: boolean, lang: string) {
     let content = ''
     const authorName = message.member?.nick || message.author.globalName || message.author.username
+    const guild = message.guildID ? this.client.guilds.get(message.guildID) : undefined
 
     // Poll
     if (message.poll !== undefined) {
-      content = vsprintf('%s 傳送了一個投票', [authorName])
+      content = '一個投票'
     }
 
     // Attachments
     if (message.attachments.length > 0) {
-      content = vsprintf('%s 傳送了 %d 個附件', [authorName, message.attachments.length])
+      content = vsprintf('%d 個附件', [message.attachments.length])
     }
 
     // Stickers
@@ -132,18 +133,22 @@ export class VoiceLogText {
       if (content !== '') {
         content += vsprintf('，以及 %s', [stickers])
       } else {
-        content = vsprintf('%s 傳送了 %s', [authorName, stickers])
+        content = stickers
       }
     }
 
     // Text
-    if (message.content !== '' && content !== '') {
-      content += vsprintf('，然後說：%s', [message.content])
+    if (content !== '') {
+      if (message.content !== '') {
+        content = vsprintf('%1s，然後說：%2s', [content, message.content])
+      }
+      content = vsprintf('%1s 傳送了 %2s', [authorName, content])
     } else if (content === '') {
+      const text = (message.content.length !== 0) ? message.content : '[不明訊息]'
       if (!isContinuous) {
-        content = vsprintf(instances.lang.get(lang).display.voice_tts.message, [authorName, message.content])
+        content = vsprintf(instances.lang.get(lang).display.voice_tts.message, [authorName, text])
       } else {
-        content = message.content
+        content = text
       }
     }
 
@@ -153,23 +158,24 @@ export class VoiceLogText {
     // Mention Channel
     if (message.channelMentions.length > 0) {
       for (const channelId of message.channelMentions) {
-        const channel = message.member?.guild.channels.get(channelId)
-        content = content.replace(`<#${channelId}>`, channel ? vsprintf('[頻道 %s]', [channel.name]) : '[不明頻道]')
+        const channel = guild?.channels.get(channelId)
+        content = content.replace(`<#${channelId}>`, channel ? vsprintf('#[頻道 %s]', [channel.name]) : '#[不明頻道]')
       }
     }
 
     // Mention Role
     if (message.roleMentions.length > 0) {
       for (const roleId of message.roleMentions) {
-        const role = message.member?.guild.roles.get(roleId)
-        content = content.replace(`<@&${roleId}>`, vsprintf('[身分組 %s]', [role?.name]))
+        this.logger.debug(`Role ID: ${roleId}`)
+        const role = guild?.roles.get(roleId)
+        content = content.replace(`<@&${roleId}>`, role ? vsprintf('@[身分組 %s]', [role.name]) : '@[不明身分組]')
       }
     }
 
     // Mention User
     if (message.mentions.length > 0) {
       for (const user of message.mentions) {
-        const member = message.member?.guild.members.get(user.id)
+        const member = guild?.members.get(user.id)
         content = content.replace(`<@${user.id}>`, `@${member?.nick || user.globalName || user.username}`)
       }
     }
