@@ -34,6 +34,14 @@ export class Discord {
       this.command.refreshCommands()
       this._voiceLog.start()
     })
+
+    this._client.on('warn', (message) => {
+      this._logger.warn(message)
+    })
+
+    this._client.on('error', (error) => {
+      this._logger.error(error)
+    })
   }
 
   public get client() {
