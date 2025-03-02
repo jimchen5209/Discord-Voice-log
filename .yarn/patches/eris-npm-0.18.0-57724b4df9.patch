@@ -1,3 +1,48 @@
+diff --git a/lib/structures/Message.js b/lib/structures/Message.js
+index 7eac7d3630f48fefda3667a6f2738d151ba8fae2..e6f7d9ba2602a6856898b6a6849a8e90fe0a8e58 100644
+--- a/lib/structures/Message.js
++++ b/lib/structures/Message.js
+@@ -87,6 +87,9 @@ class Message extends Base {
+         let message;
+ 
+         snapshot.message.id = this.messageReference.messageID;
++        snapshot.message.channel_id = this.messageReference.channelID;
++        snapshot.message.guild_id = this.messageReference.guildID;
++        snapshot.message.author = { id: "-1"}
+ 
+         if (channel) {
+           message = channel.messages.update(snapshot.message, this._client);
+@@ -147,7 +150,7 @@ class Message extends Base {
+     }
+ 
+     if (this.channel.guild) {
+-      if (data.member) {
++      if (data.member && data.author.id !== "-1") {
+         data.member.id = this.author.id;
+         if (data.author) {
+           data.member.user = data.author;
+@@ -183,7 +186,11 @@ class Message extends Base {
+         return user;
+       });
+ 
+-      this.roleMentions = data.mention_roles;
++      if (data.mention_roles) {
++        this.roleMentions = data.mention_roles;
++      } else {
++        this.roleMentions = ((this.content && this.content.match(/<@&[0-9]+>/g)) || []).map((mention) => mention.substring(3, mention.length - 1)) || [];
++      }
+     }
+     if (data.poll !== undefined) {
+       this.poll = data.poll;
+@@ -256,7 +263,7 @@ class Message extends Base {
+       return this._channelMentions;
+     }
+ 
+-    return (this._channelMentions = ((this.content && this.content.match(/<#[0-9]+>/g)) || []).map((mention) => mention.substring(2, mention.length - 1)));
++    return (this._channelMentions = ((this.content && this.content.match(/<#[0-9]+>/g)) || []).map((mention) => mention.substring(2, mention.length - 1)) || []);
+   }
+ 
+   get cleanContent() {
 diff --git a/lib/voice/VoiceConnection.js b/lib/voice/VoiceConnection.js
 index 858a4b60a46388f0647a5a70a44c8c96a9c2ab25..dd4a970abd5c60c99d4079f51c9e39635bbb3172 100644
 --- a/lib/voice/VoiceConnection.js
