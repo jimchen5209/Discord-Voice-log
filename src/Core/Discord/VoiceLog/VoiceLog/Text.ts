@@ -1,4 +1,4 @@
-import { Member, VoiceChannel, MessageContent, Client, TextChannel, Message, PossiblyUncachedTextableChannel } from 'eris'
+import { Member, VoiceChannel, MessageContent, Client, TextChannel, Message, PossiblyUncachedTextableChannel, TextableChannel } from 'eris'
 import { ILogObj, Logger } from 'tslog'
 import { vsprintf } from 'sprintf-js'
 import { DbServerConfigManager } from '../../../MongoDB/db/ServerConfig'
@@ -112,9 +112,9 @@ export class VoiceLogText {
     } as MessageContent
   }
 
-  public parseMessage(message: Message<PossiblyUncachedTextableChannel>, isContinuous: boolean, lang: string) {
+  public parseMessage(message: Message<PossiblyUncachedTextableChannel>, isContinuous: boolean, lang: string, isForward = false): string {
     let content = ''
-    const authorName = message.member?.nick || message.author.globalName || message.author.username
+    const authorName = (isForward) ? '' : message.member?.nick || message.author.globalName || message.author.username
     const guild = message.guildID ? this.client.guilds.get(message.guildID) : undefined
 
     // Poll
@@ -131,21 +131,30 @@ export class VoiceLogText {
     if (message.stickerItems && message.stickerItems.length > 0) {
       const stickers = message.stickerItems.map((sticker) => vsprintf('[貼圖 %s]', [sticker.name])).join('、')
       if (content !== '') {
-        content += vsprintf('，以及 %s', [stickers])
+        content = message.content !== '' ? [content, stickers].join('、') : vsprintf('%1s，以及%2s', [content, stickers])
       } else {
         content = stickers
       }
     }
 
+    // Forward
+    if (message.messageSnapshots && message.messageSnapshots.length > 0) {
+      const forwardContent = message.messageSnapshots.map((snapshot) => {
+        return this.parseMessage(snapshot.message as unknown as Message<TextableChannel>, true, lang, true)
+      }).join('；')
+      content = vsprintf('%d 則轉發訊息，內容為：%s', [message.messageSnapshots.length, forwardContent])
+    }
+
     // Text
     if (content !== '') {
       if (message.content !== '') {
-        content = vsprintf('%1s，然後說：%2s', [content, message.content])
+        const text = vsprintf('文字內容：%s', [message.content])
+        content = vsprintf('%1s，以及%2s', [content, text])
       }
-      content = vsprintf('%1s 傳送了 %2s', [authorName, content])
+      content = isForward ? content : vsprintf('%1s 傳送了 %2s', [authorName, content])
     } else if (content === '') {
       const text = (message.content.length !== 0) ? message.content : '[不明訊息]'
-      if (!isContinuous) {
+      if (!isContinuous && !isForward) {
         content = vsprintf(instances.lang.get(lang).display.voice_tts.message, [authorName, text])
       } else {
         content = text
