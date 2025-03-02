@@ -45,7 +45,7 @@ export class VoiceLog {
         const voice = this._voice.getCurrentVoice(guildId)
         if (voice?.channelId === message.channel.id) {
           const isContinuous = this.continuousUser[guildId]?.user === message.author.id && (message.timestamp - this.continuousUser[guildId]?.timestamp) < 5* 1000
-          const text = this._text.parseMessage(message, isContinuous, data.lang)
+          const text = this._text.parseMessage(message, isContinuous, data.voiceMessageTTS.messageLang)
 
           this._logger.debug(`${message.author} to ${message.channel} ${(isContinuous ? '(Continuous)' : '')}: ${text}`)
 
