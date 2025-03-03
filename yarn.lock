@@ -925,7 +925,7 @@ __metadata:
     eris: "patch:eris@npm%3A0.18.0#~/.yarn/patches/eris-npm-0.18.0-57724b4df9.patch"
     eslint: "npm:^9.17.0"
     fix-esm: "npm:^1.0.1"
-    globals: "npm:^15.14.0"
+    globals: "npm:^16.0.0"
     md5: "npm:^2.3.0"
     mongodb: "npm:^6.12.0"
     mpg123-decoder: "npm:^1.0.0"
@@ -1348,10 +1348,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"globals@npm:^15.14.0":
-  version: 15.15.0
-  resolution: "globals@npm:15.15.0"
-  checksum: 10c0/f9ae80996392ca71316495a39bec88ac43ae3525a438b5626cd9d5ce9d5500d0a98a266409605f8cd7241c7acf57c354a48111ea02a767ba4f374b806d6861fe
+"globals@npm:^16.0.0":
+  version: 16.0.0
+  resolution: "globals@npm:16.0.0"
+  checksum: 10c0/8906d5f01838df64a81d6c2a7b7214312e2216cf65c5ed1546dc9a7d0febddf55ffa906cf04efd5b01eec2534d6f14859a89535d1a68241832810e41ef3fd5bb
   languageName: node
   linkType: hard
 
