@@ -927,7 +927,7 @@ __metadata:
     fix-esm: "npm:^1.0.1"
     globals: "npm:^15.14.0"
     md5: "npm:^2.3.0"
-    mongodb: "npm:^6.12.0"
+    mongodb: "npm:^6.14.2"
     mpg123-decoder: "npm:^1.0.0"
     node-fetch: "npm:^2.7.0"
     node-schedule: "npm:^2.1.1"
@@ -1670,15 +1670,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"mongodb@npm:^6.12.0":
-  version: 6.13.1
-  resolution: "mongodb@npm:6.13.1"
+"mongodb@npm:^6.14.2":
+  version: 6.14.2
+  resolution: "mongodb@npm:6.14.2"
   dependencies:
     "@mongodb-js/saslprep": "npm:^1.1.9"
     bson: "npm:^6.10.3"
     mongodb-connection-string-url: "npm:^3.0.0"
   peerDependencies:
-    "@aws-sdk/credential-providers": ^3.632.0
+    "@aws-sdk/credential-providers": ^3.188.0
     "@mongodb-js/zstd": ^1.1.0 || ^2.0.0
     gcp-metadata: ^5.2.0
     kerberos: ^2.0.1
@@ -1700,7 +1700,7 @@ __metadata:
       optional: true
     socks:
       optional: true
-  checksum: 10c0/319a8f76ebee3f79d8af0218dca46e79ad7fbd2e6e11d80b902f3efd8d2bf9ee1c85f445bad45d7a2b40aff98ac7e2f3f899b9408c773579b6e91df6e283783f
+  checksum: 10c0/f95ce58defb2ad884250119f904b6ccbc11fd293515fb2cb2b1612200ef26211b0e2c3740bb9cb2481af993fca826453a4a5feb3916b34a9d7f25175342fbebc
   languageName: node
   linkType: hard
 
