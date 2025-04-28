@@ -20,7 +20,7 @@
     "eris": "patch:eris@npm%3A0.18.0#~/.yarn/patches/eris-npm-0.18.0-57724b4df9.patch",
     "fix-esm": "^1.0.1",
     "md5": "^2.3.0",
-    "mongodb": "^6.12.0",
+    "mongodb": "^6.16.0",
     "mpg123-decoder": "^1.0.0",
     "node-fetch": "^2.7.0",
     "node-schedule": "^2.1.1",
