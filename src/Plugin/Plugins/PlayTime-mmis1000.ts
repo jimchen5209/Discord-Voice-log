@@ -1,4 +1,4 @@
-import { Member } from 'eris'
+import { Member } from '@projectdysnomia/dysnomia'
 import { IVoiceOverwrite } from '../Base/VoiceOverwrite'
 import { instances } from '../../Utils/Instances'
 import { TTSHelper } from '../../Utils/TTSHelper'
