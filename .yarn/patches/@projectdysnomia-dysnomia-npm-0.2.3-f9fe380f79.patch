@@ -1,0 +1,36 @@
+diff --git a/lib/voice/VoiceConnection.js b/lib/voice/VoiceConnection.js
+index ee9c237c1048a9a489799d2f4d8ce422b45ef731..6faa7dd22ffaaed71bec5b0a0c9b52f2ff1e997f 100644
+--- a/lib/voice/VoiceConnection.js
++++ b/lib/voice/VoiceConnection.js
+@@ -430,7 +430,12 @@ class VoiceConnection extends EventEmitter {
+             if(this.connecting || this.ready) {
+                 let reconnecting = true;
+                 if(code === 4006) {
+-                    reconnecting = false;
++                    if (this.channelID) {
++                        reconnecting = true;
++                        err = null;
++                    } else {
++                        reconnecting = false;
++                    }
+                 } else if(code === 4014) {
+                     if(this.channelID) {
+                         data.endpoint = null;
+diff --git a/lib/voice/streams/OggOpusTransformer.js b/lib/voice/streams/OggOpusTransformer.js
+index b8626456544433d75d63cb13387f0d1c8448a833..447549b7b0853391ac1ef580aa9e2a64dab1c7d5 100644
+--- a/lib/voice/streams/OggOpusTransformer.js
++++ b/lib/voice/streams/OggOpusTransformer.js
+@@ -69,10 +69,11 @@ class OggOpusTransformer extends BaseTransformer {
+         }
+     }
+ 
+-    _final() {
+-        if(!this.#bitstream) {
++    _final(cb) {
++        if (!this.#bitstream === undefined) {
+             this.emit("error", new Error("No Opus stream was found"));
+         }
++        cb()
+     }
+ 
+     _transform(chunk, enc, cb) {
