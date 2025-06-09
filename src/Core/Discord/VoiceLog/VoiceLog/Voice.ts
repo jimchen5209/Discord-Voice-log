@@ -1,5 +1,5 @@
 import waitUntil from 'async-wait-until'
-import { VoiceChannel } from 'eris'
+import { VoiceChannel } from '@projectdysnomia/dysnomia'
 import { readdirSync as readDir, readFileSync as readFile, unlinkSync as deleteFile } from 'fs'
 import { ILogObj, Logger } from 'tslog'
 import { extname } from 'path'

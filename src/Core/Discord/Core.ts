@@ -1,4 +1,4 @@
-import { Client } from 'eris'
+import { Client } from '@projectdysnomia/dysnomia'
 import { Command } from './Core/Command'
 import { VoiceLog } from './VoiceLog/VoiceLog'
 import { instances } from '../../Utils/Instances'
@@ -17,12 +17,14 @@ export class Discord {
   constructor() {
     this._client = new Client(token, {
       restMode: true,
-      intents: [
-        'guilds',
-        'guildMessages',
-        'guildVoiceStates',
-        'messageContent'
-      ]
+      gateway: {
+        intents: [
+          'guilds',
+          'guildMessages',
+          'guildVoiceStates',
+          'messageContent'
+        ]
+      }
     })
     this._voiceLog = new VoiceLog(this)
     this.command = new Command(this)
