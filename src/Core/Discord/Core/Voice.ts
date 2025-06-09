@@ -1,5 +1,5 @@
 import { waitUntil } from 'async-wait-until'
-import { Client, Member, VoiceConnection } from 'eris'
+import { Client, Member, VoiceConnection } from '@projectdysnomia/dysnomia'
 import { existsSync as exists, readFileSync as readFile } from 'fs'
 import { ILogObj, Logger } from 'tslog'
 import Queue from 'promise-queue'

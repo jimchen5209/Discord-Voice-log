@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-vars -- definition file*/
-import { Member } from 'eris'
+import { Member } from '@projectdysnomia/dysnomia'
 import { IPluginBase } from './PluginBase'
 
 export interface IVoiceOverwrite extends IPluginBase {

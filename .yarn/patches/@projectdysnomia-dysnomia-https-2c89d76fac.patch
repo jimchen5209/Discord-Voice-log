@@ -1,0 +1,70 @@
+diff --git a/lib/structures/Message.js b/lib/structures/Message.js
+index a317e4659f3e30cb1765637a8fd3fca528876a7d..1cb5a567707e0759a3288a814d4d838d20affe8f 100644
+--- a/lib/structures/Message.js
++++ b/lib/structures/Message.js
+@@ -124,6 +124,7 @@ class Message extends Base {
+                 snapshot.message.id ??= data.message_reference.message_id;
+                 snapshot.message.channel_id ??= data.message_reference.channel_id;
+                 snapshot.message.guild_id ??= data.message_reference.guild_id;
++                snapshot.message.author = { id: "-1"}
+                 return {
+                     message: new Message(snapshot.message, client)
+                 };
+@@ -166,7 +167,7 @@ class Message extends Base {
+         }
+ 
+         if(this.channel.guild) {
+-            if(data.member) {
++            if (data.member && data.author.id !== "-1") {
+                 data.member.id = this.author.id;
+                 if(data.author) {
+                     data.member.user = data.author;
+@@ -390,7 +391,11 @@ class Message extends Base {
+              * Array of mentioned roles' ids
+              * @type {Array<String>}
+              */
+-            this.roleMentions = data.mention_roles;
++            if (data.mention_roles) {
++              this.roleMentions = data.mention_roles;
++            } else {
++              this.roleMentions = ((this.content && this.content.match(/<@&[0-9]+>/g)) || []).map((mention) => mention.substring(3, mention.length - 1)) || [];
++            }
+         }
+ 
+         if(data.pinned !== undefined) {
+diff --git a/lib/voice/VoiceConnection.js b/lib/voice/VoiceConnection.js
+index af55c31de04285f7874e3a618e8a85d9bd48c799..da7eb169f985ba5f8a0b7c028d396f80a9c394fc 100644
+--- a/lib/voice/VoiceConnection.js
++++ b/lib/voice/VoiceConnection.js
+@@ -546,7 +546,12 @@ class VoiceConnection extends EventEmitter {
+             if(this.connecting || this.ready) {
+                 let reconnecting = true;
+                 if(code === 4006) {
+-                    reconnecting = false;
++                    if (this.channelID) {
++                        reconnecting = true;
++                        err = null;
++                    } else {
++                        reconnecting = false;
++                    }
+                 } else if(code === 4014) {
+                     if(this.channelID) {
+                         data.endpoint = null;
+diff --git a/lib/voice/streams/OggOpusTransformer.js b/lib/voice/streams/OggOpusTransformer.js
+index b8626456544433d75d63cb13387f0d1c8448a833..447549b7b0853391ac1ef580aa9e2a64dab1c7d5 100644
+--- a/lib/voice/streams/OggOpusTransformer.js
++++ b/lib/voice/streams/OggOpusTransformer.js
+@@ -69,10 +69,11 @@ class OggOpusTransformer extends BaseTransformer {
+         }
+     }
+ 
+-    _final() {
+-        if(!this.#bitstream) {
++    _final(cb) {
++        if (!this.#bitstream === undefined) {
+             this.emit("error", new Error("No Opus stream was found"));
+         }
++        cb()
+     }
+ 
+     _transform(chunk, enc, cb) {
