@@ -102,13 +102,13 @@ export class VoiceLogText {
         break
     }
     return {
-      embed: {
+      embeds: [{
         color,
         title: member.nick ? member.nick : member.username,
         description: content,
         timestamp: (new Date()).toISOString(),
         author: { name: '𝅺', icon_url: member.avatarURL }
-      }
+      }]
     } as MessageContent<'hasNonce'>
   }
 }
