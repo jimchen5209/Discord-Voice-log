@@ -1,4 +1,4 @@
-import { Member, VoiceChannel, MessageContent, Client, TextChannel } from 'eris'
+import { Member, VoiceChannel, MessageContent, Client, TextChannel } from '@projectdysnomia/dysnomia'
 import { ILogObj, Logger } from 'tslog'
 import { vsprintf } from 'sprintf-js'
 import { DbServerConfigManager } from '../../../MongoDB/db/ServerConfig'
@@ -109,6 +109,6 @@ export class VoiceLogText {
         timestamp: (new Date()).toISOString(),
         author: { name: '𝅺', icon_url: member.avatarURL }
       }
-    } as MessageContent
+    } as MessageContent<'hasNonce'>
   }
 }

@@ -1,4 +1,4 @@
-import { Client } from 'eris'
+import { Client } from '@projectdysnomia/dysnomia'
 import { ILogObj, Logger } from 'tslog'
 import { AnyRequestData, GatewayServer, SlashCommand, SlashCreator } from 'slash-create'
 import { Discord } from '../Core'

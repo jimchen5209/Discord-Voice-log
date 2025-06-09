@@ -1,4 +1,4 @@
-import { Client, Member, VoiceChannel } from 'eris'
+import { Client, Member, VoiceChannel } from '@projectdysnomia/dysnomia'
 import { existsSync as exists, mkdirSync as mkDir } from 'fs'
 import { ILogObj, Logger } from 'tslog'
 import { scheduleJob } from 'node-schedule'
