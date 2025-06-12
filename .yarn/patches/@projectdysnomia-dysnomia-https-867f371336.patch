@@ -33,9 +33,18 @@ index a317e4659f3e30cb1765637a8fd3fca528876a7d..1cb5a567707e0759a3288a814d4d838d
  
          if(data.pinned !== undefined) {
 diff --git a/lib/voice/VoiceConnection.js b/lib/voice/VoiceConnection.js
-index 85e734c170be325e02d1be30be3ecdf5dc18a370..4e953d99aafad77eacb6f71f33caaa67e9ae6af3 100644
+index 8078daae083ddd55f24b36f5881763c9b58a0549..26f7c3673ee71da625f7ab2d067843d3f5b98446 100644
 --- a/lib/voice/VoiceConnection.js
 +++ b/lib/voice/VoiceConnection.js
+@@ -392,7 +392,7 @@ class VoiceConnection extends EventEmitter {
+                             this.disconnect(err);
+                         }
+                     });
+-                    const udpMessage = Buffer.allocUnsafe(74);
++                    const udpMessage = Buffer.alloc(74);
+                     udpMessage.writeUInt16BE(0x1, 0);
+                     udpMessage.writeUInt16BE(70, 2);
+                     udpMessage.writeUInt32BE(this.ssrc, 4);
 @@ -546,7 +546,12 @@ class VoiceConnection extends EventEmitter {
              if(this.connecting || this.ready) {
                  let reconnecting = true;
