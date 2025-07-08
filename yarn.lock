@@ -970,6 +970,7 @@ __metadata:
     "@types/promise-queue": "npm:^2.2.3"
     "@types/sprintf-js": "npm:^1.1.4"
     "@types/ws": "npm:^8.18.1"
+    "@typescript-eslint/types": "npm:^8.36.0"
     async-wait-until: "npm:^2.0.27"
     eris: "patch:eris@npm%3A0.18.0#~/.yarn/patches/eris-npm-0.18.0-57724b4df9.patch"
     eslint: "npm:^9.30.1"
