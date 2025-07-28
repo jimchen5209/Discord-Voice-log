@@ -2,5 +2,70 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "config:recommended"
+  ],
+  "schedule": [
+    "after 11pm every weekend",
+    "before 8am every weekend"
+  ],
+  "packageRules": [
+    {
+      "groupName": "eslint packages",
+      "matchPackageNames": [
+        "/.*eslint.*/"
+      ]
+    },
+    {
+      "groupName": "md5 packages",
+      "matchPackageNames": [
+        "md5",
+        "@types/md5"
+      ]
+    },
+    {
+      "groupName": "node-fetch packages",
+      "matchPackageNames": [
+        "node-fetch",
+        "@types/node-fetch"
+      ]
+    },
+    {
+      "groupName": "node-schedule packages",
+      "matchPackageNames": [
+        "node-schedule",
+        "@types/node-schedule"
+      ]
+    },
+    {
+      "groupName": "promise-queue packages",
+      "matchPackageNames": [
+        "promise-queue",
+        "@types/promise-queue"
+      ]
+    },
+    {
+      "groupName": "sprintf-js packages",
+      "matchPackageNames": [
+        "sprintf-js",
+        "@types/sprintf-js"
+      ]
+    },
+    {
+      "groupName": "ws packages",
+      "matchPackageNames": [
+        "ws",
+        "@types/ws"
+      ]
+    },
+    {
+      "groupName": "GitHub Actions",
+      "matchManagers": [
+        "github-actions"
+      ],
+      "matchPackageNames": [
+        "actions/checkout",
+        "actions/setup-node",
+        "actions/cache"
+      ]
+    }
   ]
 }
