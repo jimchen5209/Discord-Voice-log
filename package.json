@@ -22,7 +22,7 @@
     "md5": "^2.3.0",
     "mongodb": "^6.18.0",
     "mpg123-decoder": "^1.0.2",
-    "node-fetch": "^2.7.0",
+    "node-fetch": "^3.0.0",
     "node-schedule": "^2.1.1",
     "promise-queue": "^2.2.5",
     "slash-create": "^6.5.0",
