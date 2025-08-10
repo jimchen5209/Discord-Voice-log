@@ -31,20 +31,20 @@
     "tslog": "^4.9.3"
   },
   "devDependencies": {
-    "@eslint/js": "^9.32.0",
-    "@stylistic/eslint-plugin": "^5.2.2",
+    "@eslint/js": "^9.33.0",
+    "@stylistic/eslint-plugin": "^5.2.3",
     "@types/md5": "^2.3.5",
-    "@types/node": "^22.16.5",
-    "@types/node-fetch": "^2.6.12",
+    "@types/node": "^22.17.1",
+    "@types/node-fetch": "^2.6.13",
     "@types/node-schedule": "^2.1.8",
     "@types/promise-queue": "^2.2.3",
     "@types/sprintf-js": "^1.1.4",
     "@types/ws": "^8.18.1",
-    "@typescript-eslint/types": "^8.38.0",
-    "eslint": "^9.32.0",
+    "@typescript-eslint/types": "^8.39.0",
+    "eslint": "^9.33.0",
     "globals": "^16.3.0",
-    "typescript": "^5.8.3",
-    "typescript-eslint": "^8.38.0"
+    "typescript": "^5.9.2",
+    "typescript-eslint": "^8.39.0"
   },
   "packageManager": "yarn@4.9.2"
 }
