@@ -1,0 +1,18 @@
+queue_rules:
+  - name: dev-queue
+    queue_conditions:
+      - and:
+          - base=dev
+          - check-success=build
+          - 'label!=status:blocked'
+
+pull_request_rules:
+  - name: Merge branch into dev (Label)
+    conditions:
+      - base=dev
+      - 'label!=status:blocked'
+      - 'label=status:ready-to-merge'
+      - check-success=build
+    actions:
+      queue:
+        name: dev-queue
