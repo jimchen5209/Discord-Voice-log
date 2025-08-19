@@ -1,5 +1,5 @@
-import { existsSync as exists, readdirSync as readDir } from 'fs'
-import { extname } from 'path'
+import { existsSync as exists, readdirSync as readDir } from 'node:fs'
+import { extname } from 'node:path'
 import type { ILogObj, Logger } from 'tslog'
 import type { IPluginBase } from './Base/PluginBase'
 import type { IVoiceOverwrite } from './Base/VoiceOverwrite'

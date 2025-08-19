@@ -1,7 +1,7 @@
+import { unlinkSync as deleteFile, readdirSync as readDir, readFileSync as readFile } from 'node:fs'
+import { extname } from 'node:path'
 import waitUntil from 'async-wait-until'
 import type { VoiceChannel } from 'eris'
-import { unlinkSync as deleteFile, readdirSync as readDir, readFileSync as readFile } from 'fs'
-import { extname } from 'path'
 import Queue from 'promise-queue'
 import type { CommandContext, MessageEmbedOptions } from 'slash-create'
 import type { ILogObj, Logger } from 'tslog'
@@ -28,7 +28,7 @@ export class VoiceLogVoice {
     const voice = this.audios[guildId]
     if (!voice) {
       const botVoice = this.discord.client.voiceConnections.get(guildId)
-      if (botVoice && botVoice.ready) {
+      if (botVoice?.ready) {
         if (botVoice.channelID) this.audios[guildId] = new DiscordVoice(this.discord, botVoice.channelID, botVoice)
         return this.audios[guildId]
       }
@@ -63,7 +63,7 @@ export class VoiceLogVoice {
 
     this.audios[guildId] = new DiscordVoice(this.discord, channelId)
     try {
-      await waitUntil(() => this.audios[guildId] && this.audios[guildId].isReady())
+      await waitUntil(() => this.audios[guildId]?.isReady())
     } catch (error) {
       this.logger.error('Voice timed out:', error)
       return

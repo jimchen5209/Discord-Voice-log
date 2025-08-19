@@ -1,5 +1,5 @@
+import { existsSync as exists, mkdirSync as mkDir } from 'node:fs'
 import type { Client, Member, VoiceChannel } from 'eris'
-import { existsSync as exists, mkdirSync as mkDir } from 'fs'
 import { scheduleJob } from 'node-schedule'
 import Queue from 'promise-queue'
 import type { ILogObj, Logger } from 'tslog'

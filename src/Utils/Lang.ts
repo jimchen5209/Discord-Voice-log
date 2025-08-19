@@ -1,4 +1,4 @@
-import { existsSync as exists, readFileSync as readFile } from 'fs'
+import { existsSync as exists, readFileSync as readFile } from 'node:fs'
 import { type ApplicationCommandOption, type ApplicationCommandOptionChoice, CommandOptionType } from 'slash-create'
 import type { ILogObj, Logger } from 'tslog'
 

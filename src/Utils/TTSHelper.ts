@@ -1,9 +1,9 @@
-import { createWriteStream, existsSync } from 'fs'
-import { writeFile } from 'fs/promises'
+import { createWriteStream, existsSync } from 'node:fs'
+import { writeFile } from 'node:fs/promises'
+import { Readable } from 'node:stream'
 import md5 from 'md5'
 import type { MPEGDecoderWebWorker } from 'mpg123-decoder'
 import fetch, { type RequestInit } from 'node-fetch'
-import { Readable } from 'stream'
 import type { ILogObj, Logger } from 'tslog'
 import type { Config } from './Config'
 

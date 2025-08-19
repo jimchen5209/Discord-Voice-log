@@ -1,4 +1,4 @@
-import { constants, copyFileSync as copyFile, existsSync as exists, readFileSync as readFile, writeFileSync as writeFile } from 'fs'
+import { constants, copyFileSync as copyFile, existsSync as exists, readFileSync as readFile, writeFileSync as writeFile } from 'node:fs'
 import type { ILogObj, ISettingsParam, Logger } from 'tslog'
 
 export interface ConfigValue {

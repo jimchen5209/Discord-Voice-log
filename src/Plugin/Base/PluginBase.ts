@@ -4,7 +4,7 @@ export interface IPluginBase {
 }
 
 interface IPluginConstructor {
-  new (): void
+  new (): undefined
 }
 
 declare const IPluginBase: IPluginConstructor

@@ -1,4 +1,4 @@
-import { EventEmitter } from 'events'
+import { EventEmitter } from 'node:events'
 import { type Db, MongoClient, ServerApiVersion } from 'mongodb'
 import { instances } from '../../Utils/Instances'
 import { DbServerConfigManager } from './db/ServerConfig'

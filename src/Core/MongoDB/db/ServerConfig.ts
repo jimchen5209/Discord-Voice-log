@@ -1,4 +1,4 @@
-import { existsSync as exists, readFileSync as readFile, renameSync as renameFile } from 'fs'
+import { existsSync as exists, readFileSync as readFile, renameSync as renameFile } from 'node:fs'
 import { type Collection, type Db, type ObjectId, ReturnDocument } from 'mongodb'
 import { instances } from '../../../Utils/Instances'
 import { ERR_DB_NOT_INIT, ERR_INSERT_FAILURE } from '../Core'
