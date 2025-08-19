@@ -1,5 +1,5 @@
 import { constants, copyFileSync as copyFile, existsSync as exists, readFileSync as readFile, writeFileSync as writeFile } from 'fs'
-import { ILogObj, ISettingsParam, Logger } from 'tslog'
+import type { ILogObj, ISettingsParam, Logger } from 'tslog'
 
 export interface ConfigValue {
   configVersion: string | number
@@ -109,6 +109,7 @@ export class Config {
       publicKey: string
       admins: string[]
     }
+    // biome-ignore lint/style/useNamingConvention: Legacy config
     TOKEN: string
     admins: string[]
   }) {

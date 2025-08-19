@@ -1,11 +1,11 @@
-import { Client } from 'eris'
-import { ILogObj, Logger } from 'tslog'
-import { AnyRequestData, GatewayServer, SlashCommand, SlashCreator } from 'slash-create'
-import { Discord } from '../Core'
+import type { Client } from 'eris'
+import { type AnyRequestData, GatewayServer, type SlashCommand, SlashCreator } from 'slash-create'
+import type { ILogObj, Logger } from 'tslog'
+import { instances } from '../../../Utils/Instances'
+import type { Discord } from '../Core'
 import { LogCommand } from './Commands/Log'
 import { RefreshCacheCommand } from './Commands/RefreshCache'
 import { VoiceCommand } from './Commands/Voice'
-import { instances } from '../../../Utils/Instances'
 
 export class Command {
   private client: Client

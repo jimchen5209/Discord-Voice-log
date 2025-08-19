@@ -1,15 +1,15 @@
 import waitUntil from 'async-wait-until'
-import { VoiceChannel } from 'eris'
-import { readdirSync as readDir, readFileSync as readFile, unlinkSync as deleteFile } from 'fs'
-import { ILogObj, Logger } from 'tslog'
+import type { VoiceChannel } from 'eris'
+import { unlinkSync as deleteFile, readdirSync as readDir, readFileSync as readFile } from 'fs'
 import { extname } from 'path'
 import Queue from 'promise-queue'
-import { CommandContext, MessageEmbedOptions } from 'slash-create'
-import { DbServerConfigManager } from '../../../MongoDB/db/ServerConfig'
-import { Discord } from '../../Core'
-import { DiscordVoice } from '../../Core/Voice'
-import { VoiceLog } from '../VoiceLog'
+import type { CommandContext, MessageEmbedOptions } from 'slash-create'
+import type { ILogObj, Logger } from 'tslog'
 import { instances } from '../../../../Utils/Instances'
+import type { DbServerConfigManager } from '../../../MongoDB/db/ServerConfig'
+import type { Discord } from '../../Core'
+import { DiscordVoice } from '../../Core/Voice'
+import type { VoiceLog } from '../VoiceLog'
 
 export class VoiceLogVoice {
   private updateLock = false
@@ -33,7 +33,8 @@ export class VoiceLogVoice {
         return this.audios[guildId]
       }
       return undefined
-    } else if (!voice.isReady()) {
+    }
+    if (!voice.isReady()) {
       this.destroy(guildId)
       return undefined
     }
@@ -130,7 +131,7 @@ export class VoiceLogVoice {
     let progressTotal = 0
     const queue = new Queue(1, Infinity)
     const getTTS = (text: string, lang: string) => {
-      // eslint-disable-next-line no-async-promise-executor
+      // biome-ignore lint/suspicious/noAsyncPromiseExecutor: Usage of await
       return new Promise<void>(async (res) => {
         progressCount++
         const progressField = {
@@ -149,7 +150,7 @@ export class VoiceLogVoice {
       })
     }
     const getWaveTTS = (text: string, lang: string, voice: string) => {
-      // eslint-disable-next-line no-async-promise-executor
+      // biome-ignore lint/suspicious/noAsyncPromiseExecutor: Usage of await
       return new Promise<void>(async (res) => {
         progressCount++
         const progressField = {
@@ -205,7 +206,7 @@ export class VoiceLogVoice {
       value: `${seekDone || seekCounter === 0 ? '' : `Current ${seekFilename}, `} Seeked ${seekCounter} files. `
     }
     const afterWork = () => {
-      // eslint-disable-next-line no-async-promise-executor
+      // biome-ignore lint/suspicious/noAsyncPromiseExecutor: Usage of await
       return new Promise<void>(async (res) => {
         const progressField = {
           name: '✅ Processing files... Done',

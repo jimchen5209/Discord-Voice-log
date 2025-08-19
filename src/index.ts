@@ -1,6 +1,6 @@
+import { Status } from 'status-client'
 import { Discord } from './Core/Discord/Core'
 import { MongoDB } from './Core/MongoDB/Core'
-import { Status } from 'status-client'
 import { instances } from './Utils/Instances'
 
 const logger = instances.mainLogger
@@ -10,11 +10,13 @@ if (instances.config.debug) instances.mainLogger.settings.minLevel = 0 // Silly
 const status = new Status('VoiceLog')
 
 // Initialize MongoDB
-const mongoDB = (instances.mongoDB = new MongoDB())
+const mongoDB = new MongoDB()
+instances.mongoDB = mongoDB
 
 mongoDB.once('connect', () => {
   // Initialize the bot
-  const discord = (instances.discord = new Discord())
+  const discord = new Discord()
+  instances.discord = discord
 
   discord.start()
   status.set_status()

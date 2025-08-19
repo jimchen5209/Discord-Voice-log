@@ -1,8 +1,8 @@
-import { readdirSync as readDir, existsSync as exists } from 'fs'
-import { ILogObj, Logger } from 'tslog'
+import { existsSync as exists, readdirSync as readDir } from 'fs'
 import { extname } from 'path'
-import { IPluginBase } from './Base/PluginBase'
-import { IVoiceOverwrite } from './Base/VoiceOverwrite'
+import type { ILogObj, Logger } from 'tslog'
+import type { IPluginBase } from './Base/PluginBase'
+import type { IVoiceOverwrite } from './Base/VoiceOverwrite'
 
 export class PluginManager {
   private logger: Logger<ILogObj>

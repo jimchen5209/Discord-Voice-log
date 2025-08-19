@@ -1,6 +1,6 @@
 import { existsSync as exists, readFileSync as readFile } from 'fs'
-import { ApplicationCommandOption, ApplicationCommandOptionChoice, CommandOptionType } from 'slash-create'
-import { Logger, ILogObj } from 'tslog'
+import { type ApplicationCommandOption, type ApplicationCommandOptionChoice, CommandOptionType } from 'slash-create'
+import type { ILogObj, Logger } from 'tslog'
 
 export class Lang {
   private lang: {
@@ -18,6 +18,7 @@ export class Lang {
       mainLogger.error('Directory langs/list.json not found. Try re-pulling source code.')
       process.exit(1)
     }
+    // biome-ignore lint/style/useNamingConvention: From json file
     let listRaw: { [key: string]: { file: string; display_name: string } }
     try {
       listRaw = JSON.parse(readFile('./langs/list.json', { encoding: 'utf-8' }))

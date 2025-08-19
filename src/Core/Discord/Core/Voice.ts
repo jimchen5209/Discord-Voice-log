@@ -1,10 +1,10 @@
 import { waitUntil } from 'async-wait-until'
-import { Client, Member, VoiceConnection } from 'eris'
+import type { Client, Member, VoiceConnection } from 'eris'
 import { existsSync as exists, readFileSync as readFile } from 'fs'
-import { ILogObj, Logger } from 'tslog'
 import Queue from 'promise-queue'
+import type { ILogObj, Logger } from 'tslog'
 import { instances } from '../../../Utils/Instances'
-import { Discord } from '../Core'
+import type { Discord } from '../Core'
 
 export class DiscordVoice {
   private _init = true
@@ -23,7 +23,7 @@ export class DiscordVoice {
 
     this._channelId = channel
 
-    if (voice && voice.ready) {
+    if (voice?.ready) {
       this.voice = voice
       this._init = false
       this.logger.info('Using the existing voice connection')
@@ -105,7 +105,7 @@ export class DiscordVoice {
   }
 
   public isReady(): boolean {
-    return this.voice !== undefined && this.voice.ready
+    return this.voice?.ready ?? false
   }
 
   public destroy() {
@@ -161,7 +161,7 @@ export class DiscordVoice {
   }
 
   private play(file: string, format: string | undefined = undefined) {
-    // eslint-disable-next-line no-async-promise-executor
+    // biome-ignore lint/suspicious/noAsyncPromiseExecutor: Usage of await
     return new Promise<void>(async (res) => {
       if (file === '') {
         res()
@@ -169,7 +169,7 @@ export class DiscordVoice {
       }
       this.logger.info(`Playing ${file}`)
       try {
-        await waitUntil(() => this.voice && this.voice.ready)
+        await waitUntil(() => this.voice?.ready)
       } catch (error) {
         this.logger.error('Voice timed out, trying to reconnect', error)
         return

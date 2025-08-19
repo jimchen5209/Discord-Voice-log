@@ -22,7 +22,12 @@
       "correctness": {},
       "style": {
         "noUselessElse": "error",
-        "useNamingConvention": "error"
+        "useNamingConvention": {
+					"level":"error",
+					"options": {
+						"strictCase": false
+					}
+				}
       },
       "suspicious": {
         "noEmptyBlockStatements": "error",

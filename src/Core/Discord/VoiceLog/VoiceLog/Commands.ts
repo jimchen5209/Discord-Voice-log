@@ -1,13 +1,13 @@
 import waitUntil from 'async-wait-until'
-import { Client } from 'eris'
-import { CommandContext, MessageEmbedOptions } from 'slash-create'
+import type { Client } from 'eris'
+import type { CommandContext, MessageEmbedOptions } from 'slash-create'
 import { vsprintf } from 'sprintf-js'
-import { ILogObj, Logger } from 'tslog'
-import { DbServerConfigManager } from '../../../MongoDB/db/ServerConfig'
-import { Discord } from '../../Core'
-import { VoiceLog } from '../VoiceLog'
-import { VoiceLogSetStatus } from './Text'
+import type { ILogObj, Logger } from 'tslog'
 import { instances } from '../../../../Utils/Instances'
+import type { DbServerConfigManager } from '../../../MongoDB/db/ServerConfig'
+import type { Discord } from '../../Core'
+import type { VoiceLog } from '../VoiceLog'
+import { VoiceLogSetStatus } from './Text'
 
 const ERR_MISSING_LANG = 'Language not exist.'
 const ERR_MISSING_LANG_DEFAULT = 'Language not exist, will not change your language.'
@@ -164,7 +164,7 @@ export class VoiceLogCommands {
               embeds: [this.genSuccessMessage(instances.lang.get(data.lang).display.config.success)]
             })
             return
-          case VoiceLogSetStatus.ChannelSuccess_MissingLang:
+          case VoiceLogSetStatus.ChannelSuccessMissingLang:
             await context.send({
               embeds: [this.genErrorMessage(ERR_MISSING_LANG_DEFAULT)],
               ephemeral: true

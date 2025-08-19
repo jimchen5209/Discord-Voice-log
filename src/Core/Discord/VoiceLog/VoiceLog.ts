@@ -1,15 +1,15 @@
-import { Client, Member, VoiceChannel } from 'eris'
+import type { Client, Member, VoiceChannel } from 'eris'
 import { existsSync as exists, mkdirSync as mkDir } from 'fs'
-import { ILogObj, Logger } from 'tslog'
 import { scheduleJob } from 'node-schedule'
 import Queue from 'promise-queue'
-import { DbServerConfigManager } from '../../MongoDB/db/ServerConfig'
-import { Discord } from '../Core'
+import type { ILogObj, Logger } from 'tslog'
+import { instances } from '../../../Utils/Instances'
+import { ERR_DB_NOT_INIT } from '../../MongoDB/Core'
+import type { DbServerConfigManager } from '../../MongoDB/db/ServerConfig'
+import type { Discord } from '../Core'
 import { VoiceLogCommands } from './VoiceLog/Commands'
 import { VoiceLogText } from './VoiceLog/Text'
 import { VoiceLogVoice } from './VoiceLog/Voice'
-import { instances } from '../../../Utils/Instances'
-import { ERR_DB_NOT_INIT } from '../../MongoDB/Core'
 
 export class VoiceLog {
   private _voice: VoiceLogVoice

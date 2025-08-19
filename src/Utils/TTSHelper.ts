@@ -1,11 +1,11 @@
 import { createWriteStream, existsSync } from 'fs'
-import { ILogObj, Logger } from 'tslog'
-import md5 from 'md5'
-import fetch, { RequestInit } from 'node-fetch'
-import { Readable } from 'stream'
-import { Config } from './Config'
-import { MPEGDecoderWebWorker } from 'mpg123-decoder'
 import { writeFile } from 'fs/promises'
+import md5 from 'md5'
+import type { MPEGDecoderWebWorker } from 'mpg123-decoder'
+import fetch, { type RequestInit } from 'node-fetch'
+import { Readable } from 'stream'
+import type { ILogObj, Logger } from 'tslog'
+import type { Config } from './Config'
 
 export class TTSHelper {
   private logger: Logger<ILogObj>

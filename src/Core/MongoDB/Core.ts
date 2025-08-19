@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events'
-import { Db, MongoClient, ServerApiVersion } from 'mongodb'
-import { DbServerConfigManager } from './db/ServerConfig'
+import { type Db, MongoClient, ServerApiVersion } from 'mongodb'
 import { instances } from '../../Utils/Instances'
+import { DbServerConfigManager } from './db/ServerConfig'
 
 export const ERR_DB_NOT_INIT = Error('Database is not initialized')
 export const ERR_INSERT_FAILURE = Error('Data insert failed.')

@@ -1,7 +1,7 @@
 import { Client } from 'eris'
+import { instances } from '../../Utils/Instances'
 import { Command } from './Core/Command'
 import { VoiceLog } from './VoiceLog/VoiceLog'
-import { instances } from '../../Utils/Instances'
 
 const ERR_MISSING_TOKEN = Error('Discord token missing')
 

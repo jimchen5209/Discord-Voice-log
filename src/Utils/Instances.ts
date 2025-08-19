@@ -1,12 +1,12 @@
-import { ILogObj, Logger } from 'tslog'
+import { type ILogObj, Logger } from 'tslog'
 import type { Discord } from '../Core/Discord/Core'
 import type { MongoDB } from '../Core/MongoDB/Core'
+import { PluginManager } from '../Plugin/Core'
 import { Config, loggerOptions } from './Config'
 import { Lang } from './Lang'
 import { TTSHelper } from './TTSHelper'
-import { PluginManager } from '../Plugin/Core'
 
-interface Instances {
+interface INstances {
   mainLogger: Logger<ILogObj>
   config: Config
   lang: Lang
@@ -23,7 +23,7 @@ const lang = new Lang(mainLogger)
 const ttsHelper = new TTSHelper(config, mainLogger)
 const pluginManager = new PluginManager(mainLogger)
 
-export const instances: Instances = {
+export const instances: INstances = {
   mainLogger,
   config,
   lang,
