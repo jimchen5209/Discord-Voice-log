@@ -9,7 +9,6 @@ import type { VoiceLog } from '../VoiceLog'
 const ERR_UNEXPECTED_LANG_STATUS = new Error('Unexpected lang set status')
 const ERR_NO_PERMISSION = new Error('Not enough permissions to send message')
 
-/* eslint-disable no-unused-vars -- definition*/
 export enum VoiceLogSetStatus {
   AllSuccess,
   NotChanged,
@@ -18,7 +17,6 @@ export enum VoiceLogSetStatus {
   MissingLang,
   ChannelSuccessMissingLang
 }
-/* eslint-enable no-unused-vars */
 
 export class VoiceLogText {
   private client: Client

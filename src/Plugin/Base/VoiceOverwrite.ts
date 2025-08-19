@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars -- definition file*/
 import type { Member } from 'eris'
 import type { IPluginBase } from './PluginBase'
 

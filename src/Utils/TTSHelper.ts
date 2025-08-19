@@ -16,7 +16,6 @@ export class TTSHelper {
     this.logger = mainLogger.getSubLogger({ name: 'TTSHelper' })
     this.config = config
 
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     this.mp3Decoder = new (require('fix-esm').require('mpg123-decoder').MPEGDecoderWebWorker)()
   }
 
