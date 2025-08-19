@@ -1,6 +1,6 @@
 import { Discord } from './Core/Discord/Core'
 import { MongoDB } from './Core/MongoDB/Core'
-import { Status }from 'status-client'
+import { Status } from 'status-client'
 import { instances } from './Utils/Instances'
 
 const logger = instances.mainLogger

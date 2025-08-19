@@ -4,12 +4,12 @@ import { ERR_DB_NOT_INIT, ERR_INSERT_FAILURE } from '../Core'
 import { instances } from '../../../Utils/Instances'
 
 export interface IServerConfig {
-  _id: ObjectId;
-  serverID: string;
-  lang: string;
-  channelID: string;
-  lastVoiceChannel: string;
-  currentVoiceChannel: string;
+  _id: ObjectId
+  serverID: string
+  lang: string
+  channelID: string
+  lastVoiceChannel: string
+  currentVoiceChannel: string
 }
 
 export class DbServerConfigManager {
@@ -27,35 +27,19 @@ export class DbServerConfigManager {
   private async migrateData() {
     if (exists('./vlogdata.json')) {
       instances.mainLogger.info('Old data found. Migrating to db...')
-      const dataRaw = JSON.parse(
-        readFile('./vlogdata.json', { encoding: 'utf-8' })
-      )
+      const dataRaw = JSON.parse(readFile('./vlogdata.json', { encoding: 'utf-8' }))
       for (const key of Object.keys(dataRaw)) {
         if (dataRaw[key] === undefined) continue
-        await this.create(
-          key,
-          dataRaw[key].channel,
-          dataRaw[key].lang,
-          dataRaw[key].lastVoiceChannel
-        )
+        await this.create(key, dataRaw[key].channel, dataRaw[key].lang, dataRaw[key].lastVoiceChannel)
       }
       renameFile('./vlogdata.json', './vlogdata.json.bak')
     }
 
     // Add field admin to old lists
-    this.database?.updateMany(
-      { currentVoiceChannel: { $exists: false } },
-      { $set: { currentVoiceChannel: '' } }
-    )
+    this.database?.updateMany({ currentVoiceChannel: { $exists: false } }, { $set: { currentVoiceChannel: '' } })
   }
 
-  public async create(
-    serverID: string,
-    channelID = '',
-    lang = 'en_US',
-    lastVoiceChannel = '',
-    currentVoiceChannel = ''
-  ) {
+  public async create(serverID: string, channelID = '', lang = 'en_US', lastVoiceChannel = '', currentVoiceChannel = '') {
     if (!this.database) throw ERR_DB_NOT_INIT
 
     const data = {
@@ -92,46 +76,24 @@ export class DbServerConfigManager {
   public async updateChannel(serverID: string, channelID: string) {
     if (!this.database) throw ERR_DB_NOT_INIT
 
-    return await this.database.findOneAndUpdate(
-      { serverID },
-      { $set: { channelID } },
-      { returnDocument: ReturnDocument.AFTER }
-    )
+    return await this.database.findOneAndUpdate({ serverID }, { $set: { channelID } }, { returnDocument: ReturnDocument.AFTER })
   }
 
   public async updateLang(serverID: string, lang: string) {
     if (!this.database) throw ERR_DB_NOT_INIT
 
-    return await this.database.findOneAndUpdate(
-      { serverID },
-      { $set: { lang } },
-      { returnDocument: ReturnDocument.AFTER }
-    )
+    return await this.database.findOneAndUpdate({ serverID }, { $set: { lang } }, { returnDocument: ReturnDocument.AFTER })
   }
 
-  public async updateLastVoiceChannel(
-    serverID: string,
-    lastVoiceChannel: string
-  ) {
+  public async updateLastVoiceChannel(serverID: string, lastVoiceChannel: string) {
     if (!this.database) throw ERR_DB_NOT_INIT
 
-    return await this.database.findOneAndUpdate(
-      { serverID },
-      { $set: { lastVoiceChannel } },
-      { returnDocument: ReturnDocument.AFTER }
-    )
+    return await this.database.findOneAndUpdate({ serverID }, { $set: { lastVoiceChannel } }, { returnDocument: ReturnDocument.AFTER })
   }
 
-  public async updateCurrentVoiceChannel(
-    serverID: string,
-    currentVoiceChannel: string
-  ) {
+  public async updateCurrentVoiceChannel(serverID: string, currentVoiceChannel: string) {
     if (!this.database) throw ERR_DB_NOT_INIT
 
-    return await this.database.findOneAndUpdate(
-      { serverID },
-      { $set: { currentVoiceChannel } },
-      { returnDocument: ReturnDocument.AFTER }
-    )
+    return await this.database.findOneAndUpdate({ serverID }, { $set: { currentVoiceChannel } }, { returnDocument: ReturnDocument.AFTER })
   }
 }

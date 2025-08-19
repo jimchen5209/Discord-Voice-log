@@ -46,9 +46,7 @@ export class MongoDB extends EventEmitter {
             this.emit('error')
           }
 
-          this.logger.warn(
-            `Retrying to in 5 seconds... (try ${connectTryCount} / ${maxConnectTryCount} )`
-          )
+          this.logger.warn(`Retrying to in 5 seconds... (try ${connectTryCount} / ${maxConnectTryCount} )`)
           setTimeout(tryConnect, 5 * 1000)
         })
     }

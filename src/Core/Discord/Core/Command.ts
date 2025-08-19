@@ -30,8 +30,7 @@ export class Command {
     this.creator.withServer(
       new GatewayServer((handler) =>
         this.client.on('rawWS', (event) => {
-          if (event.t === 'INTERACTION_CREATE')
-            handler(event.d as AnyRequestData)
+          if (event.t === 'INTERACTION_CREATE') handler(event.d as AnyRequestData)
         })
       )
     )
@@ -45,11 +44,7 @@ export class Command {
     this.client.getRESTGuilds({ limit: 200 }).then((value) => {
       this.creator.client.guildIDs = value.map((value) => value.id)
 
-      const commands: SlashCommand[] = [
-        new VoiceCommand(this.creator),
-        new LogCommand(this.creator),
-        new RefreshCacheCommand(this.creator)
-      ]
+      const commands: SlashCommand[] = [new VoiceCommand(this.creator), new LogCommand(this.creator), new RefreshCacheCommand(this.creator)]
 
       this.creator.registerCommands(commands)
       this.registered = true

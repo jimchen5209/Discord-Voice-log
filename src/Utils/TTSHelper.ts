@@ -17,17 +17,13 @@ export class TTSHelper {
     this.config = config
 
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    this.mp3Decoder = new (require('fix-esm').require(
-      'mpg123-decoder'
-    ).MPEGDecoderWebWorker)()
+    this.mp3Decoder = new (require('fix-esm').require('mpg123-decoder').MPEGDecoderWebWorker)()
   }
 
   public async getTTSFile(text: string, lang: string): Promise<string | null> {
     const filePath = `./caches/${md5(`${text}-${lang}`)}.pcm`
     if (!existsSync(filePath)) {
-      const ttsURL = encodeURI(
-        `https://translate.google.com.tw/translate_tts?ie=UTF-8&q=${text}&tl=${lang}&client=tw-ob`
-      )
+      const ttsURL = encodeURI(`https://translate.google.com.tw/translate_tts?ie=UTF-8&q=${text}&tl=${lang}&client=tw-ob`)
       try {
         const res = await fetch(ttsURL)
         if (res.ok) {
@@ -35,9 +31,7 @@ export class TTSHelper {
           await this.mp3Decoder.ready
 
           // Decode mp3 to PCM 24kHz mono f32
-          const { channelData } = await this.mp3Decoder.decode(
-            new Uint8Array(await mp3)
-          )
+          const { channelData } = await this.mp3Decoder.decode(new Uint8Array(await mp3))
           await this.mp3Decoder.reset()
 
           // Covent to 48kHz stereo s16
@@ -55,16 +49,11 @@ export class TTSHelper {
           })
           await writeFile(filePath, pcm)
         } else {
-          this.logger.error(
-            `TTS ${text} in ${lang} download failed. response code: ${res.status}`
-          )
+          this.logger.error(`TTS ${text} in ${lang} download failed. response code: ${res.status}`)
         }
       } catch (error) {
         if (error instanceof Error) {
-          this.logger.error(
-            `TTS ${text} in ${lang} download failed: ${error.message}`,
-            error
-          )
+          this.logger.error(`TTS ${text} in ${lang} download failed: ${error.message}`, error)
         }
         return null
       }
@@ -72,11 +61,7 @@ export class TTSHelper {
     return filePath
   }
 
-  public async getWaveTTS(
-    text: string,
-    lang: string,
-    voice: string
-  ): Promise<string> {
+  public async getWaveTTS(text: string, lang: string, voice: string): Promise<string> {
     const filePath = `./caches/${md5(`${text}-${lang}-${voice}`)}.opus`
     if (!existsSync(filePath)) {
       const key = this.config.googleTTS.apiKey
@@ -95,11 +80,7 @@ export class TTSHelper {
     return filePath
   }
 
-  private async downloadWaveTTS(
-    url: string,
-    options: RequestInit,
-    path: string
-  ) {
+  private async downloadWaveTTS(url: string, options: RequestInit, path: string) {
     await fetch(url, options)
       .then((response) => response.json())
       .then((data) => {
@@ -114,10 +95,7 @@ export class TTSHelper {
       })
       .catch((error) => {
         if (error instanceof Error) {
-          this.logger.error(
-            `Download TTS failed: ${error.message}`,
-            error
-          )
+          this.logger.error(`Download TTS failed: ${error.message}`, error)
         }
       })
   }

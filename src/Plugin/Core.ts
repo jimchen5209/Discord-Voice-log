@@ -10,7 +10,7 @@ export class PluginManager {
   private _voiceOverwrites: { [key: string]: IVoiceOverwrite } = {}
 
   constructor(mainLogger: Logger<ILogObj>) {
-    this.logger = mainLogger.getSubLogger({ name: 'Plugin'})
+    this.logger = mainLogger.getSubLogger({ name: 'Plugin' })
 
     this.reloadPluginList().then(() => {
       this.enablePlugins()
@@ -55,7 +55,6 @@ export class PluginManager {
     this.logger.error(`Enable ${this.loadedPlugins[className].pluginName} failed: No compatible plugins found`)
     return false
   }
-
 
   public disablePlugin(className: string): boolean {
     if (Object.keys(this._voiceOverwrites).includes(className)) {

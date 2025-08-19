@@ -3,7 +3,12 @@ import { ApplicationCommandOption, ApplicationCommandOptionChoice, CommandOption
 import { Logger, ILogObj } from 'tslog'
 
 export class Lang {
-  private lang: { [key: string]: { display: { [key: string]: { [key: string]: string } }, displayName: string } } = {}
+  private lang: {
+    [key: string]: {
+      display: { [key: string]: { [key: string]: string } }
+      displayName: string
+    }
+  } = {}
   constructor(mainLogger: Logger<ILogObj>) {
     if (!exists('./langs')) {
       mainLogger.error('Directory langs/ not found. Try re-pulling source code.')
@@ -13,7 +18,7 @@ export class Lang {
       mainLogger.error('Directory langs/list.json not found. Try re-pulling source code.')
       process.exit(1)
     }
-    let listRaw: { [key: string]: { file: string, display_name: string } }
+    let listRaw: { [key: string]: { file: string; display_name: string } }
     try {
       listRaw = JSON.parse(readFile('./langs/list.json', { encoding: 'utf-8' }))
     } catch (error) {
@@ -36,10 +41,11 @@ export class Lang {
       return this.lang[lang]
     }
     return this.lang.en_US
-
   }
 
-  public isExist(lang: string) { return (lang in this.lang) }
+  public isExist(lang: string) {
+    return lang in this.lang
+  }
 
   public genOptions(required: boolean) {
     const choice: ApplicationCommandOptionChoice[] = []
@@ -53,13 +59,15 @@ export class Lang {
       })
     }
 
-    const options: ApplicationCommandOption[] = [{
-      name: 'language',
-      description: 'VoiceLog Language',
-      required: required,
-      choices: choice,
-      type: CommandOptionType.STRING
-    }]
+    const options: ApplicationCommandOption[] = [
+      {
+        name: 'language',
+        description: 'VoiceLog Language',
+        required: required,
+        choices: choice,
+        type: CommandOptionType.STRING
+      }
+    ]
 
     return options
   }
