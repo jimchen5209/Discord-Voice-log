@@ -1,13 +1,13 @@
+import type { Client } from '@projectdysnomia/dysnomia'
 import waitUntil from 'async-wait-until'
-import { Client } from '@projectdysnomia/dysnomia'
-import { CommandContext, MessageEmbedOptions } from 'slash-create'
+import type { CommandContext, MessageEmbedOptions } from 'slash-create'
 import { vsprintf } from 'sprintf-js'
-import { ILogObj, Logger } from 'tslog'
-import { DbServerConfigManager } from '../../../MongoDB/db/ServerConfig'
-import { Discord } from '../../Core'
-import { VoiceLog } from '../VoiceLog'
-import { VoiceLogSetStatus } from './Text'
+import type { ILogObj, Logger } from 'tslog'
 import { instances } from '../../../../Utils/Instances'
+import type { DbServerConfigManager } from '../../../MongoDB/db/ServerConfig'
+import type { Discord } from '../../Core'
+import type { VoiceLog } from '../VoiceLog'
+import { VoiceLogSetStatus } from './Text'
 
 const ERR_MISSING_LANG = 'Language not exist.'
 const ERR_MISSING_LANG_DEFAULT = 'Language not exist, will not change your language.'
@@ -32,7 +32,7 @@ export class VoiceLogCommands {
 
     const data = await this.serverConfig.getOrCreate(member.guild.id)
 
-    if (!(member.permissions.has('manageMessages')) && !(instances.config.discord.admins.includes(member.id))) {
+    if (!member.permissions.has('manageMessages') && !instances.config.discord.admins.includes(member.id)) {
       await context.send({
         embeds: [this.genErrorMessage(instances.lang.get(data.lang).display.command.no_permission)],
         ephemeral: true
@@ -80,7 +80,7 @@ export class VoiceLogCommands {
 
     const data = await this.serverConfig.getOrCreate(member.guild.id)
 
-    if (!(member.permissions.has('manageMessages')) && !(instances.config.discord.admins.includes(member.id))) {
+    if (!member.permissions.has('manageMessages') && !instances.config.discord.admins.includes(member.id)) {
       await context.send({
         embeds: [this.genErrorMessage(instances.lang.get(data.lang).display.command.no_permission)],
         ephemeral: true
@@ -111,7 +111,7 @@ export class VoiceLogCommands {
 
     const data = await this.serverConfig.getOrCreate(member.guild.id)
 
-    if (!(member.permissions.has('manageMessages')) && !(instances.config.discord.admins.includes(member.id))) {
+    if (!member.permissions.has('manageMessages') && !instances.config.discord.admins.includes(member.id)) {
       await context.send({
         embeds: [this.genErrorMessage(instances.lang.get(data.lang).display.command.no_permission)],
         ephemeral: true
@@ -135,7 +135,6 @@ export class VoiceLogCommands {
             await context.send({
               embeds: [this.genSuccessMessage(instances.lang.get(data.lang).display.config.success)]
             })
-
         }
       } catch {
         await context.send({
@@ -159,13 +158,13 @@ export class VoiceLogCommands {
           case VoiceLogSetStatus.ChannelSuccess:
             await context.send({
               embeds: [this.genNotChangedMessage(vsprintf(instances.lang.get(data.lang).display.config.lang_exist, [instances.lang.get(data.lang).displayName]))],
-              ephemeral : true
+              ephemeral: true
             })
             await context.send({
               embeds: [this.genSuccessMessage(instances.lang.get(data.lang).display.config.success)]
             })
             return
-          case VoiceLogSetStatus.ChannelSuccess_MissingLang:
+          case VoiceLogSetStatus.ChannelSuccessMissingLang:
             await context.send({
               embeds: [this.genErrorMessage(ERR_MISSING_LANG_DEFAULT)],
               ephemeral: true
@@ -185,10 +184,7 @@ export class VoiceLogCommands {
             return
           case VoiceLogSetStatus.MissingLang:
             await context.send({
-              embeds: [
-                this.genErrorMessage(ERR_MISSING_LANG_DEFAULT),
-                this.genNotChangedMessage(instances.lang.get(data.lang).display.config.exist)
-              ],
+              embeds: [this.genErrorMessage(ERR_MISSING_LANG_DEFAULT), this.genNotChangedMessage(instances.lang.get(data.lang).display.config.exist)],
               ephemeral: true
             })
             return
@@ -200,7 +196,6 @@ export class VoiceLogCommands {
               ],
               ephemeral: true
             })
-
         }
       } catch {
         await context.send({
@@ -218,7 +213,7 @@ export class VoiceLogCommands {
 
     const data = await this.serverConfig.getOrCreate(member.guild.id)
 
-    if (!(member.permissions.has('manageMessages')) && !(instances.config.discord.admins.includes(member.id))) {
+    if (!member.permissions.has('manageMessages') && !instances.config.discord.admins.includes(member.id)) {
       await context.send({
         embeds: [this.genErrorMessage(instances.lang.get(data.lang).display.command.no_permission)],
         ephemeral: true
@@ -252,7 +247,6 @@ export class VoiceLogCommands {
           embeds: [this.genErrorMessage(instances.lang.get(data.lang).display.config.error)],
           ephemeral: true
         })
-
     }
   }
 
@@ -263,7 +257,7 @@ export class VoiceLogCommands {
 
     const data = await this.serverConfig.getOrCreate(member.guild.id)
 
-    if (!(member.permissions.has('manageMessages')) && !(instances.config.discord.admins.includes(member.id))) {
+    if (!member.permissions.has('manageMessages') && !instances.config.discord.admins.includes(member.id)) {
       await context.send({
         embeds: [this.genErrorMessage(instances.lang.get(data.lang).display.command.no_permission)],
         ephemeral: true
@@ -284,7 +278,7 @@ export class VoiceLogCommands {
 
     const data = await this.serverConfig.getOrCreate(member.guild.id)
 
-    if (!(instances.config.discord.admins.includes(member.id))) {
+    if (!instances.config.discord.admins.includes(member.id)) {
       await context.send({
         embeds: [this.genErrorMessage(instances.lang.get(data.lang).display.command.no_permission)],
         ephemeral: true

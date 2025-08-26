@@ -1,6 +1,6 @@
 {
   "name": "discord_voice_log",
-  "version": "5.0.0",
+  "version": "5.0.1",
   "main": "dist/index.js",
   "repository": {
     "type": "git",
@@ -9,8 +9,10 @@
   "author": "Jim Chen <jimchen5209@gmail.com>",
   "license": "AGPL-3.0-only",
   "scripts": {
-    "lint": "eslint . --fix",
-    "lint:check": "eslint . --max-warnings 0",
+    "lint": "biome lint --write src/ langs/",
+    "lint:unsafe": "biome lint --write --unsafe src/ langs/",
+    "format": "biome format --write src/ langs/",
+    "biome:ci": "biome ci src/ langs/",
     "build": "tsc --pretty",
     "build:prod": "tsc --pretty --inlineSourceMap false"
   },
@@ -31,8 +33,7 @@
     "tslog": "^4.9.3"
   },
   "devDependencies": {
-    "@eslint/js": "^9.33.0",
-    "@stylistic/eslint-plugin": "^5.2.3",
+    "@biomejs/biome": "2.2.0",
     "@types/md5": "^2.3.5",
     "@types/node": "^22.17.1",
     "@types/node-fetch": "^2.6.13",
@@ -40,11 +41,8 @@
     "@types/promise-queue": "^2.2.3",
     "@types/sprintf-js": "^1.1.4",
     "@types/ws": "^8.18.1",
-    "@typescript-eslint/types": "^8.39.0",
-    "eslint": "^9.33.0",
     "globals": "^16.3.0",
-    "typescript": "^5.9.2",
-    "typescript-eslint": "^8.39.0"
+    "typescript": "^5.9.2"
   },
-  "packageManager": "yarn@4.9.2"
+  "packageManager": "yarn@4.9.3"
 }

@@ -1,10 +1,10 @@
+import { existsSync as exists, readFileSync as readFile } from 'node:fs'
+import type { Client, Member, VoiceConnection } from '@projectdysnomia/dysnomia'
 import { waitUntil } from 'async-wait-until'
-import { Client, Member, VoiceConnection } from '@projectdysnomia/dysnomia'
-import { existsSync as exists, readFileSync as readFile } from 'fs'
-import { ILogObj, Logger } from 'tslog'
 import Queue from 'promise-queue'
+import type { ILogObj, Logger } from 'tslog'
 import { instances } from '../../../Utils/Instances'
-import { Discord } from '../Core'
+import type { Discord } from '../Core'
 
 export class DiscordVoice {
   private _init = true
@@ -14,11 +14,7 @@ export class DiscordVoice {
   private voice: VoiceConnection | undefined
   private logger: Logger<ILogObj>
 
-  constructor(
-    discord: Discord,
-    channel: string,
-    voice: VoiceConnection | undefined = undefined
-  ) {
+  constructor(discord: Discord, channel: string, voice: VoiceConnection | undefined = undefined) {
     this.client = discord.client
     this.logger = discord.logger.getSubLogger({
       name: 'Voice',
@@ -27,12 +23,12 @@ export class DiscordVoice {
 
     this._channelId = channel
 
-    if (voice && voice.ready) {
+    if (voice?.ready) {
       this.voice = voice
       this._init = false
       this.logger.info('Using the existing voice connection')
     } else {
-      this.joinVoiceChannel(channel).then(connection => {
+      this.joinVoiceChannel(channel).then((connection) => {
         this.voice = connection
         if (connection) {
           this._init = false
@@ -47,7 +43,7 @@ export class DiscordVoice {
 
     this._channelId = channel
 
-    this.joinVoiceChannel(channel).then(connection => {
+    this.joinVoiceChannel(channel).then((connection) => {
       this.voice = connection
     })
   }
@@ -85,7 +81,7 @@ export class DiscordVoice {
     if (overwritten) return
 
     let voiceFile = ''
-    let format: string| undefined
+    let format: string | undefined
     if (exists(`assets/${member.id}.json`)) {
       const tts = JSON.parse(readFile(`assets/${member.id}.json`, { encoding: 'utf-8' }))
       if (tts.use_wave_tts && tts.lang && tts.voice && tts[type]) {
@@ -109,7 +105,7 @@ export class DiscordVoice {
   }
 
   public isReady(): boolean {
-    return (this.voice !== undefined) && this.voice.ready
+    return this.voice?.ready ?? false
   }
 
   public destroy() {
@@ -129,7 +125,7 @@ export class DiscordVoice {
       connection.on('warn', (message: string) => {
         this.logger.warn(message)
       })
-      connection.on('error', err => {
+      connection.on('error', (err) => {
         this.logger.error(err.message, err)
       })
       connection.on('debug', (message) => this.logger.debug(message))
@@ -145,13 +141,13 @@ export class DiscordVoice {
           this.switchChannel(channelId)
         }
       })
-      connection.once('disconnect', err => {
+      connection.once('disconnect', (err) => {
         this.logger.error(err?.message, err)
         connection.stopPlaying()
         this.client.leaveVoiceChannel(channelID)
         this.logger.warn('Trying to reconnect in 5 seconds...')
         setTimeout(() => {
-          this.joinVoiceChannel(this._channelId || channelID).then(newConnection => {
+          this.joinVoiceChannel(this._channelId || channelID).then((newConnection) => {
             this.voice = newConnection
           })
         }, 5 * 1000)
@@ -162,11 +158,10 @@ export class DiscordVoice {
         this.logger.error(`${e.name} - ${e.message}`, e)
       }
     }
-
   }
 
   private play(file: string, format: string | undefined = undefined) {
-    // eslint-disable-next-line no-async-promise-executor
+    // biome-ignore lint/suspicious/noAsyncPromiseExecutor: Usage of await
     return new Promise<void>(async (res) => {
       if (file === '') {
         res()
@@ -174,7 +169,7 @@ export class DiscordVoice {
       }
       this.logger.info(`Playing ${file}`)
       try {
-        await waitUntil(() => this.voice && this.voice.ready)
+        await waitUntil(() => this.voice?.ready)
       } catch (error) {
         this.logger.error('Voice timed out, trying to reconnect', error)
         return

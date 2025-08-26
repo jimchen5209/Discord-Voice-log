@@ -1,7 +1,7 @@
-import { EventEmitter } from 'events'
-import { Db, MongoClient, ServerApiVersion } from 'mongodb'
-import { DbServerConfigManager } from './db/ServerConfig'
+import { EventEmitter } from 'node:events'
+import { type Db, MongoClient, ServerApiVersion } from 'mongodb'
 import { instances } from '../../Utils/Instances'
+import { DbServerConfigManager } from './db/ServerConfig'
 
 export const ERR_DB_NOT_INIT = Error('Database is not initialized')
 export const ERR_INSERT_FAILURE = Error('Data insert failed.')
@@ -46,9 +46,7 @@ export class MongoDB extends EventEmitter {
             this.emit('error')
           }
 
-          this.logger.warn(
-            `Retrying to in 5 seconds... (try ${connectTryCount} / ${maxConnectTryCount} )`
-          )
+          this.logger.warn(`Retrying to in 5 seconds... (try ${connectTryCount} / ${maxConnectTryCount} )`)
           setTimeout(tryConnect, 5 * 1000)
         })
     }

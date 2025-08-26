@@ -1,4 +1,4 @@
-name: Run tests
+name: Build Test
 
 on: [push, pull_request]
 
@@ -8,7 +8,7 @@ jobs:
 
     steps:
     - name: Check out code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Use Node.js 22.x
       uses: actions/setup-node@v4
@@ -30,7 +30,7 @@ jobs:
       run: yarn install --immutable
 
     - name: Lint
-      run: yarn lint:check
+      run: yarn biome:ci
 
     - name: Build
       run: yarn build

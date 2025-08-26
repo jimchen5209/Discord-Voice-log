@@ -1,8 +1,8 @@
-import { readdirSync as readDir, existsSync as exists } from 'fs'
-import { ILogObj, Logger } from 'tslog'
-import { extname } from 'path'
-import { IPluginBase } from './Base/PluginBase'
-import { IVoiceOverwrite } from './Base/VoiceOverwrite'
+import { existsSync as exists, readdirSync as readDir } from 'node:fs'
+import { extname } from 'node:path'
+import type { ILogObj, Logger } from 'tslog'
+import type { IPluginBase } from './Base/PluginBase'
+import type { IVoiceOverwrite } from './Base/VoiceOverwrite'
 
 export class PluginManager {
   private logger: Logger<ILogObj>
@@ -10,7 +10,7 @@ export class PluginManager {
   private _voiceOverwrites: { [key: string]: IVoiceOverwrite } = {}
 
   constructor(mainLogger: Logger<ILogObj>) {
-    this.logger = mainLogger.getSubLogger({ name: 'Plugin'})
+    this.logger = mainLogger.getSubLogger({ name: 'Plugin' })
 
     this.reloadPluginList().then(() => {
       this.enablePlugins()
@@ -55,7 +55,6 @@ export class PluginManager {
     this.logger.error(`Enable ${this.loadedPlugins[className].pluginName} failed: No compatible plugins found`)
     return false
   }
-
 
   public disablePlugin(className: string): boolean {
     if (Object.keys(this._voiceOverwrites).includes(className)) {

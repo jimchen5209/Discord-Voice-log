@@ -1,15 +1,15 @@
-import { Client, Member, VoiceChannel } from '@projectdysnomia/dysnomia'
-import { existsSync as exists, mkdirSync as mkDir } from 'fs'
-import { ILogObj, Logger } from 'tslog'
+import { existsSync as exists, mkdirSync as mkDir } from 'node:fs'
+import type { Client, Member, VoiceChannel } from '@projectdysnomia/dysnomia'
 import { scheduleJob } from 'node-schedule'
 import Queue from 'promise-queue'
-import { DbServerConfigManager } from '../../MongoDB/db/ServerConfig'
-import { Discord } from '../Core'
+import type { ILogObj, Logger } from 'tslog'
+import { instances } from '../../../Utils/Instances'
+import { ERR_DB_NOT_INIT } from '../../MongoDB/Core'
+import type { DbServerConfigManager } from '../../MongoDB/db/ServerConfig'
+import type { Discord } from '../Core'
 import { VoiceLogCommands } from './VoiceLog/Commands'
 import { VoiceLogText } from './VoiceLog/Text'
 import { VoiceLogVoice } from './VoiceLog/Voice'
-import { instances } from '../../../Utils/Instances'
-import { ERR_DB_NOT_INIT } from '../../MongoDB/Core'
 
 export class VoiceLog {
   private _voice: VoiceLogVoice
@@ -34,7 +34,9 @@ export class VoiceLog {
 
     this.client.on('voiceChannelJoin', async (member: Member, newChannel: VoiceChannel) => {
       if (member.id === this.client.user.id) return
-      this.logger.debug(`Queue (${this.queue.getQueueLength() + 1}): User ${member.username} (${member.id}) joined voice channel ${newChannel.name} (${newChannel.id}) in guild ${member.guild.name} (${member.guild.id})`)
+      this.logger.debug(
+        `Queue (${this.queue.getQueueLength() + 1}): User ${member.username} (${member.id}) joined voice channel ${newChannel.name} (${newChannel.id}) in guild ${member.guild.name} (${member.guild.id})`
+      )
       this.queue.add(async () => {
         this.logger.info(`User ${member.username} (${member.id}) joined voice channel ${newChannel.name} (${newChannel.id}) in guild ${member.guild.name} (${member.guild.id})`)
 
@@ -57,7 +59,9 @@ export class VoiceLog {
 
     this.client.on('voiceChannelLeave', async (member: Member, oldChannel: VoiceChannel) => {
       if (member.id === this.client.user.id) return
-      this.logger.debug(`Queue (${this.queue.getQueueLength() + 1}): User ${member.username} (${member.id}) left voice channel ${oldChannel.name} (${oldChannel.id}) in guild ${member.guild.name} (${member.guild.id})`)
+      this.logger.debug(
+        `Queue (${this.queue.getQueueLength() + 1}): User ${member.username} (${member.id}) left voice channel ${oldChannel.name} (${oldChannel.id}) in guild ${member.guild.name} (${member.guild.id})`
+      )
       this.queue.add(async () => {
         this.logger.info(`User ${member.username} (${member.id}) left voice channel ${oldChannel.name} (${oldChannel.id}) in guild ${member.guild.name} (${member.guild.id})`)
 
@@ -82,9 +86,13 @@ export class VoiceLog {
         this._serverConfig.updateCurrentVoiceChannel(member.guild.id, '')
         return
       }
-      this.logger.debug(`Queue (${this.queue.getQueueLength() + 1}): User ${member.username} (${member.id}) switched voice channel from ${oldChannel.name} (${oldChannel.id}) to ${newChannel.name} (${newChannel.id}) in guild ${member.guild.name} (${member.guild.id})`)
+      this.logger.debug(
+        `Queue (${this.queue.getQueueLength() + 1}): User ${member.username} (${member.id}) switched voice channel from ${oldChannel.name} (${oldChannel.id}) to ${newChannel.name} (${newChannel.id}) in guild ${member.guild.name} (${member.guild.id})`
+      )
       this.queue.add(async () => {
-        this.logger.info(`User ${member.username} (${member.id}) switched voice channel from ${oldChannel.name} (${oldChannel.id}) to ${newChannel.name} (${newChannel.id}) in guild ${member.guild.name} (${member.guild.id})`)
+        this.logger.info(
+          `User ${member.username} (${member.id}) switched voice channel from ${oldChannel.name} (${oldChannel.id}) to ${newChannel.name} (${newChannel.id}) in guild ${member.guild.name} (${member.guild.id})`
+        )
 
         const guildId = member.guild.id
         const channelID = await this._voice.autoLeaveChannel(oldChannel, newChannel, guildId)
@@ -130,11 +138,13 @@ export class VoiceLog {
     if (!exists('./assets')) mkDir('./assets')
     if (!exists('./caches')) mkDir('./caches')
     const channels = await this._serverConfig.getCurrentChannels()
-    channels.forEach(element => {
+    channels.forEach((element) => {
       this._logger.info(`Reconnecting to ${element.currentVoiceChannel}...`)
       this._voice.join(element.serverID, element.currentVoiceChannel)
     })
-    scheduleJob('0 0 * * *', () => { this._voice.refreshCache(undefined) })
+    scheduleJob('0 0 * * *', () => {
+      this._voice.refreshCache(undefined)
+    })
   }
 
   public async end() {
