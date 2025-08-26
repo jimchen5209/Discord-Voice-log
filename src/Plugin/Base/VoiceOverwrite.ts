@@ -1,9 +1,8 @@
-/* eslint-disable no-unused-vars -- definition file*/
-import { Member } from 'eris'
-import { IPluginBase } from './PluginBase'
+import type { Member } from 'eris'
+import type { IPluginBase } from './PluginBase'
 
 export interface IVoiceOverwrite extends IPluginBase {
-  typeVoiceOverwrite: boolean;
+  typeVoiceOverwrite: boolean
 
-  playVoice(member: Member, type: string): Promise<string | undefined>;
+  playVoice(member: Member, type: string): Promise<string | undefined>
 }

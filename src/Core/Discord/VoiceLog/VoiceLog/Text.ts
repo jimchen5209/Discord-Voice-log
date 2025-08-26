@@ -1,24 +1,22 @@
-import { Member, VoiceChannel, MessageContent, Client, TextChannel } from 'eris'
-import { ILogObj, Logger } from 'tslog'
+import type { Client, Member, MessageContent, TextChannel, VoiceChannel } from 'eris'
 import { vsprintf } from 'sprintf-js'
-import { DbServerConfigManager } from '../../../MongoDB/db/ServerConfig'
-import { Discord } from '../../Core'
+import type { ILogObj, Logger } from 'tslog'
 import { instances } from '../../../../Utils/Instances'
-import { VoiceLog } from '../VoiceLog'
+import type { DbServerConfigManager } from '../../../MongoDB/db/ServerConfig'
+import type { Discord } from '../../Core'
+import type { VoiceLog } from '../VoiceLog'
 
 const ERR_UNEXPECTED_LANG_STATUS = new Error('Unexpected lang set status')
 const ERR_NO_PERMISSION = new Error('Not enough permissions to send message')
 
-/* eslint-disable no-unused-vars -- definition*/
 export enum VoiceLogSetStatus {
   AllSuccess,
   NotChanged,
   ChannelSuccess,
   LangSuccess,
   MissingLang,
-  ChannelSuccess_MissingLang
+  ChannelSuccessMissingLang
 }
-/* eslint-enable no-unused-vars */
 
 export class VoiceLogText {
   private client: Client
@@ -32,7 +30,7 @@ export class VoiceLogText {
   }
 
   public async setVoiceLog(guildId: string, channelId: string, lang: string | undefined = undefined): Promise<VoiceLogSetStatus> {
-    const permissionCheck = ((this.client.getChannel(channelId)) as TextChannel).permissionsOf(this.client.user.id)
+    const permissionCheck = (this.client.getChannel(channelId) as TextChannel).permissionsOf(this.client.user.id)
     if (!permissionCheck.has('sendMessages') || !permissionCheck.has('embedLinks')) {
       this.logger.error('Not enough permissions to send message')
       throw ERR_NO_PERMISSION
@@ -49,20 +47,18 @@ export class VoiceLogText {
         case VoiceLogSetStatus.LangSuccess:
           return VoiceLogSetStatus.AllSuccess
         case VoiceLogSetStatus.MissingLang:
-          return VoiceLogSetStatus.ChannelSuccess_MissingLang
+          return VoiceLogSetStatus.ChannelSuccessMissingLang
         case VoiceLogSetStatus.NotChanged:
           return VoiceLogSetStatus.ChannelSuccess
         default:
           this.logger.error('Unexpected lang set status')
           throw ERR_UNEXPECTED_LANG_STATUS
       }
-
-    } else {
-      if (data.channelID === channelId) return VoiceLogSetStatus.NotChanged
-
-      await this.serverConfig.updateChannel(guildId, channelId)
-      return VoiceLogSetStatus.ChannelSuccess
     }
+    if (data.channelID === channelId) return VoiceLogSetStatus.NotChanged
+
+    await this.serverConfig.updateChannel(guildId, channelId)
+    return VoiceLogSetStatus.ChannelSuccess
   }
 
   public async setLang(guildId: string, lang: string): Promise<VoiceLogSetStatus> {
@@ -106,7 +102,8 @@ export class VoiceLogText {
         color,
         title: member.nick ? member.nick : member.username,
         description: content,
-        timestamp: (new Date()).toISOString(),
+        timestamp: new Date().toISOString(),
+        // biome-ignore lint/style/useNamingConvention: MessageContent requires this
         author: { name: '𝅺', icon_url: member.avatarURL }
       }
     } as MessageContent
