@@ -33,7 +33,7 @@
     "tslog": "^4.9.3"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.2.0",
+    "@biomejs/biome": "2.2.3",
     "@types/md5": "^2.3.5",
     "@types/node": "^22.17.1",
     "@types/node-fetch": "^2.6.13",
