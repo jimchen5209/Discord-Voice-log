@@ -43,7 +43,7 @@ jobs:
         with:
           scan-type: 'fs'
           output: trivy.md
-          ignore-unfixed: true
+          trivy-config: trivy.yaml
           exit-code: ${{ steps.dependencies.outputs.changed == 'true' && '1' || '0' }}
 
       - name: Publish Trivy Output to Summary
