@@ -22,5 +22,5 @@
   },
   "editor.formatOnSave": true,
   "editor.formatOnSaveMode": "modificationsIfAvailable",
-  "npm.packageManager": "yarn"
+  "npm.packageManager": "pnpm"
 }
