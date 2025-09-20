@@ -14,7 +14,7 @@ importers:
   .:
     dependencies:
       async-wait-until:
-        specifier: ^2.0.27
+        specifier: ^2.0.30
         version: 2.0.30
       eris:
         specifier: ^0.18.0
@@ -26,7 +26,7 @@ importers:
         specifier: ^2.3.0
         version: 2.3.0
       mongodb:
-        specifier: ^6.18.0
+        specifier: ^6.20.0
         version: 6.20.0
       mpg123-decoder:
         specifier: ^1.0.2
@@ -41,13 +41,13 @@ importers:
         specifier: ^2.2.5
         version: 2.2.5
       slash-create:
-        specifier: ^6.5.0
+        specifier: ^6.6.2
         version: 6.6.2
       sprintf-js:
         specifier: ^1.1.3
         version: 1.1.3
       status-client:
-        specifier: jimchen5209/StatusClient_JS#v2.3.0
+        specifier: github:jimchen5209/StatusClient_JS#v2.3.0
         version: https://codeload.github.com/jimchen5209/StatusClient_JS/tar.gz/be7568ff41c68bf6a87b892698145af7c8a8c983
       tslog:
         specifier: ^4.9.3
@@ -60,7 +60,7 @@ importers:
         specifier: ^2.3.5
         version: 2.3.5
       '@types/node':
-        specifier: ^22.17.1
+        specifier: ^22.18.6
         version: 22.18.6
       '@types/node-fetch':
         specifier: ^2.6.13
@@ -78,7 +78,7 @@ importers:
         specifier: ^8.18.1
         version: 8.18.1
       globals:
-        specifier: ^16.3.0
+        specifier: ^16.4.0
         version: 16.4.0
       typescript:
         specifier: ^5.9.2
