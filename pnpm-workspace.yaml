@@ -1,0 +1,2 @@
+patchedDependencies:
+  eris: patches/eris.patch
