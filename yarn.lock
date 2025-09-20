@@ -1057,8 +1057,8 @@ __metadata:
   linkType: hard
 
 "slash-create@npm:^6.5.0":
-  version: 6.5.0
-  resolution: "slash-create@npm:6.5.0"
+  version: 6.6.2
+  resolution: "slash-create@npm:6.6.2"
   dependencies:
     eventemitter3: "npm:^5.0.1"
     lodash.isequal: "npm:^4.5.0"
@@ -1072,7 +1072,7 @@ __metadata:
       optional: true
     fastify:
       optional: true
-  checksum: 10c0/0bca50d3325540021feec834c72be8fbb0308a92093f73f921c69136f1185a511ed49b782be799c42c8ad11a82d457554b27e5bb8d1334ab762907a7cb108dc1
+  checksum: 10c0/ef21bf2e952e306bda8bcb12cac2e88fddd15360bb317c3b70e0eebac5401af773ccf2aa26ee67b1137b7f2ca28dd0d3b2101ab259f4b8367e90ed3fe6bca17f
   languageName: node
   linkType: hard
 
