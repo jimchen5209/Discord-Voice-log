@@ -51,7 +51,7 @@ importers:
         version: https://codeload.github.com/jimchen5209/StatusClient_JS/tar.gz/be7568ff41c68bf6a87b892698145af7c8a8c983
       tslog:
         specifier: ^4.9.3
-        version: 4.9.3
+        version: 4.10.2
     devDependencies:
       '@biomejs/biome':
         specifier: 2.2.5
@@ -574,8 +574,8 @@ packages:
     resolution: {integrity: sha512-hdF5ZgjTqgAntKkklYw0R03MG2x/bSzTtkxmIRw/sTNV8YXsCJ1tfLAX23lhxhHJlEf3CRCOCGGWw3vI3GaSPw==}
     engines: {node: '>=18'}
 
-  tslog@4.9.3:
-    resolution: {integrity: sha512-oDWuGVONxhVEBtschLf2cs/Jy8i7h1T+CpdkTNWQgdAF7DhRo2G8vMCgILKe7ojdEkLhICWgI1LYSSKaJsRgcw==}
+  tslog@4.10.2:
+    resolution: {integrity: sha512-XuELoRpMR+sq8fuWwX7P0bcj+PRNiicOKDEb3fGNURhxWVyykCi9BNq7c4uVz7h7P0sj8qgBsr5SWS6yBClq3g==}
     engines: {node: '>=16'}
 
   tweetnacl@1.0.3:
@@ -1078,7 +1078,7 @@ snapshots:
     dependencies:
       punycode: 2.3.1
 
-  tslog@4.9.3: {}
+  tslog@4.10.2: {}
 
   tweetnacl@1.0.3: {}
 
