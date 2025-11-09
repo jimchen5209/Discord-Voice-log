@@ -1,7 +1,7 @@
 import { Client } from 'eris'
+import { instances } from '../../Utils/Instances'
 import { Command } from './Core/Command'
 import { VoiceLog } from './VoiceLog/VoiceLog'
-import { instances } from '../../Utils/Instances'
 
 const ERR_MISSING_TOKEN = Error('Discord token missing')
 
@@ -28,9 +28,7 @@ export class Discord {
     this.command = new Command(this)
 
     this._client.on('ready', async () => {
-      this._logger.info(
-        `Logged in as ${this._client.user.username} (${this._client.user.id})`
-      )
+      this._logger.info(`Logged in as ${this._client.user.username} (${this._client.user.id})`)
       this.command.refreshCommands()
       this._voiceLog.start()
     })

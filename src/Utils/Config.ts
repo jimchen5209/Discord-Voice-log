@@ -1,8 +1,8 @@
-import { constants, copyFileSync as copyFile, existsSync as exists, readFileSync as readFile, writeFileSync as writeFile } from 'fs'
-import { ILogObj, ISettingsParam, Logger } from 'tslog'
+import { constants, copyFileSync as copyFile, existsSync as exists, readFileSync as readFile, writeFileSync as writeFile } from 'node:fs'
+import type { ILogObj, ISettingsParam, Logger } from 'tslog'
 
 export interface ConfigValue {
-  configVersion: string | number,
+  configVersion: string | number
   discord: DiscordConfig
   googleTTS: GoogleTTSConfig
   mongodb: MongoDBConfig
@@ -40,9 +40,17 @@ export class Config {
   private _debug: boolean
   private logger: Logger<ILogObj>
 
-  private readonly discordDefault = { botToken: '', applicationID: '', publicKey: '', admins: [] }
+  private readonly discordDefault = {
+    botToken: '',
+    applicationID: '',
+    publicKey: '',
+    admins: []
+  }
   private readonly googleTTSDefault = { apiKey: '' }
-  private readonly mongodbDefault = { host: 'mongodb://localhost:27017', name: 'VoiceLog' }
+  private readonly mongodbDefault = {
+    host: 'mongodb://localhost:27017',
+    name: 'VoiceLog'
+  }
 
   constructor(mainLogger: Logger<ILogObj>) {
     this.logger = mainLogger.getSubLogger({ name: 'Config' })
@@ -65,7 +73,7 @@ export class Config {
       if (!config.mongodb) config.mongodb = {}
       this._mongodb = this.mergeMongoDBConfig(config)
 
-      this._debug = (config.debug) ? config.debug : ((config.Debug) ? config.Debug : false)
+      this._debug = config.debug ? config.debug : config.Debug ? config.Debug : false
 
       this.save()
 
@@ -73,7 +81,7 @@ export class Config {
         this.backupAndQuit(config)
       }
     } else {
-      this.logger.fatal('Can\'t load config.json: File not found.')
+      this.logger.fatal("Can't load config.json: File not found.")
       this.logger.info('Generating empty config...')
       this._discord = this.discordDefault
       this._googleTTS = this.googleTTSDefault
@@ -83,7 +91,6 @@ export class Config {
       this.logger.info('Fill your config and try again.')
       process.exit(1)
     }
-
   }
 
   private checkVersion(version: number) {
@@ -95,25 +102,35 @@ export class Config {
     return false
   }
 
-  private mergeDiscordConfig(config: { discord: { botToken: string; applicationID: string; publicKey: string; admins: string[] }; TOKEN: string; admins: string[] }) {
+  private mergeDiscordConfig(config: {
+    discord: {
+      botToken: string
+      applicationID: string
+      publicKey: string
+      admins: string[]
+    }
+    // biome-ignore lint/style/useNamingConvention: Legacy config
+    TOKEN: string
+    admins: string[]
+  }) {
     return {
-      botToken: (config.discord.botToken) ? config.discord.botToken : ((config.TOKEN) ? config.TOKEN : this.discordDefault.botToken),
-      applicationID: (config.discord.applicationID) ? config.discord.applicationID : this.discordDefault.applicationID,
-      publicKey: (config.discord.publicKey) ? config.discord.publicKey : this.discordDefault.publicKey,
-      admins: (config.discord.admins) ? config.discord.admins : ((config.admins) ? config.admins : this.discordDefault.admins)
+      botToken: config.discord.botToken ? config.discord.botToken : config.TOKEN ? config.TOKEN : this.discordDefault.botToken,
+      applicationID: config.discord.applicationID ? config.discord.applicationID : this.discordDefault.applicationID,
+      publicKey: config.discord.publicKey ? config.discord.publicKey : this.discordDefault.publicKey,
+      admins: config.discord.admins ? config.discord.admins : config.admins ? config.admins : this.discordDefault.admins
     } as DiscordConfig
   }
 
   private mergeGoogleTTSConfig(config: { googleTTS: { apiKey: string }; googleAPIKey: string }) {
     return {
-      apiKey: (config.googleTTS.apiKey) ? config.googleTTS.apiKey : ((config.googleAPIKey) ? config.googleAPIKey : this.googleTTSDefault.apiKey)
+      apiKey: config.googleTTS.apiKey ? config.googleTTS.apiKey : config.googleAPIKey ? config.googleAPIKey : this.googleTTSDefault.apiKey
     } as GoogleTTSConfig
   }
 
   private mergeMongoDBConfig(config: { mongodb: { host: string; name: string }; database: { host: string; name: string } }) {
     return {
-      host: (config.mongodb.host) ? config.mongodb.host : ((config.database.host) ? config.database.host : this.mongodbDefault.host),
-      name: (config.mongodb.name) ? config.mongodb.name : ((config.database.name) ? config.database.name : this.mongodbDefault.name)
+      host: config.mongodb.host ? config.mongodb.host : config.database.host ? config.database.host : this.mongodbDefault.host,
+      name: config.mongodb.name ? config.mongodb.name : config.database.name ? config.database.name : this.mongodbDefault.name
     } as MongoDBConfig
   }
 
@@ -139,14 +156,18 @@ export class Config {
   }
 
   private save() {
-    const json = JSON.stringify({
-      '//configVersion': 'DO NOT MODIFY THIS UNLESS YOU KNOW WHAT YOU ARE DOING!!!!!',
-      configVersion: this.configVersion,
-      discord: this._discord,
-      googleTTS: this._googleTTS,
-      mongodb: this._mongodb,
-      debug: this._debug
-    }, null, 4)
+    const json = JSON.stringify(
+      {
+        '//configVersion': 'DO NOT MODIFY THIS UNLESS YOU KNOW WHAT YOU ARE DOING!!!!!',
+        configVersion: this.configVersion,
+        discord: this._discord,
+        googleTTS: this._googleTTS,
+        mongodb: this._mongodb,
+        debug: this._debug
+      },
+      null,
+      4
+    )
     writeFile('./config.json', json, 'utf8')
   }
 

@@ -1,11 +1,10 @@
-
 export interface IPluginBase {
-  pluginName:string;
-  description:string;
+  pluginName: string
+  description: string
 }
 
 interface IPluginConstructor {
-  new(): void;
+  new (): undefined
 }
 
 declare const IPluginBase: IPluginConstructor
