@@ -18,8 +18,8 @@
   },
   "keywords": [],
   "dependencies": {
+    "@projectdysnomia/dysnomia": "github:projectdysnomia/dysnomia#0114e58",
     "async-wait-until": "^2.0.30",
-    "@projectdysnomia/dysnomia": "patch:@projectdysnomia/dysnomia@https%3A//github.com/Snazzah/dysnomia.git%23commit=2348d2df4266ef0b98f89feedfea71bb881c6ba9#~/.yarn/patches/@projectdysnomia-dysnomia-https-867f371336.patch",
     "fix-esm": "^1.0.1",
     "md5": "^2.3.0",
     "mongodb": "^6.20.0",

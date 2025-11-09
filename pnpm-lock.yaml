@@ -5,20 +5,20 @@ settings:
   excludeLinksFromLockfile: false
 
 patchedDependencies:
-  eris:
-    hash: 7819021cea1567d4fb8c6a81e73630ce08082dfe9ae781b59650a6b68f1126b2
-    path: patches/eris.patch
+  '@projectdysnomia/dysnomia@0.2.3':
+    hash: 4ea46611a9eda9a7036d493630ecbf883f36e426432a39e10e7c6f36613bc4b3
+    path: patches/@projectdysnomia__dysnomia@0.2.3.patch
 
 importers:
 
   .:
     dependencies:
+      '@projectdysnomia/dysnomia':
+        specifier: github:projectdysnomia/dysnomia#0114e58
+        version: https://codeload.github.com/projectdysnomia/dysnomia/tar.gz/0114e58(patch_hash=4ea46611a9eda9a7036d493630ecbf883f36e426432a39e10e7c6f36613bc4b3)(eventemitter3@5.0.1)
       async-wait-until:
         specifier: ^2.0.30
         version: 2.0.31
-      eris:
-        specifier: ^0.18.0
-        version: 0.18.0(patch_hash=7819021cea1567d4fb8c6a81e73630ce08082dfe9ae781b59650a6b68f1126b2)
       fix-esm:
         specifier: ^1.0.1
         version: 1.0.1
@@ -232,6 +232,15 @@ packages:
     cpu: [x64]
     os: [win32]
 
+  '@emnapi/core@1.6.0':
+    resolution: {integrity: sha512-zq/ay+9fNIJJtJiZxdTnXS20PllcYMX3OE23ESc4HK/bdYu3cOWYVhsOhVnXALfU/uqJIxn5NBPd9z4v+SfoSg==}
+
+  '@emnapi/runtime@1.6.0':
+    resolution: {integrity: sha512-obtUmAHTMjll499P+D9A3axeJFlhdjOWdKUNs/U6QIGT7V5RjcUW1xToAzjvmgTSQhDbYn/NwfTRoJcQ2rNBxA==}
+
+  '@emnapi/wasi-threads@1.1.0':
+    resolution: {integrity: sha512-WI0DdZ8xFSbgMjR1sFsKABJ/C5OnRrjT06JXbZKexJGrDuPTzZdDYfFlsgcCXCyf+suG5QU2e/y1Wo2V/OapLQ==}
+
   '@eshaz/web-worker@1.2.2':
     resolution: {integrity: sha512-WxXiHFmD9u/owrzempiDlBB1ZYqiLnm9s6aPc8AlFQalq2tKmqdmMr9GXOupDgzXtqnBipj8Un0gkIm7Sjf8mw==}
 
@@ -257,6 +266,158 @@ packages:
 
   '@mongodb-js/saslprep@1.3.0':
     resolution: {integrity: sha512-zlayKCsIjYb7/IdfqxorK5+xUMyi4vOKcFy10wKJYc63NSdKI8mNME+uJqfatkPmOSMMUiojrL58IePKBm3gvQ==}
+
+  '@napi-rs/wasm-runtime@1.0.7':
+    resolution: {integrity: sha512-SeDnOO0Tk7Okiq6DbXmmBODgOAb9dp9gjlphokTUxmt8U3liIP1ZsozBahH69j/RJv+Rfs6IwUKHTgQYJ/HBAw==}
+
+  '@projectdysnomia/dysnomia@https://codeload.github.com/projectdysnomia/dysnomia/tar.gz/0114e58':
+    resolution: {tarball: https://codeload.github.com/projectdysnomia/dysnomia/tar.gz/0114e58}
+    version: 0.2.3
+    engines: {node: '>=18.0.0'}
+    peerDependencies:
+      '@discordjs/opus': ^0.9.0
+      erlpack: github:discord/erlpack
+      eventemitter3: ^5.0.1
+      pako: ^2.1.0
+      sodium-native: ^4.1.1
+      zlib-sync: ^0.1.9
+    peerDependenciesMeta:
+      '@discordjs/opus':
+        optional: true
+      erlpack:
+        optional: true
+      eventemitter3:
+        optional: true
+      pako:
+        optional: true
+      sodium-native:
+        optional: true
+      zlib-sync:
+        optional: true
+
+  '@snazzah/davey-android-arm-eabi@0.1.7':
+    resolution: {integrity: sha512-GxkEpfFtaS8xZHN42NkTQhLFdYCQ9qxJvmG+qwYDL+wdv3s7Dl44o2lg5gwGOtQU8EZw9/lZkYi9TenYkStbFg==}
+    engines: {node: '>= 10'}
+    cpu: [arm]
+    os: [android]
+
+  '@snazzah/davey-android-arm64@0.1.7':
+    resolution: {integrity: sha512-EkC1Wz3IMBZfbaCE82+peV+vEFVCRL3HxTRKGIY5AXzkKGQSJJ7Est/6h9vTcQbBEbMj2RAXRbwcydukWJR2vg==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [android]
+
+  '@snazzah/davey-darwin-arm64@0.1.7':
+    resolution: {integrity: sha512-Iov5NUjhl5Q9XZHIuGLzd9PgQPm8ELI9NPiNt3r6VtSVHLp9/ktOgzaeEji0WnvvirrSb9MdpfTuyHnJjEXuRQ==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@snazzah/davey-darwin-x64@0.1.7':
+    resolution: {integrity: sha512-P7WqV/9ttSW2kHlC1WME8ykMeo0LJBzqbC9lZ2aYH4IEdb5mp4lCzb82mcEc99Nxi8878c0k5Qaza6z4KeSdIA==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [darwin]
+
+  '@snazzah/davey-freebsd-x64@0.1.7':
+    resolution: {integrity: sha512-O8QxS4jGPCvvHa5EJIvP0Dm2JkMqe1RnfDU0qnIcSwzJseqQqwpM5vXSMt9E2Mi58RiUGwTRefr0I9+ttCrDzg==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [freebsd]
+
+  '@snazzah/davey-linux-arm-gnueabihf@0.1.7':
+    resolution: {integrity: sha512-30Gzhbg7kBbbg/Vdb75c5DUvHrwRglIXtTK0L3paxo5TCNXNFdfnSX5oLGjV4s1pyoFL8nWyq3/IzCcUIcHx5Q==}
+    engines: {node: '>= 10'}
+    cpu: [arm]
+    os: [linux]
+
+  '@snazzah/davey-linux-arm64-gnu@0.1.7':
+    resolution: {integrity: sha512-kDpbZEb24bn84yDG7gG8KTLL1sTl+UHPEt83qD5G3Sm7L37DN+uABN4nw51wst1JzxWphq7tvSSjfqz9NES4Xg==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [linux]
+    libc: [glibc]
+
+  '@snazzah/davey-linux-arm64-musl@0.1.7':
+    resolution: {integrity: sha512-J+6CnJ34OaoFYq9f8BQPSXWMF3HRjKg5UCEb0E64Q7wMz5+6o7hACd7kVjKnG3as7IjGMcgp6/SNtrht79ntjQ==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [linux]
+    libc: [musl]
+
+  '@snazzah/davey-linux-x64-gnu@0.1.7':
+    resolution: {integrity: sha512-7+I6LN43WkALjrQGm/pp1fQg84pSnwicsLPZKthlEi1L2UP2d9k8JEtnhHXJ4pymLuPsAZu5nC8QMDoIJy+exw==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [linux]
+    libc: [glibc]
+
+  '@snazzah/davey-linux-x64-musl@0.1.7':
+    resolution: {integrity: sha512-N17vBRkU401w8EOvHVem2di/zAqv3CDgm7LAnONm8S/CNpAeLQWrhbHdN6RHZEyhQk2trnfPh4+wiZbAoXek0A==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [linux]
+    libc: [musl]
+
+  '@snazzah/davey-wasm32-wasi@0.1.7':
+    resolution: {integrity: sha512-BhtNJpqmP69sdSf5eyDqlIsZSjkHo6FebaXaYVH0qf3V9YYQdEbbjep3MrcIL2F0STfpceSi2v+vZTTwlZBbKw==}
+    engines: {node: '>=14.0.0'}
+    cpu: [wasm32]
+
+  '@snazzah/davey-win32-arm64-msvc@0.1.7':
+    resolution: {integrity: sha512-oj/F1eQRQggMwqXNq6CY4UTqcFcCi/Wug99jWH8LepLVsYUdFxQUNTqkp51qarT+lbuX4L/ZZqZX4y4dhz6Lvg==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [win32]
+
+  '@snazzah/davey-win32-ia32-msvc@0.1.7':
+    resolution: {integrity: sha512-T1qPP/pQm0qDaM7QGCYMzeXE1Xes0b3ckAQS2m27dt3FkD1Ki8FX2g77dcGOWqGkzDlNJj1drw/9QlgCt3Tcrw==}
+    engines: {node: '>= 10'}
+    cpu: [ia32]
+    os: [win32]
+
+  '@snazzah/davey-win32-x64-msvc@0.1.7':
+    resolution: {integrity: sha512-Z2NhImUYeApi/lNn7MBcn14dPa2dtgnp5taz43JDaPpl+2cinDm9kYjpFzJE9SZMlfsa//p2dhE9B8TEVi9bHQ==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [win32]
+
+  '@snazzah/davey@0.1.7':
+    resolution: {integrity: sha512-qBWp9sHf9vvKqDhg2AGOgWjB9q7MZat2CAPIcaXe+XFWl7nCmriRnDcdIRy7CwKWK+ECiuO29/RSxxKuulo28w==}
+    engines: {node: '>= 10'}
+
+  '@stablelib/aead@1.0.1':
+    resolution: {integrity: sha512-q39ik6sxGHewqtO0nP4BuSe3db5G1fEJE8ukvngS2gLkBXyy6E7pLubhbYgnkDFv6V8cWaxcE4Xn0t6LWcJkyg==}
+
+  '@stablelib/binary@1.0.1':
+    resolution: {integrity: sha512-ClJWvmL6UBM/wjkvv/7m5VP3GMr9t0osr4yVgLZsLCOz4hGN9gIAFEqnJ0TsSMAN+n840nf2cHZnA5/KFqHC7Q==}
+
+  '@stablelib/chacha20poly1305@1.0.1':
+    resolution: {integrity: sha512-MmViqnqHd1ymwjOQfghRKw2R/jMIGT3wySN7cthjXCBdO+qErNPUBnRzqNpnvIwg7JBCg3LdeCZZO4de/yEhVA==}
+
+  '@stablelib/chacha@1.0.1':
+    resolution: {integrity: sha512-Pmlrswzr0pBzDofdFuVe1q7KdsHKhhU24e8gkEwnTGOmlC7PADzLVxGdn2PoNVBBabdg0l/IfLKg6sHAbTQugg==}
+
+  '@stablelib/constant-time@1.0.1':
+    resolution: {integrity: sha512-tNOs3uD0vSJcK6z1fvef4Y+buN7DXhzHDPqRLSXUel1UfqMB1PWNsnnAezrKfEwTLpN0cGH2p9NNjs6IqeD0eg==}
+
+  '@stablelib/int@1.0.1':
+    resolution: {integrity: sha512-byr69X/sDtDiIjIV6m4roLVWnNNlRGzsvxw+agj8CIEazqWGOQp2dTYgQhtyVXV9wpO6WyXRQUzLV/JRNumT2w==}
+
+  '@stablelib/poly1305@1.0.1':
+    resolution: {integrity: sha512-1HlG3oTSuQDOhSnLwJRKeTRSAdFNVB/1djy2ZbS35rBSJ/PFqx9cf9qatinWghC2UbfOYD8AcrtbUQl8WoxabA==}
+
+  '@stablelib/wipe@1.0.1':
+    resolution: {integrity: sha512-WfqfX/eXGiAd3RJe4VU2snh/ZPwtSjLG4ynQ/vYzvghTh7dHFcI1wl+nrkWG6lGhukOxOsUHfv8dUXr58D0ayg==}
+
+  '@stablelib/xchacha20@1.0.1':
+    resolution: {integrity: sha512-1YkiZnFF4veUwBVhDnDYwo6EHeKzQK4FnLiO7ezCl/zu64uG0bCCAUROJaBkaLH+5BEsO3W7BTXTguMbSLlWSw==}
+
+  '@stablelib/xchacha20poly1305@1.0.1':
+    resolution: {integrity: sha512-B1Abj0sMJ8h3HNmGnJ7vHBrAvxuNka6cJJoZ1ILN7iuacXp7sUYcgOVEOTLWj+rtQMpspY9tXSCRLPmN1mQNWg==}
+
+  '@tybys/wasm-util@0.10.1':
+    resolution: {integrity: sha512-9tTaPJLSiejZKx+Bmog4uSubteqTvFrVrURwkmHixBo0G4seD0zUxp98E1DzUBJxLQ3NPwXrGKDiVjwx/DpPsg==}
 
   '@types/md5@2.3.6':
     resolution: {integrity: sha512-WD69gNXtRBnpknfZcb4TRQ0XJQbUPZcai/Qdhmka3sxUR3Et8NrXoeAoknG/LghYHTf4ve795rInVYHBTQdNVA==}
@@ -351,10 +512,6 @@ packages:
 
   electron-to-chromium@1.5.222:
     resolution: {integrity: sha512-gA7psSwSwQRE60CEoLz6JBCQPIxNeuzB2nL8vE03GK/OHxlvykbLyeiumQy1iH5C2f3YbRAZpGCMT12a/9ih9w==}
-
-  eris@0.18.0:
-    resolution: {integrity: sha512-zv2hjAfs4SYjR/EHUwBGNoKClctbqki1jPMed4SiQ4KKfafV1MIBLqKodQSGDgT9qkSUI5+MQ4EQW/8MkbAPkg==}
-    engines: {node: '>=10.4.0'}
 
   es-define-property@1.0.1:
     resolution: {integrity: sha512-e3nRfgfUZ4rNGL232gUgX06QNyyez04KdjFrF+LTRoOXmrOgFKDg4BCdsjW8EnT69eqdYGmRpJwiPVYNrCaW3g==}
@@ -521,8 +678,8 @@ packages:
     resolution: {integrity: sha512-OXdegQq03OmXEjt2hZP33W2YPs/E5BcFQks46+G2gAxs4gHOIVD1u7EqlYLYSKsaIpyKCK9Gbk0ta1/gjRSMRQ==}
     engines: {node: '>=6'}
 
-  opusscript@0.0.8:
-    resolution: {integrity: sha512-VSTi1aWFuCkRCVq+tx/BQ5q9fMnQ9pVZ3JU4UHKqTkf0ED3fKEPdr+gKAAl3IA2hj9rrP6iyq3hlcJq3HELtNQ==}
+  opusscript@0.1.1:
+    resolution: {integrity: sha512-mL0fZZOUnXdZ78woRXp18lApwpp0lF5tozJOD1Wut0dgrA9WuQTgSels/CSmFleaAZrJi/nci5KOVtbuxeWoQA==}
 
   picocolors@1.1.1:
     resolution: {integrity: sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA==}
@@ -573,6 +730,9 @@ packages:
   tr46@5.1.1:
     resolution: {integrity: sha512-hdF5ZgjTqgAntKkklYw0R03MG2x/bSzTtkxmIRw/sTNV8YXsCJ1tfLAX23lhxhHJlEf3CRCOCGGWw3vI3GaSPw==}
     engines: {node: '>=18'}
+
+  tslib@2.8.1:
+    resolution: {integrity: sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==}
 
   tslog@4.10.2:
     resolution: {integrity: sha512-XuELoRpMR+sq8fuWwX7P0bcj+PRNiicOKDEb3fGNURhxWVyykCi9BNq7c4uVz7h7P0sj8qgBsr5SWS6yBClq3g==}
@@ -786,6 +946,22 @@ snapshots:
   '@biomejs/cli-win32-x64@2.3.0':
     optional: true
 
+  '@emnapi/core@1.6.0':
+    dependencies:
+      '@emnapi/wasi-threads': 1.1.0
+      tslib: 2.8.1
+    optional: true
+
+  '@emnapi/runtime@1.6.0':
+    dependencies:
+      tslib: 2.8.1
+    optional: true
+
+  '@emnapi/wasi-threads@1.1.0':
+    dependencies:
+      tslib: 2.8.1
+    optional: true
+
   '@eshaz/web-worker@1.2.2': {}
 
   '@fastify/busboy@2.1.1': {}
@@ -812,6 +988,147 @@ snapshots:
   '@mongodb-js/saslprep@1.3.0':
     dependencies:
       sparse-bitfield: 3.0.3
+
+  '@napi-rs/wasm-runtime@1.0.7':
+    dependencies:
+      '@emnapi/core': 1.6.0
+      '@emnapi/runtime': 1.6.0
+      '@tybys/wasm-util': 0.10.1
+    optional: true
+
+  '@projectdysnomia/dysnomia@https://codeload.github.com/projectdysnomia/dysnomia/tar.gz/0114e58(patch_hash=4ea46611a9eda9a7036d493630ecbf883f36e426432a39e10e7c6f36613bc4b3)(eventemitter3@5.0.1)':
+    dependencies:
+      ws: 8.18.3
+    optionalDependencies:
+      '@snazzah/davey': 0.1.7
+      '@stablelib/xchacha20poly1305': 1.0.1
+      eventemitter3: 5.0.1
+      opusscript: 0.1.1
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
+
+  '@snazzah/davey-android-arm-eabi@0.1.7':
+    optional: true
+
+  '@snazzah/davey-android-arm64@0.1.7':
+    optional: true
+
+  '@snazzah/davey-darwin-arm64@0.1.7':
+    optional: true
+
+  '@snazzah/davey-darwin-x64@0.1.7':
+    optional: true
+
+  '@snazzah/davey-freebsd-x64@0.1.7':
+    optional: true
+
+  '@snazzah/davey-linux-arm-gnueabihf@0.1.7':
+    optional: true
+
+  '@snazzah/davey-linux-arm64-gnu@0.1.7':
+    optional: true
+
+  '@snazzah/davey-linux-arm64-musl@0.1.7':
+    optional: true
+
+  '@snazzah/davey-linux-x64-gnu@0.1.7':
+    optional: true
+
+  '@snazzah/davey-linux-x64-musl@0.1.7':
+    optional: true
+
+  '@snazzah/davey-wasm32-wasi@0.1.7':
+    dependencies:
+      '@napi-rs/wasm-runtime': 1.0.7
+    optional: true
+
+  '@snazzah/davey-win32-arm64-msvc@0.1.7':
+    optional: true
+
+  '@snazzah/davey-win32-ia32-msvc@0.1.7':
+    optional: true
+
+  '@snazzah/davey-win32-x64-msvc@0.1.7':
+    optional: true
+
+  '@snazzah/davey@0.1.7':
+    optionalDependencies:
+      '@snazzah/davey-android-arm-eabi': 0.1.7
+      '@snazzah/davey-android-arm64': 0.1.7
+      '@snazzah/davey-darwin-arm64': 0.1.7
+      '@snazzah/davey-darwin-x64': 0.1.7
+      '@snazzah/davey-freebsd-x64': 0.1.7
+      '@snazzah/davey-linux-arm-gnueabihf': 0.1.7
+      '@snazzah/davey-linux-arm64-gnu': 0.1.7
+      '@snazzah/davey-linux-arm64-musl': 0.1.7
+      '@snazzah/davey-linux-x64-gnu': 0.1.7
+      '@snazzah/davey-linux-x64-musl': 0.1.7
+      '@snazzah/davey-wasm32-wasi': 0.1.7
+      '@snazzah/davey-win32-arm64-msvc': 0.1.7
+      '@snazzah/davey-win32-ia32-msvc': 0.1.7
+      '@snazzah/davey-win32-x64-msvc': 0.1.7
+    optional: true
+
+  '@stablelib/aead@1.0.1':
+    optional: true
+
+  '@stablelib/binary@1.0.1':
+    dependencies:
+      '@stablelib/int': 1.0.1
+    optional: true
+
+  '@stablelib/chacha20poly1305@1.0.1':
+    dependencies:
+      '@stablelib/aead': 1.0.1
+      '@stablelib/binary': 1.0.1
+      '@stablelib/chacha': 1.0.1
+      '@stablelib/constant-time': 1.0.1
+      '@stablelib/poly1305': 1.0.1
+      '@stablelib/wipe': 1.0.1
+    optional: true
+
+  '@stablelib/chacha@1.0.1':
+    dependencies:
+      '@stablelib/binary': 1.0.1
+      '@stablelib/wipe': 1.0.1
+    optional: true
+
+  '@stablelib/constant-time@1.0.1':
+    optional: true
+
+  '@stablelib/int@1.0.1':
+    optional: true
+
+  '@stablelib/poly1305@1.0.1':
+    dependencies:
+      '@stablelib/constant-time': 1.0.1
+      '@stablelib/wipe': 1.0.1
+    optional: true
+
+  '@stablelib/wipe@1.0.1':
+    optional: true
+
+  '@stablelib/xchacha20@1.0.1':
+    dependencies:
+      '@stablelib/binary': 1.0.1
+      '@stablelib/chacha': 1.0.1
+      '@stablelib/wipe': 1.0.1
+    optional: true
+
+  '@stablelib/xchacha20poly1305@1.0.1':
+    dependencies:
+      '@stablelib/aead': 1.0.1
+      '@stablelib/chacha20poly1305': 1.0.1
+      '@stablelib/constant-time': 1.0.1
+      '@stablelib/wipe': 1.0.1
+      '@stablelib/xchacha20': 1.0.1
+    optional: true
+
+  '@tybys/wasm-util@0.10.1':
+    dependencies:
+      tslib: 2.8.1
+    optional: true
 
   '@types/md5@2.3.6': {}
 
@@ -897,16 +1214,6 @@ snapshots:
       gopd: 1.2.0
 
   electron-to-chromium@1.5.222: {}
-
-  eris@0.18.0(patch_hash=7819021cea1567d4fb8c6a81e73630ce08082dfe9ae781b59650a6b68f1126b2):
-    dependencies:
-      ws: 8.18.3
-    optionalDependencies:
-      opusscript: 0.0.8
-      tweetnacl: 1.0.3
-    transitivePeerDependencies:
-      - bufferutil
-      - utf-8-validate
 
   es-define-property@1.0.1: {}
 
@@ -1042,7 +1349,7 @@ snapshots:
       long-timeout: 0.1.1
       sorted-array-functions: 1.3.0
 
-  opusscript@0.0.8:
+  opusscript@0.1.1:
     optional: true
 
   picocolors@1.1.1: {}
@@ -1077,6 +1384,9 @@ snapshots:
   tr46@5.1.1:
     dependencies:
       punycode: 2.3.1
+
+  tslib@2.8.1:
+    optional: true
 
   tslog@4.10.2: {}
 
