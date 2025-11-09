@@ -85,7 +85,7 @@ export class DiscordVoice {
     if (exists(`assets/${member.id}.json`)) {
       const tts = JSON.parse(readFile(`assets/${member.id}.json`, { encoding: 'utf-8' }))
       if (tts.use_wave_tts && tts.lang && tts.voice && tts[type]) {
-        const file =  await instances.ttsHelper.getWaveTTS(tts[type], tts.lang, tts.voice)
+        const file = await instances.ttsHelper.getWaveTTS(tts[type], tts.lang, tts.voice)
         if (file !== null) {
           voiceFile = file
           format = 'ogg'
@@ -109,7 +109,7 @@ export class DiscordVoice {
 
   public async playTTS(text: string, waveTTS: boolean, lang: string, voice: string) {
     let voiceFile = ''
-    let format: string| undefined
+    let format: string | undefined
     if (waveTTS) {
       const file = await instances.ttsHelper.getWaveTTS(text, lang, voice)
       if (file !== null) {

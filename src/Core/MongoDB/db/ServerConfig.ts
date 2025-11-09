@@ -1,19 +1,12 @@
-
-import {
-  existsSync as exists,
-  readFileSync as readFile,
-  renameSync as renameFile
-} from 'node:fs'
+import { existsSync as exists, readFileSync as readFile, renameSync as renameFile } from 'node:fs'
 import { type Collection, type Db, type ObjectId, ReturnDocument } from 'mongodb'
 import { instances } from '../../../Utils/Instances'
 import { ERR_DB_NOT_INIT, ERR_INSERT_FAILURE } from '../Core'
 
-/* eslint-disable no-unused-vars */
 export enum VoiceMessageTTSType {
-  waveNet = 'WaveNet',
-  legacy = 'Legacy'
+  WaveNet = 'WaveNet',
+  Legacy = 'Legacy'
 }
-/* eslint-enable no-unused-vars */
 
 export interface IVoiceMessageTTS {
   enabled: boolean
@@ -36,7 +29,7 @@ export interface IServerConfig {
 const VOICE_MESSAGE_TTS_DEFAULT: IVoiceMessageTTS = {
   enabled: false,
   messageLang: 'en_US',
-  type: VoiceMessageTTSType.waveNet,
+  type: VoiceMessageTTSType.WaveNet,
   voiceLang: 'en-US',
   voiceName: 'en-US-Wavenet-A'
 }
@@ -76,8 +69,14 @@ export class DbServerConfigManager {
     )
   }
 
-  public async create(serverID: string, channelID = '', lang = 'en_US', lastVoiceChannel = '', currentVoiceChannel = '',
-    voiceMessageTTS: IVoiceMessageTTS = VOICE_MESSAGE_TTS_DEFAULT) {
+  public async create(
+    serverID: string,
+    channelID = '',
+    lang = 'en_US',
+    lastVoiceChannel = '',
+    currentVoiceChannel = '',
+    voiceMessageTTS: IVoiceMessageTTS = VOICE_MESSAGE_TTS_DEFAULT
+  ) {
     if (!this.database) throw ERR_DB_NOT_INIT
 
     const data = {
@@ -124,42 +123,21 @@ export class DbServerConfigManager {
     return await this.database.findOneAndUpdate({ serverID }, { $set: { lang } }, { returnDocument: ReturnDocument.AFTER })
   }
 
-  public async updateLastVoiceChannel(
-    serverID: string,
-    lastVoiceChannel: string
-  ) {
+  public async updateLastVoiceChannel(serverID: string, lastVoiceChannel: string) {
     if (!this.database) throw ERR_DB_NOT_INIT
 
-    return await this.database.findOneAndUpdate(
-      { serverID },
-      { $set: { lastVoiceChannel } },
-      { returnDocument: ReturnDocument.AFTER }
-    )
+    return await this.database.findOneAndUpdate({ serverID }, { $set: { lastVoiceChannel } }, { returnDocument: ReturnDocument.AFTER })
   }
 
-  public async updateCurrentVoiceChannel(
-    serverID: string,
-    currentVoiceChannel: string
-  ) {
+  public async updateCurrentVoiceChannel(serverID: string, currentVoiceChannel: string) {
     if (!this.database) throw ERR_DB_NOT_INIT
 
-    return await this.database.findOneAndUpdate(
-      { serverID },
-      { $set: { currentVoiceChannel } },
-      { returnDocument: ReturnDocument.AFTER }
-    )
+    return await this.database.findOneAndUpdate({ serverID }, { $set: { currentVoiceChannel } }, { returnDocument: ReturnDocument.AFTER })
   }
 
-  public async updateVoiceMessageTTS(
-    serverID: string,
-    voiceMessageTTS: IVoiceMessageTTS
-  ) {
+  public async updateVoiceMessageTTS(serverID: string, voiceMessageTTS: IVoiceMessageTTS) {
     if (!this.database) throw ERR_DB_NOT_INIT
 
-    return await this.database.findOneAndUpdate(
-      { serverID },
-      { $set: { voiceMessageTTS } },
-      { returnDocument: ReturnDocument.AFTER }
-    )
+    return await this.database.findOneAndUpdate({ serverID }, { $set: { voiceMessageTTS } }, { returnDocument: ReturnDocument.AFTER })
   }
 }

@@ -1,4 +1,4 @@
-import type { Client, Member, MessageContent, TextChannel, Message, PossiblyUncachedTextableChannel, TextableChannel, VoiceChannel } from 'eris'
+import type { Client, Member, Message, MessageContent, PossiblyUncachedTextableChannel, TextableChannel, TextChannel, VoiceChannel } from 'eris'
 import { vsprintf } from 'sprintf-js'
 import type { ILogObj, Logger } from 'tslog'
 import { instances } from '../../../../Utils/Instances'
@@ -111,7 +111,7 @@ export class VoiceLogText {
 
   public parseMessage(message: Message<PossiblyUncachedTextableChannel>, isContinuous: boolean, lang: string, isForward = false): string {
     let content = ''
-    const authorName = (isForward) ? '' : message.member?.nick || message.author.globalName || message.author.username
+    const authorName = isForward ? '' : message.member?.nick || message.author.globalName || message.author.username
     const guild = message.guildID ? this.client.guilds.get(message.guildID) : undefined
 
     // Poll
@@ -146,9 +146,11 @@ export class VoiceLogText {
 
     // Forward
     if (message.messageSnapshots && message.messageSnapshots.length > 0) {
-      const forwardContent = message.messageSnapshots.map((snapshot) => {
-        return this.parseMessage(snapshot.message as unknown as Message<TextableChannel>, true, lang, true)
-      }).join(instances.lang.get(lang).display.voice_tts.multi_item_separator)
+      const forwardContent = message.messageSnapshots
+        .map((snapshot) => {
+          return this.parseMessage(snapshot.message as unknown as Message<TextableChannel>, true, lang, true)
+        })
+        .join(instances.lang.get(lang).display.voice_tts.multi_item_separator)
       if (message.messageSnapshots.length === 1) {
         content = vsprintf(instances.lang.get(lang).display.voice_tts.forward_single, [message.messageSnapshots.length, forwardContent])
       } else {
@@ -164,7 +166,7 @@ export class VoiceLogText {
       }
       content = isForward ? content : vsprintf(instances.lang.get(lang).display.voice_tts.attachment_message, [authorName, content])
     } else if (content === '') {
-      const text = (message.content.length !== 0) ? message.content : instances.lang.get(lang).display.voice_tts.message_unknown
+      const text = message.content.length !== 0 ? message.content : instances.lang.get(lang).display.voice_tts.message_unknown
       if (!isContinuous && !isForward) {
         content = vsprintf(instances.lang.get(lang).display.voice_tts.text_message, [authorName, text])
       } else {

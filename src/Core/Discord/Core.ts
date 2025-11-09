@@ -17,12 +17,7 @@ export class Discord {
   constructor() {
     this._client = new Client(token, {
       restMode: true,
-      intents: [
-        'guilds',
-        'guildMessages',
-        'guildVoiceStates',
-        'messageContent'
-      ]
+      intents: ['guilds', 'guildMessages', 'guildVoiceStates', 'messageContent']
     })
     this._voiceLog = new VoiceLog(this)
     this.command = new Command(this)
