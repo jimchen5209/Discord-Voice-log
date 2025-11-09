@@ -1,11 +1,11 @@
-import { Client } from 'eris'
-import { ILogObj, Logger } from 'tslog'
-import { AnyRequestData, GatewayServer, SlashCommand, SlashCreator } from 'slash-create'
-import { Discord } from '../Core'
+import type { Client } from 'eris'
+import { type AnyRequestData, GatewayServer, type SlashCommand, SlashCreator } from 'slash-create'
+import type { ILogObj, Logger } from 'tslog'
+import { instances } from '../../../Utils/Instances'
+import type { Discord } from '../Core'
 import { LogCommand } from './Commands/Log'
 import { RefreshCacheCommand } from './Commands/RefreshCache'
 import { VoiceCommand } from './Commands/Voice'
-import { instances } from '../../../Utils/Instances'
 
 export class Command {
   private client: Client
@@ -30,8 +30,7 @@ export class Command {
     this.creator.withServer(
       new GatewayServer((handler) =>
         this.client.on('rawWS', (event) => {
-          if (event.t === 'INTERACTION_CREATE')
-            handler(event.d as AnyRequestData)
+          if (event.t === 'INTERACTION_CREATE') handler(event.d as AnyRequestData)
         })
       )
     )
@@ -45,11 +44,7 @@ export class Command {
     this.client.getRESTGuilds({ limit: 200 }).then((value) => {
       this.creator.client.guildIDs = value.map((value) => value.id)
 
-      const commands: SlashCommand[] = [
-        new VoiceCommand(this.creator),
-        new LogCommand(this.creator),
-        new RefreshCacheCommand(this.creator)
-      ]
+      const commands: SlashCommand[] = [new VoiceCommand(this.creator), new LogCommand(this.creator), new RefreshCacheCommand(this.creator)]
 
       this.creator.registerCommands(commands)
       this.registered = true
