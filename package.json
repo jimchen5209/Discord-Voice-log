@@ -9,10 +9,9 @@
   "author": "Jim Chen <jimchen5209@gmail.com>",
   "license": "AGPL-3.0-only",
   "scripts": {
-    "lint": "biome lint --write src/ langs/",
-    "lint:unsafe": "biome lint --write --unsafe src/ langs/",
-    "format": "biome format --write src/ langs/",
-    "biome:ci": "biome ci src/ langs/",
+    "lint": "biome check --write",
+    "lint:unsafe": "biome check --write --unsafe",
+    "biome:ci": "biome ci",
     "build": "tsc --pretty",
     "build:prod": "tsc --pretty --inlineSourceMap false"
   },
