@@ -14,7 +14,7 @@
     "indentWidth": 2,
     "lineEnding": "lf",
     "lineWidth": 180,
-    "includes": ["src/**"]
+    "includes": ["src/**", "langs/**"]
   },
   "linter": {
     "enabled": true,
@@ -35,7 +35,7 @@
         "noVar": "error"
       }
     },
-    "includes": ["src/**"]
+    "includes": ["src/**", "langs/**"]
   },
   "javascript": {
     "formatter": {
