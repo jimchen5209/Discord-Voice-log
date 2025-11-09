@@ -1,4 +1,4 @@
-import type { Client, Member, Message, MessageContent, PossiblyUncachedTextableChannel, TextableChannel, TextChannel, VoiceChannel } from 'eris'
+import type { Client, Member, Message, MessageContent, PossiblyUncachedTextableChannel, TextableChannel, TextChannel, VoiceChannel } from '@projectdysnomia/dysnomia'
 import { vsprintf } from 'sprintf-js'
 import type { ILogObj, Logger } from 'tslog'
 import { instances } from '../../../../Utils/Instances'
