@@ -47,10 +47,9 @@ export class Discord {
     this._client.connect()
   }
 
-  public stop() {
+  public async stop() {
     this._logger.info('Logging out...')
-    this._voiceLog.end().then(() => {
-      this._client.disconnect({ reconnect: false })
-    })
+    await this._voiceLog.end()
+    this._client.disconnect({ reconnect: false })
   }
 }
