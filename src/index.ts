@@ -3,6 +3,8 @@ import { Discord } from './Core/Discord/Core'
 import { MongoDB } from './Core/MongoDB/Core'
 import { instances } from './Utils/Instances'
 
+let quitting = false
+
 const logger = instances.mainLogger
 logger.info('Starting...')
 if (instances.config.debug) instances.mainLogger.settings.minLevel = 0 // Silly
@@ -34,15 +36,29 @@ process.on('warning', (e) => {
 // Graceful shutdown
 const stop = () => {
   console.log()
-  logger.info('Shutting down...')
-  instances.discord?.stop()
-  instances.mongoDB?.close()
-
-  // Wait for 5 seconds before force quitting
-  setTimeout(() => {
+  if (quitting) {
     logger.warn('Force quitting...')
-    process.exit(0)
-  }, 5 * 1000)
+    process.exit(1)
+  }
+
+  logger.info('Shutting down...')
+  let discordEnded = false
+  let mongoDBEnded = false
+  instances.discord?.stop().then(() => {
+    discordEnded = true
+  })
+  instances.mongoDB?.close()
+  quitting = true
+
+  instances.mongoDB?.once('disconnected', () => {
+    mongoDBEnded = true
+  })
+
+  setInterval(() => {
+    if (discordEnded && mongoDBEnded) {
+      process.exit(0)
+    }
+  }, 500)
 }
 process.on('SIGINT', () => stop())
 process.on('SIGTERM', () => stop())

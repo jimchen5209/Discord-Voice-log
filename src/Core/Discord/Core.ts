@@ -1,4 +1,4 @@
-import { Client } from 'eris'
+import { Client } from '@projectdysnomia/dysnomia'
 import { instances } from '../../Utils/Instances'
 import { Command } from './Core/Command'
 import { VoiceLog } from './VoiceLog/VoiceLog'
@@ -17,7 +17,9 @@ export class Discord {
   constructor() {
     this._client = new Client(token, {
       restMode: true,
-      intents: ['guilds', 'guildVoiceStates']
+      gateway: {
+        intents: ['guilds', 'guildVoiceStates']
+      }
     })
     this._voiceLog = new VoiceLog(this)
     this.command = new Command(this)
@@ -45,10 +47,9 @@ export class Discord {
     this._client.connect()
   }
 
-  public stop() {
+  public async stop() {
     this._logger.info('Logging out...')
-    this._voiceLog.end().then(() => {
-      this._client.disconnect({ reconnect: false })
-    })
+    await this._voiceLog.end()
+    this._client.disconnect({ reconnect: false })
   }
 }
