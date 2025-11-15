@@ -5,7 +5,7 @@ import Queue from 'promise-queue'
 import type { ILogObj, Logger } from 'tslog'
 import { instances } from '../../../Utils/Instances'
 import { ERR_DB_NOT_INIT } from '../../MongoDB/Core'
-import type { DbServerConfigManager } from '../../MongoDB/db/ServerConfig'
+import { type DbServerConfigManager, VoiceMessageTTSType } from '../../MongoDB/db/ServerConfig'
 import type { Discord } from '../Core'
 import { VoiceLogCommands } from './VoiceLog/Commands'
 import { VoiceLogText } from './VoiceLog/Text'
@@ -19,6 +19,7 @@ export class VoiceLog {
   private _serverConfig: DbServerConfigManager
   private client: Client
   private queue: Queue = new Queue(1, Infinity)
+  private continuousUser: { [key: string]: { user: string; timestamp: number } } = {}
 
   constructor(discord: Discord) {
     this.client = discord.client
@@ -31,6 +32,30 @@ export class VoiceLog {
     this._voice = new VoiceLogVoice(this, discord)
     this._text = new VoiceLogText(this, discord)
     this._command = new VoiceLogCommands(this, discord)
+
+    this.client.on('messageCreate', async (message) => {
+      if (message.guildID === undefined) return
+      const guildId = message.guildID
+      const data = await this._serverConfig.get(guildId)
+
+      if (!data?.voiceMessageTTS.enabled) return
+
+      this.queue.add(async () => {
+        const voice = this._voice.getCurrentVoice(guildId)
+        if (voice?.channelId === message.channel.id) {
+          const isContinuous = this.continuousUser[guildId]?.user === message.author.id && message.timestamp - this.continuousUser[guildId]?.timestamp < 5 * 1000
+          const text = this._text.parseMessage(message, isContinuous, data.voiceMessageTTS.messageLang)
+
+          this._logger.debug(`${message.author} to ${message.channel} ${isContinuous ? '(Continuous)' : ''}: ${text}`)
+
+          voice.playTTS(text, data.voiceMessageTTS.type === VoiceMessageTTSType.WaveNet, data.voiceMessageTTS.voiceLang, data.voiceMessageTTS.voiceName)
+          this.continuousUser[guildId] = {
+            user: message.author.id,
+            timestamp: message.timestamp
+          }
+        }
+      })
+    })
 
     this.client.on('voiceChannelJoin', async (member: Member, newChannel: VoiceChannel) => {
       if (member.id === this.client.user.id) return
@@ -52,7 +77,13 @@ export class VoiceLog {
         }
 
         if (newChannel.id === channelID) {
-          if (voice) voice.playVoice(member, 'join')
+          if (voice) {
+            voice.playVoice(member, 'join')
+            this.continuousUser[guildId] = {
+              user: this.client.user.id,
+              timestamp: 0
+            }
+          }
         }
       })
     })
@@ -75,7 +106,13 @@ export class VoiceLog {
           }
         }
         if (oldChannel.id === channelID) {
-          if (voice) voice.playVoice(member, 'left')
+          if (voice) {
+            voice.playVoice(member, 'left')
+            this.continuousUser[guildId] = {
+              user: this.client.user.id,
+              timestamp: 0
+            }
+          }
         }
       })
     })
@@ -105,10 +142,22 @@ export class VoiceLog {
           }
         }
         if (oldChannel.id === channelID) {
-          if (voice) voice.playVoice(member, 'switched_out')
+          if (voice) {
+            voice.playVoice(member, 'switched_out')
+            this.continuousUser[guildId] = {
+              user: this.client.user.id,
+              timestamp: 0
+            }
+          }
         }
         if (newChannel.id === channelID) {
-          if (voice) voice.playVoice(member, 'switched_in')
+          if (voice) {
+            voice.playVoice(member, 'switched_in')
+            this.continuousUser[guildId] = {
+              user: this.client.user.id,
+              timestamp: 0
+            }
+          }
         }
       })
     })

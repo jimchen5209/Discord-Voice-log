@@ -60,7 +60,7 @@ export class TTSHelper {
     return filePath
   }
 
-  public async getWaveTTS(text: string, lang: string, voice: string): Promise<string> {
+  public async getWaveTTS(text: string, lang: string, voice: string): Promise<string | null> {
     const filePath = `./caches/${md5(`${text}-${lang}-${voice}`)}.opus`
     if (!existsSync(filePath)) {
       const key = this.config.googleTTS.apiKey
@@ -74,28 +74,36 @@ export class TTSHelper {
         },
         method: 'POST'
       }
-      await this.downloadWaveTTS(url, options, filePath)
+      return await this.downloadWaveTTS(url, options, filePath)
     }
     return filePath
   }
 
   private async downloadWaveTTS(url: string, options: RequestInit, path: string) {
-    await fetch(url, options)
-      .then((response) => response.json())
-      .then((data) => {
-        const imgBuffer = Buffer.from(data.audioContent, 'base64')
+    // biome-ignore lint/suspicious/noAsyncPromiseExecutor: Usage of await
+    return new Promise<string | null>(async (res) => {
+      await fetch(url, options)
+        .then((response) => response.json())
+        .then((data) => {
+          const imgBuffer = Buffer.from(data.audioContent, 'base64')
 
-        const s = new Readable()
+          const s = new Readable()
+          const w = createWriteStream(path)
 
-        s.push(imgBuffer)
-        s.push(null)
+          w.once('finish', () => {
+            res(path)
+          })
+          s.push(imgBuffer)
+          s.push(null)
 
-        s.pipe(createWriteStream(path))
-      })
-      .catch((error) => {
-        if (error instanceof Error) {
-          this.logger.error(`Download TTS failed: ${error.message}`, error)
-        }
-      })
+          s.pipe(w)
+        })
+        .catch((error) => {
+          if (error instanceof Error) {
+            this.logger.error(`Download TTS failed: ${error.message}`, error)
+          }
+          res(null)
+        })
+    })
   }
 }

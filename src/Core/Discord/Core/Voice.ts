@@ -85,8 +85,11 @@ export class DiscordVoice {
     if (exists(`assets/${member.id}.json`)) {
       const tts = JSON.parse(readFile(`assets/${member.id}.json`, { encoding: 'utf-8' }))
       if (tts.use_wave_tts && tts.lang && tts.voice && tts[type]) {
-        voiceFile = await instances.ttsHelper.getWaveTTS(tts[type], tts.lang, tts.voice)
-        format = 'ogg'
+        const file = await instances.ttsHelper.getWaveTTS(tts[type], tts.lang, tts.voice)
+        if (file !== null) {
+          voiceFile = file
+          format = 'ogg'
+        }
       } else if (tts.lang && tts[type]) {
         const file = await instances.ttsHelper.getTTSFile(tts[type], tts.lang)
         if (file !== null) {
@@ -100,6 +103,25 @@ export class DiscordVoice {
       }
     } else if (exists(`assets/${member.id}_${type}.wav`)) {
       voiceFile = `assets/${member.id}_${type}.wav`
+    }
+    if (voiceFile !== '') this.queue.add(() => this.play(voiceFile, format))
+  }
+
+  public async playTTS(text: string, waveTTS: boolean, lang: string, voice: string) {
+    let voiceFile = ''
+    let format: string | undefined
+    if (waveTTS) {
+      const file = await instances.ttsHelper.getWaveTTS(text, lang, voice)
+      if (file !== null) {
+        voiceFile = file
+        format = 'ogg'
+      }
+    } else {
+      const file = await instances.ttsHelper.getTTSFile(text, lang)
+      if (file !== null) {
+        voiceFile = file
+        format = 'pcm'
+      }
     }
     if (voiceFile !== '') this.queue.add(() => this.play(voiceFile, format))
   }
