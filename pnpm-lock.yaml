@@ -6,7 +6,7 @@ settings:
 
 patchedDependencies:
   '@projectdysnomia/dysnomia@0.2.3':
-    hash: 4ea46611a9eda9a7036d493630ecbf883f36e426432a39e10e7c6f36613bc4b3
+    hash: ff6367eb55a5319202a76e7fcf4d886403230426be503d526ffbb9f17578f44a
     path: patches/@projectdysnomia__dysnomia@0.2.3.patch
 
 importers:
@@ -15,7 +15,7 @@ importers:
     dependencies:
       '@projectdysnomia/dysnomia':
         specifier: github:projectdysnomia/dysnomia#0114e58
-        version: https://codeload.github.com/projectdysnomia/dysnomia/tar.gz/0114e58(patch_hash=4ea46611a9eda9a7036d493630ecbf883f36e426432a39e10e7c6f36613bc4b3)(eventemitter3@5.0.1)
+        version: https://codeload.github.com/projectdysnomia/dysnomia/tar.gz/0114e58(patch_hash=ff6367eb55a5319202a76e7fcf4d886403230426be503d526ffbb9f17578f44a)(eventemitter3@5.0.1)
       async-wait-until:
         specifier: ^2.0.31
         version: 2.0.31
@@ -989,7 +989,7 @@ snapshots:
       '@tybys/wasm-util': 0.10.1
     optional: true
 
-  '@projectdysnomia/dysnomia@https://codeload.github.com/projectdysnomia/dysnomia/tar.gz/0114e58(patch_hash=4ea46611a9eda9a7036d493630ecbf883f36e426432a39e10e7c6f36613bc4b3)(eventemitter3@5.0.1)':
+  '@projectdysnomia/dysnomia@https://codeload.github.com/projectdysnomia/dysnomia/tar.gz/0114e58(patch_hash=ff6367eb55a5319202a76e7fcf4d886403230426be503d526ffbb9f17578f44a)(eventemitter3@5.0.1)':
     dependencies:
       ws: 8.18.3
     optionalDependencies:
