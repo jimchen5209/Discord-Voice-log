@@ -17,8 +17,8 @@
   },
   "keywords": [],
   "dependencies": {
+    "@projectdysnomia/dysnomia": "github:projectdysnomia/dysnomia#0114e58",
     "async-wait-until": "^2.0.31",
-    "eris": "^0.18.0",
     "fix-esm": "^1.0.1",
     "md5": "^2.3.0",
     "mongodb": "^6.20.0",

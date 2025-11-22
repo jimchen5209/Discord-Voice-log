@@ -1,3 +1,4 @@
-patchedDependencies:
-  eris: patches/eris.patch
 minimumReleaseAge: 20160
+
+patchedDependencies:
+  '@projectdysnomia/dysnomia@0.2.3': patches/@projectdysnomia__dysnomia@0.2.3.patch
