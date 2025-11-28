@@ -42,23 +42,30 @@ const stop = () => {
   }
 
   logger.info('Shutting down...')
-  let discordEnded = false
-  let mongoDBEnded = false
-  instances.discord?.stop().then(() => {
-    discordEnded = true
-  })
-  instances.mongoDB?.close()
   quitting = true
 
-  instances.mongoDB?.once('disconnected', () => {
-    mongoDBEnded = true
+  const timeout = setTimeout(() => {
+    logger.warn('Graceful shutdown timed out. Force quitting...')
+    process.exit(1)
+  }, 60 * 1000)
+
+  const discordShutdown = instances.discord?.stop() ?? Promise.resolve()
+
+  const mongoShutdown = new Promise<void>((resolve) => {
+    if (instances.mongoDB) {
+      instances.mongoDB.once('disconnected', resolve)
+      instances.mongoDB.close()
+    } else {
+      resolve()
+    }
   })
 
-  setInterval(() => {
-    if (discordEnded && mongoDBEnded) {
-      process.exit(0)
-    }
-  }, 500)
+  Promise.all([discordShutdown, mongoShutdown]).then(() => {
+    clearTimeout(timeout)
+    logger.info('All services shut down gracefully. Exiting.')
+    process.exit(0)
+  })
 }
+
 process.on('SIGINT', () => stop())
 process.on('SIGTERM', () => stop())

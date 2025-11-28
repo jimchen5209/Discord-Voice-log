@@ -62,7 +62,7 @@ index fc4016a146d5dc606e53ae44c177536ebcfc2405..a6176088a3ac425338b90e63ec4cc55c
  
      _final(cb) {
 -        if(!this.#bitstream) {
-+        if(!this.#bitstream === undefined) {
++        if(this.#bitstream === undefined) {
              this.emit("error", new Error("No Opus stream was found"));
          }
          cb();
