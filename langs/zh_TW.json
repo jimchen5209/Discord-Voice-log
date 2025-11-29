@@ -20,5 +20,25 @@
     "lang_exist": "語言已經是 %s",
     "unset_success": "語音頻道狀態記錄已取消",
     "error": "設定語音頻道狀態時發生錯誤"
+  },
+  "voice_tts": {
+    "text_message": "%0s 說： %1s",
+    "attachment_message": "%0s 傳送了 %1s",
+    "attachment_single": "%d 個附件",
+    "attachment_multiple": "%d 個附件",
+    "attachment_poll": "一個投票",
+    "attachment_text": "文字內容：%s",
+    "multi_item_separator": "、",
+    "multi_item_last_separator": "%0s，以及%1s",
+    "forward_single": "%d 則轉發訊息，內容為：%s",
+    "forward_multiple": "%d 則轉發訊息，內容為：%s",
+    "message_unknown": "[不明訊息]",
+    "message_sticker": "[貼圖 %s]",
+    "message_emoji": "[表情符號 %s]",
+    "message_channel_mention": "#[頻道 %s]",
+    "message_channel_mention_unknown": "#[不明頻道]",
+    "message_role_mention": "@[身分組 %s]",
+    "message_role_mention_unknown": "@[不明身分組]",
+    "message_link": "[連結 %s]"
   }
 }
