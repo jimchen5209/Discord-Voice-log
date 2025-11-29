@@ -1,4 +1,4 @@
-import type { Client, Member, MessageContent, TextChannel, VoiceChannel } from 'eris'
+import type { Client, Member, MessageContent, TextChannel, VoiceChannel } from '@projectdysnomia/dysnomia'
 import { vsprintf } from 'sprintf-js'
 import type { ILogObj, Logger } from 'tslog'
 import { instances } from '../../../../Utils/Instances'
@@ -98,14 +98,16 @@ export class VoiceLogText {
         break
     }
     return {
-      embed: {
-        color,
-        title: member.nick ? member.nick : member.username,
-        description: content,
-        timestamp: new Date().toISOString(),
-        // biome-ignore lint/style/useNamingConvention: MessageContent requires this
-        author: { name: '𝅺', icon_url: member.avatarURL }
-      }
-    } as MessageContent
+      embeds: [
+        {
+          color,
+          title: member.nick ? member.nick : member.username,
+          description: content,
+          timestamp: new Date().toISOString(),
+          // biome-ignore lint/style/useNamingConvention: MessageContent requires this
+          author: { name: '𝅺', icon_url: member.avatarURL }
+        }
+      ]
+    } as MessageContent<'hasNonce'>
   }
 }

@@ -1,6 +1,6 @@
 import { existsSync as exists, readFileSync as readFile } from 'node:fs'
+import type { Client, Member, VoiceConnection } from '@projectdysnomia/dysnomia'
 import { waitUntil } from 'async-wait-until'
-import type { Client, Member, VoiceConnection } from 'eris'
 import Queue from 'promise-queue'
 import type { ILogObj, Logger } from 'tslog'
 import { instances } from '../../../Utils/Instances'
