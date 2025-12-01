@@ -6,7 +6,7 @@ settings:
 
 patchedDependencies:
   eris:
-    hash: 7819021cea1567d4fb8c6a81e73630ce08082dfe9ae781b59650a6b68f1126b2
+    hash: 5d9f72ee181b3b88027a7bf494235a3a7480dfd914ffb6d75e2c3a8e7da075d4
     path: patches/eris.patch
 
 importers:
@@ -18,7 +18,7 @@ importers:
         version: 2.0.31
       eris:
         specifier: ^0.18.0
-        version: 0.18.0(patch_hash=7819021cea1567d4fb8c6a81e73630ce08082dfe9ae781b59650a6b68f1126b2)
+        version: 0.18.0(patch_hash=5d9f72ee181b3b88027a7bf494235a3a7480dfd914ffb6d75e2c3a8e7da075d4)
       fix-esm:
         specifier: ^1.0.1
         version: 1.0.1
@@ -891,7 +891,7 @@ snapshots:
 
   electron-to-chromium@1.5.240: {}
 
-  eris@0.18.0(patch_hash=7819021cea1567d4fb8c6a81e73630ce08082dfe9ae781b59650a6b68f1126b2):
+  eris@0.18.0(patch_hash=5d9f72ee181b3b88027a7bf494235a3a7480dfd914ffb6d75e2c3a8e7da075d4):
     dependencies:
       ws: 8.18.3
     optionalDependencies:

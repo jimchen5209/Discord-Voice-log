@@ -3,6 +3,19 @@ import { type Collection, type Db, type ObjectId, ReturnDocument } from 'mongodb
 import { instances } from '../../../Utils/Instances'
 import { ERR_DB_NOT_INIT, ERR_INSERT_FAILURE } from '../Core'
 
+export enum VoiceMessageTTSType {
+  WaveNet = 'WaveNet',
+  Legacy = 'Legacy'
+}
+
+export interface IVoiceMessageTTS {
+  enabled: boolean
+  messageLang: string
+  type: VoiceMessageTTSType
+  voiceLang: string
+  voiceName: string
+}
+
 export interface IServerConfig {
   _id: ObjectId
   serverID: string
@@ -10,6 +23,15 @@ export interface IServerConfig {
   channelID: string
   lastVoiceChannel: string
   currentVoiceChannel: string
+  voiceMessageTTS: IVoiceMessageTTS
+}
+
+const VOICE_MESSAGE_TTS_DEFAULT: IVoiceMessageTTS = {
+  enabled: false,
+  messageLang: 'en_US',
+  type: VoiceMessageTTSType.WaveNet,
+  voiceLang: 'en-US',
+  voiceName: 'en-US-Wavenet-A'
 }
 
 export class DbServerConfigManager {
@@ -37,9 +59,24 @@ export class DbServerConfigManager {
 
     // Add field admin to old lists
     this.database?.updateMany({ currentVoiceChannel: { $exists: false } }, { $set: { currentVoiceChannel: '' } })
+    this.database?.updateMany(
+      { voiceMessageTTS: { $exists: false } },
+      {
+        $set: {
+          voiceMessageTTS: VOICE_MESSAGE_TTS_DEFAULT
+        }
+      }
+    )
   }
 
-  public async create(serverID: string, channelID = '', lang = 'en_US', lastVoiceChannel = '', currentVoiceChannel = '') {
+  public async create(
+    serverID: string,
+    channelID = '',
+    lang = 'en_US',
+    lastVoiceChannel = '',
+    currentVoiceChannel = '',
+    voiceMessageTTS: IVoiceMessageTTS = VOICE_MESSAGE_TTS_DEFAULT
+  ) {
     if (!this.database) throw ERR_DB_NOT_INIT
 
     const data = {
@@ -47,7 +84,8 @@ export class DbServerConfigManager {
       channelID,
       lang,
       lastVoiceChannel,
-      currentVoiceChannel
+      currentVoiceChannel,
+      voiceMessageTTS
     } as IServerConfig
 
     return (await this.database.insertOne(data)).acknowledged ? data : null
@@ -95,5 +133,11 @@ export class DbServerConfigManager {
     if (!this.database) throw ERR_DB_NOT_INIT
 
     return await this.database.findOneAndUpdate({ serverID }, { $set: { currentVoiceChannel } }, { returnDocument: ReturnDocument.AFTER })
+  }
+
+  public async updateVoiceMessageTTS(serverID: string, voiceMessageTTS: IVoiceMessageTTS) {
+    if (!this.database) throw ERR_DB_NOT_INIT
+
+    return await this.database.findOneAndUpdate({ serverID }, { $set: { voiceMessageTTS } }, { returnDocument: ReturnDocument.AFTER })
   }
 }
