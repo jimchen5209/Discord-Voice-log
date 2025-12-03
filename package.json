@@ -21,7 +21,7 @@
     "eris": "^0.18.0",
     "fix-esm": "^1.0.1",
     "md5": "^2.3.0",
-    "mongodb": "^6.20.0",
+    "mongodb": "^7.0.0",
     "mpg123-decoder": "^1.0.3",
     "node-fetch": "^2.7.0",
     "node-schedule": "^2.1.1",
