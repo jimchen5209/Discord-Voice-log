@@ -1,7 +1,7 @@
 import { unlinkSync as deleteFile, readdirSync as readDir, readFileSync as readFile } from 'node:fs'
 import { extname } from 'node:path'
+import type { VoiceChannel } from '@projectdysnomia/dysnomia'
 import waitUntil from 'async-wait-until'
-import type { VoiceChannel } from 'eris'
 import Queue from 'promise-queue'
 import type { CommandContext, MessageEmbedOptions } from 'slash-create'
 import type { ILogObj, Logger } from 'tslog'

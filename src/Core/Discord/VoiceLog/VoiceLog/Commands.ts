@@ -1,5 +1,5 @@
+import type { Client } from '@projectdysnomia/dysnomia'
 import waitUntil from 'async-wait-until'
-import type { Client } from 'eris'
 import type { CommandContext, MessageEmbedOptions } from 'slash-create'
 import { vsprintf } from 'sprintf-js'
 import type { ILogObj, Logger } from 'tslog'
