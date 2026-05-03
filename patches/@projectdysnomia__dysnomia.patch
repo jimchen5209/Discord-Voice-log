@@ -1,13 +1,13 @@
 diff --git a/lib/voice/VoiceConnection.js b/lib/voice/VoiceConnection.js
-index 66110cc89938dd8c380c922ff608b5c62fc142bf..360aa9f3ce8b8b8d473e78cdb49f7dda8d56c6d5 100644
+index 20d95abbffe106c303aacb522d06d0a23d6d4860..b04a309822eb81eae73313536277a0dca37ff203 100644
 --- a/lib/voice/VoiceConnection.js
 +++ b/lib/voice/VoiceConnection.js
-@@ -593,8 +593,15 @@ class VoiceConnection extends EventEmitter {
+@@ -603,8 +603,15 @@ class VoiceConnection extends EventEmitter {
              this.emit("warn", `Voice WS close ${code}: ${reason}`);
              if(this.connecting || this.ready) {
                  let reconnecting = true;
--                if(code === 1000 || code === 4006 || code === 4021) {
-+                if(code === 1000 || code === 4021) {
+-                if(code === 1000 || code === 4006 || code === 4021 || code === 4017) {
++                if(code === 1000 || code === 4021 || code === 4017) {
                      reconnecting = false;
 +                } else if(code === 4006) {
 +                    if (this.channelID) {
@@ -20,7 +20,7 @@ index 66110cc89938dd8c380c922ff608b5c62fc142bf..360aa9f3ce8b8b8d473e78cdb49f7dda
                      if(this.channelID) {
                          data.endpoint = null;
 diff --git a/lib/voice/streams/OggOpusTransformer.js b/lib/voice/streams/OggOpusTransformer.js
-index fc4016a146d5dc606e53ae44c177536ebcfc2405..a6176088a3ac425338b90e63ec4cc55c863656a9 100644
+index fc4016a146d5dc606e53ae44c177536ebcfc2405..075959810dcd1703637777a40f9dc733adbe2798 100644
 --- a/lib/voice/streams/OggOpusTransformer.js
 +++ b/lib/voice/streams/OggOpusTransformer.js
 @@ -70,7 +70,7 @@ class OggOpusTransformer extends BaseTransformer {
