@@ -1,3 +1,7 @@
-patchedDependencies:
-  eris: patches/eris.patch
+overrides:
+  undici@<6.23.0: '>=6.23.0'
+  undici@<6.24.0: '>=6.24.0'
 minimumReleaseAge: 20160
+
+patchedDependencies:
+  '@projectdysnomia/dysnomia': patches/@projectdysnomia__dysnomia.patch

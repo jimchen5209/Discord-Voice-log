@@ -83,6 +83,12 @@ export class TTSHelper {
     await fetch(url, options)
       .then((response) => response.json())
       .then((data) => {
+        if (!data.audioContent) {
+          if (data.error) {
+            Error(`Google TTS API Error: ${data.error.message} (Code: ${data.error.code})`)
+          }
+          throw new Error('Unable to get audio content from response')
+        }
         const imgBuffer = Buffer.from(data.audioContent, 'base64')
 
         const s = new Readable()

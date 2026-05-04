@@ -1,4 +1,4 @@
-import type { Member } from 'eris'
+import type { Member } from '@projectdysnomia/dysnomia'
 import type { IPluginBase } from './PluginBase'
 
 export interface IVoiceOverwrite extends IPluginBase {

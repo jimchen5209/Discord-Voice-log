@@ -1,4 +1,4 @@
-import type { Client } from 'eris'
+import type { Client } from '@projectdysnomia/dysnomia'
 import { type AnyRequestData, GatewayServer, type SlashCommand, SlashCreator } from 'slash-create'
 import type { ILogObj, Logger } from 'tslog'
 import { instances } from '../../../Utils/Instances'
