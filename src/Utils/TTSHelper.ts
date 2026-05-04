@@ -3,7 +3,7 @@ import { writeFile } from 'node:fs/promises'
 import { Readable } from 'node:stream'
 import md5 from 'md5'
 import type { MPEGDecoderWebWorker } from 'mpg123-decoder'
-import fetch, { FetchError, type RequestInit } from 'node-fetch'
+import fetch, { type RequestInit } from 'node-fetch'
 import type { ILogObj, Logger } from 'tslog'
 import type { Config } from './Config'
 
@@ -85,7 +85,7 @@ export class TTSHelper {
       .then((data) => {
         if (!data.audioContent) {
           if (data.error) {
-            throw new FetchError(data.error.message, data.error.code)
+            Error(`Google TTS API Error: ${data.error.message} (Code: ${data.error.code})`)
           }
           throw new Error('Unable to get audio content from response')
         }
