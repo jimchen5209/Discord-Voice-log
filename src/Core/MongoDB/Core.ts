@@ -56,7 +56,7 @@ export class MongoDB extends EventEmitter {
 
   public close() {
     this.logger.info('Closing mongoDB connection...')
-    this.client.close().then(() => {
+    this.client.close().finally(() => {
       this.emit('disconnected')
     })
   }
