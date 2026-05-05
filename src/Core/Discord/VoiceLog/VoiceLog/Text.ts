@@ -90,7 +90,7 @@ export class VoiceLogText {
         break
       case 'move':
         color = 10448150
-        content = vsprintf('%0s ▶️ %1s', [oldChannel?.name, newChannel?.name])
+        content = vsprintf('%0s ▶ %1s', [oldChannel?.name, newChannel?.name])
         break
       default:
         color = 6776679
