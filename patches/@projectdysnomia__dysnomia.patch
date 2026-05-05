@@ -1,3 +1,37 @@
+diff --git a/index.d.ts b/index.d.ts
+index ec450e9068297bfcdb42079a0f65ac2b8698484b..6335ddb4475b3a43f6bdbac4e8cc8e8737d27274 100644
+--- a/index.d.ts
++++ b/index.d.ts
+@@ -1787,6 +1787,7 @@ declare namespace Dysnomia {
+   }
+   interface MessageActivity {
+     party_id?: string;
++    name_override?: string;
+     type: MessageActivityTypes;
+   }
+   interface MessageApplication {
+@@ -2771,6 +2772,7 @@ declare namespace Dysnomia {
+       SPECTATE:     2;
+       LISTEN:       3;
+       JOIN_REQUEST: 5;
++      STREAM_REQUEST: 6;
+     };
+     MessageFlags: {
+       CROSSPOSTED:                            1;
+diff --git a/lib/Constants.js b/lib/Constants.js
+index 3398b834293df32e1fafe65ec6352b1b66d5c7dc..a82613d523d5029aa11f9e2058a88e6087d9a075 100644
+--- a/lib/Constants.js
++++ b/lib/Constants.js
+@@ -549,7 +549,8 @@ module.exports.MessageActivityTypes = {
+     JOIN:         1,
+     SPECTATE:     2,
+     LISTEN:       3,
+-    JOIN_REQUEST: 5
++    JOIN_REQUEST: 5,
++    STREAM_REQUEST: 6
+ };
+ 
+ module.exports.MessageFlags = {
 diff --git a/lib/structures/Message.js b/lib/structures/Message.js
 index a317e4659f3e30cb1765637a8fd3fca528876a7d..bc64e9921ed72fd5e818c78980ae54efffa09e90 100644
 --- a/lib/structures/Message.js

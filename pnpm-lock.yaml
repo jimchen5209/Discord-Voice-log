@@ -10,7 +10,7 @@ overrides:
 
 patchedDependencies:
   '@projectdysnomia/dysnomia':
-    hash: 245e2aeaeb9e21e3fd696fe159a195e8ef39513c45f1e68af0bc620740779f81
+    hash: 65aa6fa43bcebdba85b19cb561b3bd58d186f857f3b5ebf30a91f2fc472c6421
     path: patches/@projectdysnomia__dysnomia.patch
 
 importers:
@@ -19,7 +19,7 @@ importers:
     dependencies:
       '@projectdysnomia/dysnomia':
         specifier: 0.2.4
-        version: 0.2.4(patch_hash=245e2aeaeb9e21e3fd696fe159a195e8ef39513c45f1e68af0bc620740779f81)(@emnapi/core@1.6.0)(@emnapi/runtime@1.6.0)(eventemitter3@5.0.1)
+        version: 0.2.4(patch_hash=65aa6fa43bcebdba85b19cb561b3bd58d186f857f3b5ebf30a91f2fc472c6421)(@emnapi/core@1.6.0)(@emnapi/runtime@1.6.0)(eventemitter3@5.0.1)
       async-wait-until:
         specifier: ^2.0.31
         version: 2.0.31
@@ -990,7 +990,7 @@ snapshots:
       '@tybys/wasm-util': 0.10.1
     optional: true
 
-  '@projectdysnomia/dysnomia@0.2.4(patch_hash=245e2aeaeb9e21e3fd696fe159a195e8ef39513c45f1e68af0bc620740779f81)(@emnapi/core@1.6.0)(@emnapi/runtime@1.6.0)(eventemitter3@5.0.1)':
+  '@projectdysnomia/dysnomia@0.2.4(patch_hash=65aa6fa43bcebdba85b19cb561b3bd58d186f857f3b5ebf30a91f2fc472c6421)(@emnapi/core@1.6.0)(@emnapi/runtime@1.6.0)(eventemitter3@5.0.1)':
     dependencies:
       ws: 8.20.0
     optionalDependencies:
