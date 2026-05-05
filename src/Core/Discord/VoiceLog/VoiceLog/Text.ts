@@ -105,7 +105,7 @@ export class VoiceLogText {
           description: content,
           timestamp: new Date().toISOString(),
           // biome-ignore lint/style/useNamingConvention: MessageContent requires this
-          author: { name: '𝅺', icon_url: member.avatarURL }
+          author: { name: `@${member.username}`, icon_url: member.avatarURL }
         }
       ]
     } as MessageContent<'hasNonce'>
