@@ -217,9 +217,8 @@ export class VoiceLogText {
     }
 
     // Stream Request
-    // FIXME: Add type def and translate
     if (message.activity && message.activity.type === 6) {
-      content += `請直播 ${message.activity.name_override}`
+      content = vsprintf(instances.lang.get(lang).display.voice_tts.stream_reuqest, [content, message.activity.name_override])
     }
 
     // Url

@@ -39,6 +39,7 @@
     "message_channel_mention_unknown": "#[不明頻道]",
     "message_role_mention": "@[身分組 %s]",
     "message_role_mention_unknown": "@[不明身分組]",
-    "message_link": "[連結 %s]"
+    "message_link": "[連結 %s]",
+    "stream_request": "%0s，請直播 %1s。"
   }
 }

@@ -39,6 +39,7 @@
     "message_channel_mention_unknown": "#[Unknown channel]",
     "message_role_mention": "@[Role %s]",
     "message_role_mention_unknown": "@[Unknown role]",
-    "message_link": "[Link %s]"
+    "message_link": "[Link %s]",
+    "stream_request": "%0s, please stream %1s."
   }
 }
