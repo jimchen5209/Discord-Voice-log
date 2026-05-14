@@ -1,6 +1,6 @@
 import { type ILogObj, Logger } from 'tslog'
 import type { Discord } from '../Core/Discord/Core'
-import type { MongoDB } from '../Core/MongoDB/Core'
+import type { SQLiteCore } from '../Core/SQLite/Core'
 import { PluginManager } from '../Plugin/Core'
 import { Config, loggerOptions } from './Config'
 import { Lang } from './Lang'
@@ -13,7 +13,7 @@ interface INstances {
   ttsHelper: TTSHelper
   pluginManager: PluginManager
   discord: Discord | undefined
-  mongoDB: MongoDB | undefined
+  db: SQLiteCore | undefined
 }
 
 // Static instances
@@ -30,5 +30,5 @@ export const instances: INstances = {
   ttsHelper,
   pluginManager,
   discord: undefined,
-  mongoDB: undefined
+  db: undefined
 }

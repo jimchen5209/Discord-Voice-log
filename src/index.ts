@@ -1,6 +1,8 @@
+import { existsSync as exists } from 'node:fs'
 import { Status } from 'status-client'
 import { Discord } from './Core/Discord/Core'
-import { MongoDB } from './Core/MongoDB/Core'
+import { SQLiteCore } from './Core/SQLite/Core'
+import { migrateMongoToSqlite } from './Core/SQLite/Migration'
 import { instances } from './Utils/Instances'
 
 let quitting = false
@@ -11,23 +13,25 @@ if (instances.config.debug) instances.mainLogger.settings.minLevel = 0 // Silly
 
 const status = new Status('VoiceLog')
 
-// Initialize MongoDB
-const mongoDB = new MongoDB()
-instances.mongoDB = mongoDB
+// Initialize SQLite
+const db = new SQLiteCore()
+instances.db = db
 
-mongoDB.once('connect', () => {
-  // Initialize the bot
-  const discord = new Discord()
-  instances.discord = discord
+const dumpPath = process.env.MONGODB_DUMP_PATH ?? './mongo_dump.json'
 
-  discord.start()
-  status.set_status()
-})
+if (exists(dumpPath)) {
+  // Attempt to migrate from MongoDB dump file if path is provided in .env
+  logger.info(`MongoDB dump found: $dumpPath. Attempting data migration...`)
+  migrateMongoToSqlite(dumpPath)
+}
 
-mongoDB.once('error', () => {
-  logger.error('Unable to connect to database. Quitting...')
-  process.exit(1)
-})
+// Since SQLite/Prisma is synchronous initialization for the client
+// (connection is lazy), we can start the bot immediately.
+const discord = new Discord()
+instances.discord = discord
+
+discord.start()
+status.set_status()
 
 process.on('warning', (e) => {
   logger.warn(e.message)
@@ -51,16 +55,15 @@ const stop = () => {
 
   const discordShutdown = instances.discord?.stop() ?? Promise.resolve()
 
-  const mongoShutdown = new Promise<void>((resolve) => {
-    if (instances.mongoDB) {
-      instances.mongoDB.once('disconnected', resolve)
-      instances.mongoDB.close()
+  const dbShutdown = new Promise<void>((resolve) => {
+    if (instances.db) {
+      instances.db.close().then(() => resolve())
     } else {
       resolve()
     }
   })
 
-  Promise.all([discordShutdown, mongoShutdown]).then(() => {
+  Promise.all([discordShutdown, dbShutdown]).then(() => {
     clearTimeout(timeout)
     logger.info('All services shut down gracefully. Exiting.')
     process.exit(0)

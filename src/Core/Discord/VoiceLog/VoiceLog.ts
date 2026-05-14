@@ -4,8 +4,8 @@ import { scheduleJob } from 'node-schedule'
 import Queue from 'promise-queue'
 import type { ILogObj, Logger } from 'tslog'
 import { instances } from '../../../Utils/Instances'
-import { ERR_DB_NOT_INIT } from '../../MongoDB/Core'
-import { type DbServerConfigManager, VoiceMessageTTSType } from '../../MongoDB/db/ServerConfig'
+import { type DbServerConfigManager, ERR_DB_NOT_INIT } from '../../SQLite/Core'
+import { VoiceMessageTTSType } from '../../SQLite/db/ServerConfig'
 import type { Discord } from '../Core'
 import { VoiceLogCommands } from './VoiceLog/Commands'
 import { VoiceLogText } from './VoiceLog/Text'
@@ -25,7 +25,7 @@ export class VoiceLog {
     this.client = discord.client
     this._logger = discord.logger.getSubLogger({ name: 'VoiceLog' })
 
-    const serverConfig = instances.mongoDB?.serverConfig
+    const serverConfig = instances.db?.serverConfig
     if (!serverConfig) throw ERR_DB_NOT_INIT
     this._serverConfig = serverConfig
 

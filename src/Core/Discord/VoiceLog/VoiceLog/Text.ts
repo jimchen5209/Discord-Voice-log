@@ -2,7 +2,7 @@ import type { Client, Member, Message, MessageContent, PossiblyUncachedTextableC
 import { vsprintf } from 'sprintf-js'
 import type { ILogObj, Logger } from 'tslog'
 import { instances } from '../../../../Utils/Instances'
-import type { DbServerConfigManager } from '../../../MongoDB/db/ServerConfig'
+import type { DbServerConfigManager } from '../../../SQLite/Core'
 import type { Discord } from '../../Core'
 import type { VoiceLog } from '../VoiceLog'
 

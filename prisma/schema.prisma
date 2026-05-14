@@ -1,0 +1,26 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model ServerConfig {
+  serverID            String   @id
+  lang                String   @default("en_US")
+  channelID           String   @default("")
+  lastVoiceChannel    String   @default("")
+  currentVoiceChannel String   @default("")
+  
+  // TTS Settings
+  ttsEnabled          Boolean  @default(false)
+  ttsMessageLang      String   @default("en_US")
+  ttsType             String   @default("WaveNet")
+  ttsVoiceLang        String   @default("en-US")
+  ttsVoiceName        String   @default("en-US-Wavenet-A")
+
+  @@map("serverConfig")
+}
+

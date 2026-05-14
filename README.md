@@ -2,20 +2,28 @@
 
 ## How to use
 
-1. Install [mongoDB](https://www.mongodb.com/download-center/community), [node.js](https://nodejs.org/en/) (Recommend using [nvm](https://github.com/nvm-sh/nvm)), [yarn](https://yarnpkg.com/), [ffmpeg](https://ffmpeg.org/) and start the mongoDB Server
+1. Install [node.js](https://nodejs.org/en/) (Recommend using [nvm](https://github.com/nvm-sh/nvm)), [pnpm](https://pnpm.io/), [ffmpeg](https://ffmpeg.org/)
 2. Clone this repo
-3. Install dependencies with `yarn install`
-4. Build with `yarn build:prod`
-5. Run `node dist` the first time to generate `config.json`
-6. Create and grab your discord bot token, application ID, public key [here](https://discordapp.com/developers/applications/)
-7. Fill `config.json`
-8. Install `pm2` via `npm install -g pm2` (Optional but recommended)
-9. Start the bot with `node dist` or `pm2 reload ecosystem.config.js`
-10. When inviting bot to your server, be sure to enable these permission at least  
+3. Install dependencies with `pnpm install`
+4. Initialize the database:
+   ```bash
+   npx prisma migrate dev --name init
+   ```
+   *(Note: This project now uses SQLite via Prisma ORM for simplified setup)*
+5. Build with `pnpm build:prod`
+6. Run `node dist` the first time to generate `config.json`
+7. Create and grab your discord bot token, application ID, public key [here](https://discordapp.com/developers/applications/)
+8. Fill `config.json`
+9. Install `pm2` via `npm install -g pm2` (Optional but recommended)
+10. Start the bot with `node dist` or `pm2 reload ecosystem.config.js`
+
+## Database Migration
+If you are upgrading from an older version that used MongoDB, please refer to the [Migration Guide](MIGRATION_GUIDE.md) to move your data to SQLite.
+11. When inviting bot to your server, be sure to enable these permission at least  
 ![image](https://user-images.githubusercontent.com/10269287/149659808-a51a571f-7ef2-43cf-b415-6220a56847a4.png)  
-11. This bot uses slash command, type `/` in server chat and start configuring the bot
+12. This bot uses slash command, type `/` in server chat and start configuring the bot
 ![image](https://user-images.githubusercontent.com/10269287/149659879-8be3aecb-d8b6-4a7c-b06f-43776dfe2233.png)
-12. For the voice activity sound, put the following file into `asset/` folder:
+13. For the voice activity sound, put the following file into `asset/` folder:
 ```
 <User ID>_join.wav --Connected to the channel
 <User ID>_left.wav --Left the channel
