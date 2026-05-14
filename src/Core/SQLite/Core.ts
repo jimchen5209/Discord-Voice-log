@@ -1,3 +1,4 @@
+import type { ServerConfig } from '@prisma/client'
 import { instances } from '../../Utils/Instances'
 import { prisma } from '../SQLite/Client'
 import { type IVoiceMessageTTS, VoiceMessageTTSType } from './db/ServerConfig'
@@ -99,7 +100,7 @@ export class DbServerConfigManager {
       }
     })
 
-    return configs.map((config) => ({
+    return configs.map((config: ServerConfig) => ({
       ...config,
       voiceMessageTTS: {
         enabled: config.ttsEnabled,

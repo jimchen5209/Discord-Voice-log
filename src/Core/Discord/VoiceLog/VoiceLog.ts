@@ -5,7 +5,7 @@ import Queue from 'promise-queue'
 import type { ILogObj, Logger } from 'tslog'
 import { instances } from '../../../Utils/Instances'
 import { type DbServerConfigManager, ERR_DB_NOT_INIT } from '../../SQLite/Core'
-import { VoiceMessageTTSType } from '../../SQLite/db/ServerConfig'
+import { type IServerConfig, VoiceMessageTTSType } from '../../SQLite/db/ServerConfig'
 import type { Discord } from '../Core'
 import { VoiceLogCommands } from './VoiceLog/Commands'
 import { VoiceLogText } from './VoiceLog/Text'
@@ -187,7 +187,7 @@ export class VoiceLog {
     if (!exists('./assets')) mkDir('./assets')
     if (!exists('./caches')) mkDir('./caches')
     const channels = await this._serverConfig.getCurrentChannels()
-    channels.forEach((element) => {
+    channels.forEach((element: IServerConfig) => {
       this._logger.info(`Reconnecting to ${element.currentVoiceChannel}...`)
       this._voice.join(element.serverID, element.currentVoiceChannel)
     })
