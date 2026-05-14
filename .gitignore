@@ -127,6 +127,8 @@ dist
 .idea/
 
 # project
+prisma/*.db
+prisma/*.db-journal
 assets/
 logs/
 caches/
