@@ -61,6 +61,13 @@ export class VoiceLogText {
     return VoiceLogSetStatus.ChannelSuccess
   }
 
+  public async setVoiceMessageTTS(guildId: string, ttsConfig: Partial<IVoiceMessageTTS>): Promise<IVoiceMessageTTS> {
+    const data = await this.serverConfig.getOrCreate(guildId)
+    const newTTS = { ...data.voiceMessageTTS, ...ttsConfig }
+    await this.serverConfig.updateVoiceMessageTTS(guildId, newTTS)
+    return newTTS
+  }
+
   public async setLang(guildId: string, lang: string): Promise<VoiceLogSetStatus> {
     if (!instances.lang.isExist(lang)) return VoiceLogSetStatus.MissingLang
 

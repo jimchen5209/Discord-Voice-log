@@ -271,6 +271,58 @@ export class VoiceLogCommands {
     })
   }
 
+  public async commandSetTTS(context: CommandContext) {
+    if (!context.guildID || !context.member) return
+    const member = await this.client.getRESTGuildMember(context.guildID, context.member.id)
+    if (!member) return
+
+    const data = await this.serverConfig.getOrCreate(member.guild.id)
+
+    if (!member.permissions.has('manageMessages') && !instances.config.discord.admins.includes(member.id)) {
+      await context.send({
+        embeds: [this.genErrorMessage(instances.lang.get(data.lang).display.command.no_permission)],
+        ephemeral: true
+      })
+      return
+    }
+
+    const options = context.options.tts as Partial<Record<string, unknown>>
+    if (!options) {
+      await context.send({
+        embeds: [this.genErrorMessage('Please provide at least one option to change.')],
+        ephemeral: true
+      })
+      return
+    }
+
+    const ttsConfig: Partial<IVoiceMessageTTS> = {}
+    if (typeof options.enabled === 'boolean') ttsConfig.enabled = options.enabled
+    if (typeof options.type === 'string') ttsConfig.type = options.type as VoiceMessageTTSType
+    if (typeof options.message_lang === 'string') ttsConfig.messageLang = options.message_lang
+    if (typeof options.voice_lang === 'string') ttsConfig.voiceLang = options.voice_lang
+    if (typeof options.voice_name === 'string') ttsConfig.voiceName = options.voice_name
+
+    try {
+      const updated = await this.voiceLog.text.setVoiceMessageTTS(member.guild.id, ttsConfig)
+      await context.send({
+        embeds: [
+          {
+            title: instances.lang.get(data.lang).display.config.tts_success,
+            color: 4289797,
+            description: `\`\`\`json\n${JSON.stringify(updated, null, 2)}\n\`\`\``,
+            timestamp: new Date().toISOString()
+          } as MessageEmbedOptions
+        ]
+      })
+    } catch (error) {
+      this.logger.error('Failed to update TTS config', error)
+      await context.send({
+        embeds: [this.genErrorMessage(instances.lang.get(data.lang).display.config.error)],
+        ephemeral: true
+      })
+    }
+  }
+
   public async commandRefreshCache(context: CommandContext) {
     if (!context.guildID || !context.member) return
     const member = await this.client.getRESTGuildMember(context.guildID, context.member.id)
