@@ -2,7 +2,7 @@ import type { Client, Member, Message, MessageContent, PossiblyUncachedTextableC
 import { vsprintf } from 'sprintf-js'
 import type { ILogObj, Logger } from 'tslog'
 import { instances } from '../../../../Utils/Instances'
-import type { DbServerConfigManager } from '../../../MongoDB/db/ServerConfig'
+import type { DbServerConfigManager, IVoiceMessageTTS } from '../../../MongoDB/db/ServerConfig'
 import type { Discord } from '../../Core'
 import type { VoiceLog } from '../VoiceLog'
 
@@ -59,6 +59,13 @@ export class VoiceLogText {
 
     await this.serverConfig.updateChannel(guildId, channelId)
     return VoiceLogSetStatus.ChannelSuccess
+  }
+
+  public async setVoiceMessageTTS(guildId: string, ttsConfig: Partial<IVoiceMessageTTS>): Promise<IVoiceMessageTTS> {
+    const data = await this.serverConfig.getOrCreate(guildId)
+    const newTTS = { ...data.voiceMessageTTS, ...ttsConfig }
+    await this.serverConfig.updateVoiceMessageTTS(guildId, newTTS)
+    return newTTS
   }
 
   public async setLang(guildId: string, lang: string): Promise<VoiceLogSetStatus> {

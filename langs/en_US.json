@@ -19,7 +19,8 @@
     "lang_success": "Set language to %s",
     "lang_exist": "The language has already been %s",
     "unset_success": "Voice state logging disabled",
-    "error": "An error occurred while setting logging state"
+    "error": "An error occurred while setting logging state",
+    "tts_success": "Voice Message TTS configuration updated"
   },
   "voice_tts": {
     "text_message": "%0s says: %1s",
