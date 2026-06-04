@@ -7,6 +7,7 @@ settings:
 overrides:
   undici@<6.23.0: '>=6.23.0'
   undici@<6.24.0: '>=6.24.0'
+  ws@>=8.0.0 <8.20.1: '>=8.20.1'
 
 patchedDependencies:
   '@projectdysnomia/dysnomia':
@@ -769,8 +770,8 @@ packages:
   whatwg-url@5.0.0:
     resolution: {integrity: sha512-saE57nupxk6v3HY35+jzBwYa0rKSy0XR8JSxZPwgLr7ys0IBzhGviA1/TUGJLmSVqs8pb9AnvICXEuOHLprYTw==}
 
-  ws@8.20.0:
-    resolution: {integrity: sha512-sAt8BhgNbzCtgGbt2OxmpuryO63ZoDk/sqaB/znQm94T4fCEsy/yV+7CdC1kJhOU9lboAEU7R3kquuycDoibVA==}
+  ws@8.20.1:
+    resolution: {integrity: sha512-It4dO0K5v//JtTXuPkfEOaI3uUN87iYPnqo/ZzqCoG3g8uhA66QUMs/SrM0YK7/NAu+r4LMh/9dq2A7k+rHs+w==}
     engines: {node: '>=10.0.0'}
     peerDependencies:
       bufferutil: ^4.0.1
@@ -992,7 +993,7 @@ snapshots:
 
   '@projectdysnomia/dysnomia@0.2.4(patch_hash=65aa6fa43bcebdba85b19cb561b3bd58d186f857f3b5ebf30a91f2fc472c6421)(@emnapi/core@1.6.0)(@emnapi/runtime@1.6.0)(eventemitter3@5.0.1)':
     dependencies:
-      ws: 8.20.0
+      ws: 8.20.1
     optionalDependencies:
       '@snazzah/davey': 0.1.11(@emnapi/core@1.6.0)(@emnapi/runtime@1.6.0)
       '@stablelib/xchacha20poly1305': 1.0.1
@@ -1418,6 +1419,6 @@ snapshots:
       tr46: 0.0.3
       webidl-conversions: 3.0.1
 
-  ws@8.20.0: {}
+  ws@8.20.1: {}
 
   yallist@3.1.1: {}
