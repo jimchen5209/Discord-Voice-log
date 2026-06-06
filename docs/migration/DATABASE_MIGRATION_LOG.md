@@ -51,8 +51,9 @@ Since SQLite is a relational database, we flattened the MongoDB document structu
 ### Schema Updates
 If you need to add fields to the database:
 1. Edit `prisma/schema.prisma`.
-2. Run `npx prisma migrate dev --name <migration_name>`.
-3. Run `npx prisma generate`.
+2. Run `pnpm db:migrate`.
+3. Run `pnpm db:generate`.
+
 
 ### Data Inspection
 Use Prisma Studio for a GUI view of the data:
