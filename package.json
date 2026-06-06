@@ -16,7 +16,8 @@
     "build:prod": "tsc --pretty --inlineSourceMap false",
     "db:generate": "node scripts/prisma-wrapper.js generate",
     "db:migrate": "node scripts/prisma-wrapper.js migrate dev",
-    "db:migrate:prod": "node scripts/prisma-wrapper.js migrate deploy"
+    "db:migrate:prod": "node scripts/prisma-wrapper.js migrate deploy",
+    "db:studio": "node scripts/prisma-wrapper.js studio"
   },
   "keywords": [],
   "dependencies": {

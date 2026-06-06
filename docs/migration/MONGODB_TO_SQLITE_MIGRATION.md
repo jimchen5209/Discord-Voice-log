@@ -78,7 +78,7 @@ If you have an existing MongoDB database and want to move the data to the new SQ
 7. **Verification**:
    After the bot starts, check if the `voice-log.db` file contains the migrated data using Prisma Studio:
    ```bash
-   npx prisma studio
+   pnpm db:studio
    ```
 
 ## 4. Development Notes

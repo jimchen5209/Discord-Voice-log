@@ -15,13 +15,13 @@ export async function migrateMongoToSqlite(dumpPath: string) {
 
     logger.info(`Found ${dataArray.length} documents. Migrating to SQLite...`)
 
-     for (const doc of dataArray) {
-       if (!doc || !doc.serverID) {
-         logger.warn(`Skipping document without serverID: ${JSON.stringify(doc)}`)
-         continue
-       }
+    for (const doc of dataArray) {
+      if (!doc?.serverID) {
+        logger.warn(`Skipping document without serverID: ${JSON.stringify(doc)}`)
+        continue
+      }
 
-       const tts = doc.voiceMessageTTS || {
+      const tts = doc.voiceMessageTTS || {
         enabled: false,
         messageLang: 'en_US',
         type: 'WaveNet',
