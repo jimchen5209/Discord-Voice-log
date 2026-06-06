@@ -1,9 +1,8 @@
 import { readFileSync as readFile, unlinkSync as unlink } from 'node:fs'
-import { PrismaClient } from '@prisma/client'
 import { instances } from '../../Utils/Instances'
+import { prisma } from './Client'
 
 export async function migrateMongoToSqlite(dumpPath: string) {
-  const prisma = new PrismaClient()
   const logger = instances.mainLogger.getSubLogger({ name: 'DBMigrate' })
 
   try {
@@ -12,12 +11,17 @@ export async function migrateMongoToSqlite(dumpPath: string) {
     const documents = JSON.parse(rawData)
 
     // Handle both array of docs or mongoexport object format
-    const dataArray = Array.isArray(documents) ? documents : Object.values(documents)
+    const dataArray = Array.isArray(documents) ? documents : [documents]
 
     logger.info(`Found ${dataArray.length} documents. Migrating to SQLite...`)
 
-    for (const doc of dataArray) {
-      const tts = doc.voiceMessageTTS || {
+     for (const doc of dataArray) {
+       if (!doc || !doc.serverID) {
+         logger.warn(`Skipping document without serverID: ${JSON.stringify(doc)}`)
+         continue
+       }
+
+       const tts = doc.voiceMessageTTS || {
         enabled: false,
         messageLang: 'en_US',
         type: 'WaveNet',
@@ -57,7 +61,5 @@ export async function migrateMongoToSqlite(dumpPath: string) {
   } catch (error) {
     logger.error('MongoDB dump migration failed:', error)
     throw error
-  } finally {
-    await prisma.$disconnect()
   }
 }

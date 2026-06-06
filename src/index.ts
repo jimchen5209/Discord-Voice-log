@@ -13,25 +13,32 @@ if (instances.config.debug) instances.mainLogger.settings.minLevel = 0 // Silly
 
 const status = new Status('VoiceLog')
 
-// Initialize SQLite
-const db = new SQLiteCore()
-instances.db = db
+async function main() {
+  // Initialize SQLite
+  const db = new SQLiteCore()
+  instances.db = db
 
-const dumpPath = process.env.MONGODB_DUMP_PATH ?? './mongo_dump.json'
+  const dumpPath = process.env.MONGODB_DUMP_PATH ?? './mongo_dump.json'
 
-if (exists(dumpPath)) {
-  // Attempt to migrate from MongoDB dump file if path is provided in .env
-  logger.info(`MongoDB dump found: $dumpPath. Attempting data migration...`)
-  migrateMongoToSqlite(dumpPath)
+  if (exists(dumpPath)) {
+    // Attempt to migrate from MongoDB dump file if path is provided in .env
+    logger.info(`MongoDB dump found: ${dumpPath}. Attempting data migration...`)
+    await migrateMongoToSqlite(dumpPath)
+  }
+
+  // Since SQLite/Prisma is synchronous initialization for the client
+  // (connection is lazy), we can start the bot immediately.
+  const discord = new Discord()
+  instances.discord = discord
+
+  discord.start()
+  status.set_status()
 }
 
-// Since SQLite/Prisma is synchronous initialization for the client
-// (connection is lazy), we can start the bot immediately.
-const discord = new Discord()
-instances.discord = discord
-
-discord.start()
-status.set_status()
+main().catch((err) => {
+  instances.mainLogger.fatal(err)
+  process.exit(1)
+})
 
 process.on('warning', (e) => {
   logger.warn(e.message)
