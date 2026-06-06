@@ -73,11 +73,10 @@ export class Config {
 
       this._debug = config.debug ? config.debug : config.Debug ? config.Debug : false
 
-      this.save()
-
       if (versionChanged) {
         this.backupAndQuit(config)
       }
+      this.save()
     } else {
       this.logger.fatal("Can't load config.json: File not found.")
       this.logger.info('Generating empty config...')
