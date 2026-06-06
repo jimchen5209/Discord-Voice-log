@@ -20,7 +20,14 @@
     "lang_exist": "語言已經是 %s",
     "unset_success": "語音頻道狀態記錄已取消",
     "error": "設定語音頻道狀態時發生錯誤",
-    "tts_success": "語音訊息 TTS 設定已更新"
+    "tts_success": "語音訊息 TTS 設定已更新",
+    "tts_enabled": "TTS 已啟用",
+    "tts_message_lang": "TTS訊息語言",
+    "tts_type": "TTS 引擎",
+    "tts_voice_lang": "TTS 語音語言",
+    "tts_voice_name": "TTS 語音名稱",
+    "tts_yes": "是",
+    "tts_no": "否"
   },
   "voice_tts": {
     "text_message": "%0s 說： %1s",

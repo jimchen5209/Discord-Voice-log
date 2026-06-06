@@ -305,14 +305,7 @@ export class VoiceLogCommands {
     try {
       const updated = await this.voiceLog.text.setVoiceMessageTTS(member.guild.id, ttsConfig)
       await context.send({
-        embeds: [
-          {
-            title: instances.lang.get(data.lang).display.config.tts_success,
-            color: 4289797,
-            description: `\`\`\`json\n${JSON.stringify(updated, null, 2)}\n\`\`\``,
-            timestamp: new Date().toISOString()
-          } as MessageEmbedOptions
-        ]
+        embeds: [this.genTTSSuccessMessage(instances.lang.get(data.lang).display.config.tts_success, updated, data.lang)]
       })
     } catch (error) {
       this.logger.error('Failed to update TTS config', error)
@@ -362,6 +355,23 @@ export class VoiceLogCommands {
       title: 'Error',
       color: 13632027,
       description: msg
+    } as MessageEmbedOptions
+  }
+
+  private genTTSSuccessMessage(title: string, ttsConfig: IVoiceMessageTTS, lang: string) {
+    const l = instances.lang.get(lang).display.config
+    const translatedFields = [
+      { label: l.tts_enabled, value: ttsConfig.enabled ? l.tts_yes : l.tts_no },
+      { label: l.tts_message_lang, value: ttsConfig.messageLang },
+      { label: l.tts_type, value: ttsConfig.type },
+      { label: l.tts_voice_lang, value: ttsConfig.voiceLang },
+      { label: l.tts_voice_name, value: ttsConfig.voiceName }
+    ]
+    const description = translatedFields.map((f) => `**${f.label}**: ${f.value}`).join('\n')
+    return {
+      title,
+      color: 4289797,
+      description
     } as MessageEmbedOptions
   }
 }

@@ -20,7 +20,14 @@
     "lang_exist": "The language has already been %s",
     "unset_success": "Voice state logging disabled",
     "error": "An error occurred while setting logging state",
-    "tts_success": "Voice Message TTS configuration updated"
+    "tts_success": "Voice Message TTS configuration updated",
+    "tts_enabled": "TTS Enabled",
+    "tts_message_lang": "TTS Message Language",
+    "tts_type": "TTS Engine",
+    "tts_voice_lang": "TTS Voice Language",
+    "tts_voice_name": "TTS Voice Name",
+    "tts_yes": "Yes",
+    "tts_no": "No"
   },
   "voice_tts": {
     "text_message": "%0s says: %1s",
