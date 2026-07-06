@@ -79,25 +79,22 @@ export class TTSHelper {
     return filePath
   }
 
-  private async downloadWaveTTS(url: string, options: RequestInit, path: string) {
-    // biome-ignore lint/suspicious/noAsyncPromiseExecutor: Usage of await
-    return new Promise<string | null>(async (res) => {
-      await fetch(url, options)
+  private downloadWaveTTS(url: string, options: RequestInit, path: string): Promise<string | null> {
+    return new Promise<string | null>((resolve) => {
+      fetch(url, options)
         .then((response) => response.json())
         .then((data) => {
           if (!data.audioContent) {
             if (data.error) {
-              Error(`Google TTS API Error: ${data.error.message} (Code: ${data.error.code})`)
+              throw new Error(`Google TTS API Error: ${data.error.message} (Code: ${data.error.code})`)
             }
             throw new Error('Unable to get audio content from response')
           }
           const imgBuffer = Buffer.from(data.audioContent, 'base64')
-
           const s = new Readable()
           const w = createWriteStream(path)
-
           w.once('finish', () => {
-            res(path)
+            resolve(path)
           })
           s.push(imgBuffer)
           s.push(null)
@@ -108,7 +105,7 @@ export class TTSHelper {
           if (error instanceof Error) {
             this.logger.error(`Download TTS failed: ${error.message}`, error)
           }
-          res(null)
+          resolve(null)
         })
     })
   }
