@@ -1,4 +1,5 @@
 import { type CommandContext, CommandOptionType, SlashCommand, type SlashCreator } from 'slash-create'
+import { instances } from '../../../../Utils/Instances'
 import type { VoiceLog } from '../../VoiceLog/VoiceLog'
 
 export class VoiceCommand extends SlashCommand {
@@ -42,7 +43,8 @@ export class VoiceCommand extends SlashCommand {
             {
               name: 'message_lang',
               description: 'Message language for TTS parsing',
-              type: CommandOptionType.STRING
+              type: CommandOptionType.STRING,
+              choices: instances.lang.genChoice()
             },
             {
               name: 'voice_lang',

@@ -298,7 +298,16 @@ export class VoiceLogCommands {
     const ttsConfig: Partial<IVoiceMessageTTS> = {}
     if (typeof options.enabled === 'boolean') ttsConfig.enabled = options.enabled
     if (typeof options.type === 'string') ttsConfig.type = options.type as VoiceMessageTTSType
-    if (typeof options.message_lang === 'string') ttsConfig.messageLang = options.message_lang
+    if (typeof options.message_lang === 'string') {
+      if (!instances.lang.isExist(options.message_lang)) {
+        await context.send({
+          embeds: [this.genErrorMessage(ERR_MISSING_LANG)],
+          ephemeral: true
+        })
+        return
+      }
+      ttsConfig.messageLang = options.message_lang
+    }
     if (typeof options.voice_lang === 'string') ttsConfig.voiceLang = options.voice_lang
     if (typeof options.voice_name === 'string') ttsConfig.voiceName = options.voice_name
 
