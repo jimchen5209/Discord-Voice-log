@@ -184,7 +184,7 @@ export class VoiceLogText {
     }
 
     // Emoji
-    content = content.replace(/<:([a-zA-Z0-9_]+):\d+>/g, vsprintf(instances.lang.get(lang).display.voice_tts.message_emoji, ['$1']))
+    content = content.replace(/<a?:([a-zA-Z0-9_]+):\d+>/g, vsprintf(instances.lang.get(lang).display.voice_tts.message_emoji, ['$1']))
 
     // Mention Channel
     if (message.channelMentions.length > 0) {
