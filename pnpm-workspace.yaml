@@ -1,8 +1,11 @@
 minimumReleaseAge: 20160
 overrides:
+  '@babel/core@<=7.29.0': '>=7.29.6'
+  form-data@>=4.0.0 <4.0.6: '>=4.0.6'
   undici@<6.23.0: '>=6.23.0'
   undici@<6.24.0: '>=6.24.0'
-  ws@>=8.0.0 <8.20.1: '>=8.20.1'
+  undici@<6.27.0: '>=6.27.0'
+  ws@>=8.0.0 <8.21.0: '>=8.21.0'
 
 patchedDependencies:
   '@projectdysnomia/dysnomia': patches/@projectdysnomia__dysnomia.patch
