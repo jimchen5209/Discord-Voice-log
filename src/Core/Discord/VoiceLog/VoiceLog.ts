@@ -46,6 +46,11 @@ export class VoiceLog {
           const isContinuous = this.continuousUser[guildId]?.user === message.author.id && message.timestamp - this.continuousUser[guildId]?.timestamp < 5 * 1000
           const text = this._text.parseMessage(message, isContinuous, data.voiceMessageTTS.messageLang)
 
+          if (text === '') {
+            this._logger.debug('Skipped empty message')
+            return
+          }
+
           this._logger.debug(`${message.author} to ${message.channel} ${isContinuous ? '(Continuous)' : ''}: ${text}`)
 
           voice.playTTS(text, data.voiceMessageTTS.type === VoiceMessageTTSType.WaveNet, data.voiceMessageTTS.voiceLang, data.voiceMessageTTS.voiceName)

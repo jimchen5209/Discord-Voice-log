@@ -120,17 +120,21 @@ export class VoiceLogText {
   }
 
   public parseMessage(message: Message<PossiblyUncachedTextableChannel>, isContinuous: boolean, lang: string, isForward = false): string {
+    if (message.member?.id === this.client.user.id) {
+      this.logger.debug('Skipped message from self')
+      return ''
+    }
     let content = ''
     const authorName = isForward ? '' : message.member?.nick || message.author.globalName || message.author.username
     const guild = message.guildID ? this.client.guilds.get(message.guildID) : undefined
 
-    // Poll
     if (message.poll !== undefined) {
+      // Poll
       content = instances.lang.get(lang).display.voice_tts.attachment_poll
     }
 
-    // Attachments
     if (message.attachments.size > 0) {
+      // Attachments
       if (message.attachments.size === 1) {
         content = vsprintf(instances.lang.get(lang).display.voice_tts.attachment_single, [message.attachments.size])
       } else {
@@ -138,8 +142,8 @@ export class VoiceLogText {
       }
     }
 
-    // Stickers
     if (message.stickerItems && message.stickerItems.length > 0) {
+      // Stickers
       const stickers = message.stickerItems
         .map((sticker) => vsprintf(instances.lang.get(lang).display.voice_tts.message_sticker, [sticker.name]))
         .join(instances.lang.get(lang).display.voice_tts.multi_item_separator)
@@ -154,8 +158,8 @@ export class VoiceLogText {
       }
     }
 
-    // Forward
     if (message.messageSnapshots && message.messageSnapshots.length > 0) {
+      // Forward
       const forwardContent = message.messageSnapshots
         .map((snapshot) => {
           return this.parseMessage(snapshot.message as unknown as Message<TextableChannel>, true, lang, true)
@@ -168,8 +172,8 @@ export class VoiceLogText {
       }
     }
 
-    // Text
     if (content !== '') {
+      // Text
       if (message.content !== '') {
         const text = vsprintf(instances.lang.get(lang).display.voice_tts.attachment_text, [message.content])
         content = vsprintf(instances.lang.get(lang).display.voice_tts.multi_item_last_separator, [content, text])
@@ -185,10 +189,10 @@ export class VoiceLogText {
     }
 
     // Emoji
-    content = content.replace(/<:([a-zA-Z0-9_]+):\d+>/g, vsprintf(instances.lang.get(lang).display.voice_tts.message_emoji, ['$1']))
+    content = content.replace(/<a?:([a-zA-Z0-9_]+):\d+>/g, vsprintf(instances.lang.get(lang).display.voice_tts.message_emoji, ['$1']))
 
-    // Mention Channel
     if (message.channelMentions.length > 0) {
+      // Mention Channel
       for (const channelId of message.channelMentions) {
         const channel = guild?.channels.get(channelId)
         let channelText = ''
@@ -201,8 +205,8 @@ export class VoiceLogText {
       }
     }
 
-    // Mention Role
     if (message.roleMentions.length > 0) {
+      // Mention Role
       for (const roleId of message.roleMentions) {
         this.logger.debug(`Role ID: ${roleId}`)
         const role = guild?.roles.get(roleId)
@@ -216,16 +220,16 @@ export class VoiceLogText {
       }
     }
 
-    // Mention User
     if (message.mentions.length > 0) {
+      // Mention User
       for (const user of message.mentions) {
         const member = guild?.members.get(user.id)
         content = content.replace(`<@${user.id}>`, `@${member?.nick || user.globalName || user.username}`)
       }
     }
 
-    // Stream Request
     if (message.activity && message.activity.type === 6) {
+      // Stream Request
       content = vsprintf(instances.lang.get(lang).display.voice_tts.stream_request, [content, message.activity.name_override])
     }
 

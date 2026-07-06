@@ -48,7 +48,7 @@ export class Lang {
     return lang in this.lang
   }
 
-  public genOptions(required: boolean) {
+  public genChoice() {
     const choice: ApplicationCommandOptionChoice[] = []
 
     for (const key of Object.keys(this.lang)) {
@@ -60,12 +60,16 @@ export class Lang {
       })
     }
 
+    return choice
+  }
+
+  public genOptions(required: boolean) {
     const options: ApplicationCommandOption[] = [
       {
         name: 'language',
         description: 'VoiceLog Language',
         required: required,
-        choices: choice,
+        choices: this.genChoice(),
         type: CommandOptionType.STRING
       }
     ]
