@@ -102,6 +102,11 @@ export class DbServerConfigManager {
     if (!data) data = await this.create(guildId)
     if (!data) throw ERR_INSERT_FAILURE
 
+    // Runtime Fallback - Remove after replacing to sqlite
+    if (!data.voiceMessageTTS) {
+      data.voiceMessageTTS = VOICE_MESSAGE_TTS_DEFAULT
+    }
+
     return data
   }
 
