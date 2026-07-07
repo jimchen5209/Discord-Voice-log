@@ -56,7 +56,7 @@ importers:
         version: 1.1.3
       status-client:
         specifier: github:jimchen5209/StatusClient_JS#v2.3.0
-        version: https://codeload.github.com/jimchen5209/StatusClient_JS/tar.gz/be7568ff41c68bf6a87b892698145af7c8a8c983
+        version: https://codeload.github.com/jimchen5209/StatusClient_JS/tar.gz/35dbe99adc7aa5c081299ba26483e933c87bcdac
       tslog:
         specifier: ^4.10.2
         version: 4.10.2
@@ -69,7 +69,7 @@ importers:
         version: 2.3.6
       '@types/node':
         specifier: ^24.12.2
-        version: 24.12.2
+        version: 24.13.2
       '@types/node-fetch':
         specifier: ^2.6.13
         version: 2.6.13
@@ -471,8 +471,8 @@ packages:
   '@types/node-schedule@2.1.8':
     resolution: {integrity: sha512-k00g6Yj/oUg/CDC+MeLHUzu0+OFxWbIqrFfDiLi6OPKxTujvpv29mHGM8GtKr7B+9Vv92FcK/8mRqi1DK5f3hA==}
 
-  '@types/node@24.12.2':
-    resolution: {integrity: sha512-A1sre26ke7HDIuY/M23nd9gfB+nrmhtYyMINbjI1zHJxYteKR6qSMX56FsmjMcDb3SMcjJg5BiRRgOCC/yBD0g==}
+  '@types/node@24.13.2':
+    resolution: {integrity: sha512-fRa09kZTgu8o71KFcDjUFuc7F+dEbZYZmkI0mg5YBTRs0yMKjYHsq/c0urDKeDb+D5qVgXOdFcuu+DZPKOITwA==}
 
   '@types/promise-queue@2.2.3':
     resolution: {integrity: sha512-CuEQpGSYKvHr3SQ7C7WkluLg9CFjVORbn8YFRsQ5u6mqGbZVfSOv03ic9t95HtZuMchnlNqnIsQGFOpxqdhjTQ==}
@@ -776,8 +776,8 @@ packages:
   sprintf-js@1.1.3:
     resolution: {integrity: sha512-Oo+0REFV59/rz3gfJNKQiBlwfHaSESl1pcGyABQsnnIfWOFt6JNj5gCog2U6MLZ//IGYD+nA8nI+mTShREReaA==}
 
-  status-client@https://codeload.github.com/jimchen5209/StatusClient_JS/tar.gz/be7568ff41c68bf6a87b892698145af7c8a8c983:
-    resolution: {tarball: https://codeload.github.com/jimchen5209/StatusClient_JS/tar.gz/be7568ff41c68bf6a87b892698145af7c8a8c983}
+  status-client@https://codeload.github.com/jimchen5209/StatusClient_JS/tar.gz/35dbe99adc7aa5c081299ba26483e933c87bcdac:
+    resolution: {tarball: https://codeload.github.com/jimchen5209/StatusClient_JS/tar.gz/35dbe99adc7aa5c081299ba26483e933c87bcdac}
     version: 2.3.0
 
   tr46@0.0.3:
@@ -802,8 +802,8 @@ packages:
     engines: {node: '>=14.17'}
     hasBin: true
 
-  undici-types@7.16.0:
-    resolution: {integrity: sha512-Zz+aZWSj8LE6zoxD+xrjh4VfkIG8Ya6LvYkZqtUQGJPZjYl53ypCaUwWqo7eI0x66KBGeRo+mlBEkMSeSZ38Nw==}
+  undici-types@7.18.2:
+    resolution: {integrity: sha512-AsuCzffGHJybSaRrmr5eHr81mwJU3kjw6M+uprWvCXiNeN9SOGwQ3Jn8jb8m3Z6izVgknn1R0FTCEAP2QrLY/w==}
 
   undici@8.5.0:
     resolution: {integrity: sha512-xamtWoB1EshgjpmlXd7GGm2VfdDtw1+rD8uhry8pSNW3If6S8E0m2T2+orSKeZXEn/aPJMviCpDBA65WJt8zhg==}
@@ -1236,16 +1236,16 @@ snapshots:
 
   '@types/node-fetch@2.6.13':
     dependencies:
-      '@types/node': 24.12.2
+      '@types/node': 24.13.2
       form-data: 4.0.6
 
   '@types/node-schedule@2.1.8':
     dependencies:
-      '@types/node': 24.12.2
+      '@types/node': 24.13.2
 
-  '@types/node@24.12.2':
+  '@types/node@24.13.2':
     dependencies:
-      undici-types: 7.16.0
+      undici-types: 7.18.2
 
   '@types/promise-queue@2.2.3': {}
 
@@ -1259,7 +1259,7 @@ snapshots:
 
   '@types/ws@8.18.1':
     dependencies:
-      '@types/node': 24.12.2
+      '@types/node': 24.13.2
 
   '@wasm-audio-decoders/common@9.0.7':
     dependencies:
@@ -1483,7 +1483,7 @@ snapshots:
 
   sprintf-js@1.1.3: {}
 
-  status-client@https://codeload.github.com/jimchen5209/StatusClient_JS/tar.gz/be7568ff41c68bf6a87b892698145af7c8a8c983: {}
+  status-client@https://codeload.github.com/jimchen5209/StatusClient_JS/tar.gz/35dbe99adc7aa5c081299ba26483e933c87bcdac: {}
 
   tr46@0.0.3: {}
 
@@ -1500,7 +1500,7 @@ snapshots:
 
   typescript@6.0.3: {}
 
-  undici-types@7.16.0: {}
+  undici-types@7.18.2: {}
 
   undici@8.5.0: {}
 
