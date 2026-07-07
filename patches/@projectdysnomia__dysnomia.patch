@@ -1,3 +1,71 @@
+diff --git a/index.d.ts b/index.d.ts
+index ec450e9068297bfcdb42079a0f65ac2b8698484b..6335ddb4475b3a43f6bdbac4e8cc8e8737d27274 100644
+--- a/index.d.ts
++++ b/index.d.ts
+@@ -1787,6 +1787,7 @@ declare namespace Dysnomia {
+   }
+   interface MessageActivity {
+     party_id?: string;
++    name_override?: string;
+     type: MessageActivityTypes;
+   }
+   interface MessageApplication {
+@@ -2771,6 +2772,7 @@ declare namespace Dysnomia {
+       SPECTATE:     2;
+       LISTEN:       3;
+       JOIN_REQUEST: 5;
++      STREAM_REQUEST: 6;
+     };
+     MessageFlags: {
+       CROSSPOSTED:                            1;
+diff --git a/lib/Constants.js b/lib/Constants.js
+index 3398b834293df32e1fafe65ec6352b1b66d5c7dc..a82613d523d5029aa11f9e2058a88e6087d9a075 100644
+--- a/lib/Constants.js
++++ b/lib/Constants.js
+@@ -549,7 +549,8 @@ module.exports.MessageActivityTypes = {
+     JOIN:         1,
+     SPECTATE:     2,
+     LISTEN:       3,
+-    JOIN_REQUEST: 5
++    JOIN_REQUEST: 5,
++    STREAM_REQUEST: 6
+ };
+ 
+ module.exports.MessageFlags = {
+diff --git a/lib/structures/Message.js b/lib/structures/Message.js
+index a317e4659f3e30cb1765637a8fd3fca528876a7d..bc64e9921ed72fd5e818c78980ae54efffa09e90 100644
+--- a/lib/structures/Message.js
++++ b/lib/structures/Message.js
+@@ -124,6 +124,7 @@ class Message extends Base {
+                 snapshot.message.id ??= data.message_reference.message_id;
+                 snapshot.message.channel_id ??= data.message_reference.channel_id;
+                 snapshot.message.guild_id ??= data.message_reference.guild_id;
++                snapshot.message.author = { id: "-1" }
+                 return {
+                     message: new Message(snapshot.message, client)
+                 };
+@@ -166,7 +167,7 @@ class Message extends Base {
+         }
+ 
+         if(this.channel.guild) {
+-            if(data.member) {
++            if (data.member && data.author.id !== "-1") {
+                 data.member.id = this.author.id;
+                 if(data.author) {
+                     data.member.user = data.author;
+@@ -390,7 +391,11 @@ class Message extends Base {
+              * Array of mentioned roles' ids
+              * @type {Array<String>}
+              */
+-            this.roleMentions = data.mention_roles;
++            if (data.mention_roles) {
++              this.roleMentions = data.mention_roles;
++            } else {
++              this.roleMentions = ((this.content && this.content.match(/<@&[0-9]+>/g)) || []).map((mention) => mention.substring(3, mention.length - 1)) || [];
++            }
+         }
+ 
+         if(data.pinned !== undefined) {
 diff --git a/lib/voice/VoiceConnection.js b/lib/voice/VoiceConnection.js
 index 20d95abbffe106c303aacb522d06d0a23d6d4860..b04a309822eb81eae73313536277a0dca37ff203 100644
 --- a/lib/voice/VoiceConnection.js

@@ -60,7 +60,7 @@ export class TTSHelper {
     return filePath
   }
 
-  public async getWaveTTS(text: string, lang: string, voice: string): Promise<string> {
+  public async getWaveTTS(text: string, lang: string, voice: string): Promise<string | null> {
     const filePath = `./caches/${md5(`${text}-${lang}-${voice}`)}.opus`
     if (!existsSync(filePath)) {
       const key = this.config.googleTTS.apiKey
@@ -74,34 +74,39 @@ export class TTSHelper {
         },
         method: 'POST'
       }
-      await this.downloadWaveTTS(url, options, filePath)
+      return await this.downloadWaveTTS(url, options, filePath)
     }
     return filePath
   }
 
-  private async downloadWaveTTS(url: string, options: RequestInit, path: string) {
-    await fetch(url, options)
-      .then((response) => response.json())
-      .then((data) => {
-        if (!data.audioContent) {
-          if (data.error) {
-            Error(`Google TTS API Error: ${data.error.message} (Code: ${data.error.code})`)
+  private downloadWaveTTS(url: string, options: RequestInit, path: string): Promise<string | null> {
+    return new Promise<string | null>((resolve) => {
+      fetch(url, options)
+        .then((response) => response.json())
+        .then((data) => {
+          if (!data.audioContent) {
+            if (data.error) {
+              throw new Error(`Google TTS API Error: ${data.error.message} (Code: ${data.error.code})`)
+            }
+            throw new Error('Unable to get audio content from response')
           }
-          throw new Error('Unable to get audio content from response')
-        }
-        const imgBuffer = Buffer.from(data.audioContent, 'base64')
+          const imgBuffer = Buffer.from(data.audioContent, 'base64')
+          const s = new Readable()
+          const w = createWriteStream(path)
+          w.once('finish', () => {
+            resolve(path)
+          })
+          s.push(imgBuffer)
+          s.push(null)
 
-        const s = new Readable()
-
-        s.push(imgBuffer)
-        s.push(null)
-
-        s.pipe(createWriteStream(path))
-      })
-      .catch((error) => {
-        if (error instanceof Error) {
-          this.logger.error(`Download TTS failed: ${error.message}`, error)
-        }
-      })
+          s.pipe(w)
+        })
+        .catch((error) => {
+          if (error instanceof Error) {
+            this.logger.error(`Download TTS failed: ${error.message}`, error)
+          }
+          resolve(null)
+        })
+    })
   }
 }

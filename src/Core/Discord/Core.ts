@@ -18,7 +18,7 @@ export class Discord {
     this._client = new Client(token, {
       restMode: true,
       gateway: {
-        intents: ['guilds', 'guildVoiceStates']
+        intents: ['guilds', 'guildMessages', 'guildVoiceStates', 'messageContent']
       }
     })
     this._voiceLog = new VoiceLog(this)
@@ -28,6 +28,14 @@ export class Discord {
       this._logger.info(`Logged in as ${this._client.user.username} (${this._client.user.id})`)
       this.command.refreshCommands()
       this._voiceLog.start()
+    })
+
+    this._client.on('warn', (message) => {
+      this._logger.warn(message)
+    })
+
+    this._client.on('error', (error) => {
+      this._logger.error(error)
     })
   }
 

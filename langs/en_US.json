@@ -19,6 +19,35 @@
     "lang_success": "Set language to %s",
     "lang_exist": "The language has already been %s",
     "unset_success": "Voice state logging disabled",
-    "error": "An error occurred while setting logging state"
+    "error": "An error occurred while setting logging state",
+    "tts_success": "Voice Message TTS configuration updated",
+    "tts_enabled": "TTS Enabled",
+    "tts_message_lang": "TTS Message Language",
+    "tts_type": "TTS Engine",
+    "tts_voice_lang": "TTS Voice Language",
+    "tts_voice_name": "TTS Voice Name",
+    "tts_yes": "Yes",
+    "tts_no": "No"
+  },
+  "voice_tts": {
+    "text_message": "%0s says: %1s",
+    "attachment_message": "%0s sent %1s",
+    "attachment_single": "%d attachment",
+    "attachment_multiple": "%d attachments",
+    "attachment_poll": "a poll",
+    "attachment_text": "text content: %s",
+    "multi_item_separator": ", ",
+    "multi_item_last_separator": "%0s, and %1s",
+    "forward_single": "%d forwarded message, with content: %s",
+    "forward_multiple": "%d forwarded message, with content: %s",
+    "message_unknown": "[Unknown message]",
+    "message_sticker": "[Sticker %s]",
+    "message_emoji": "[Emoji %s]",
+    "message_channel_mention": "#[Channel %s]",
+    "message_channel_mention_unknown": "#[Unknown channel]",
+    "message_role_mention": "@[Role %s]",
+    "message_role_mention_unknown": "@[Unknown role]",
+    "message_link": "[Link %s]",
+    "stream_request": "%0s, please stream %1s."
   }
 }
