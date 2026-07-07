@@ -777,7 +777,7 @@ packages:
     resolution: {integrity: sha512-Oo+0REFV59/rz3gfJNKQiBlwfHaSESl1pcGyABQsnnIfWOFt6JNj5gCog2U6MLZ//IGYD+nA8nI+mTShREReaA==}
 
   status-client@https://codeload.github.com/jimchen5209/StatusClient_JS/tar.gz/35dbe99adc7aa5c081299ba26483e933c87bcdac:
-    resolution: {tarball: https://codeload.github.com/jimchen5209/StatusClient_JS/tar.gz/35dbe99adc7aa5c081299ba26483e933c87bcdac}
+    resolution: {gitHosted: true, tarball: https://codeload.github.com/jimchen5209/StatusClient_JS/tar.gz/35dbe99adc7aa5c081299ba26483e933c87bcdac}
     version: 2.3.0
 
   tr46@0.0.3:
