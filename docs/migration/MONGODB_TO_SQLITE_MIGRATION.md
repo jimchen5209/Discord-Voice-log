@@ -23,7 +23,6 @@ If you have an existing MongoDB database and want to move the data to the new SQ
 ### Execution Steps
 
 1. **Generate Prisma Client**:
-   Generate the client using the project's wrapper:
    ```bash
    pnpm db:generate
    ```

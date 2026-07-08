@@ -46,7 +46,7 @@ export class Config {
     admins: []
   }
   private readonly googleTTSDefault = { apiKey: '' }
-  private readonly sqliteDefault = { databaseUrl: 'file:./voice-log.db' }
+  private readonly sqliteDefault = { databaseUrl: 'file:./prisma/voice-log.db' }
 
   constructor(mainLogger: Logger<ILogObj>) {
     this.logger = mainLogger.getSubLogger({ name: 'Config' })

@@ -16,7 +16,7 @@
   ```bash
   pnpm db:migrate
   ```
-  *(Note: This project now uses SQLite via Prisma ORM for simplified setup)*
+  *(Note: This project now uses SQLite via Prisma ORM (v7) with `better-sqlite3` driver for simplified setup)*
 9. Install `pm2` via `npm install -g pm2` (Optional but recommended)
 10. Start the bot with `node dist` or `pm2 reload ecosystem.config.js`
 11. When inviting bot to your server, be sure to enable these permission at least  

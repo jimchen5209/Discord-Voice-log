@@ -14,13 +14,15 @@
     "biome:ci": "biome ci",
     "build": "tsc --pretty",
     "build:prod": "tsc --pretty --inlineSourceMap false",
-    "db:generate": "node scripts/prisma-wrapper.js generate",
-    "db:migrate": "node scripts/prisma-wrapper.js migrate dev",
-    "db:migrate:prod": "node scripts/prisma-wrapper.js migrate deploy",
-    "db:studio": "node scripts/prisma-wrapper.js studio"
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:migrate:prod": "prisma migrate deploy",
+    "db:studio": "prisma studio"
   },
   "keywords": [],
   "dependencies": {
+    "@prisma/adapter-better-sqlite3": "^7.8.0",
+    "@prisma/client": "^7.8.0",
     "@projectdysnomia/dysnomia": "0.2.4",
     "async-wait-until": "^2.0.31",
     "fix-esm": "^1.0.1",
@@ -36,7 +38,6 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.1",
-    "@prisma/client": "^6.19.3",
     "@types/md5": "^2.3.6",
     "@types/node": "^24.13.2",
     "@types/node-fetch": "^2.6.13",
@@ -44,7 +45,7 @@
     "@types/promise-queue": "^2.2.3",
     "@types/sprintf-js": "^1.1.4",
     "@types/ws": "^8.18.1",
-    "prisma": "^6.19.3",
+    "prisma": "^7.8.0",
     "typescript": "^6.0.3"
   },
   "packageManager": "pnpm@10.34.4+sha512.8768be55200ae3f2226b6527fcca2687e14bc4e5f12d7721a0f25da3df47915177058648db4177baf348120fa0ba2752d8d8d93f6beaf1fe64ae18da8de961af"
