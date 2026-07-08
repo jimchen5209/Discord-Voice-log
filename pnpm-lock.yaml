@@ -6,6 +6,7 @@ settings:
 
 overrides:
   '@babel/core@<=7.29.0': '>=7.29.6'
+  '@hono/node-server@<1.19.13': '>=1.19.13'
   form-data@>=4.0.0 <4.0.6: '>=4.0.6'
   undici@<6.23.0: '>=6.23.0'
   undici@<6.24.0: '>=6.24.0'
@@ -306,9 +307,9 @@ packages:
   '@eshaz/web-worker@1.2.2':
     resolution: {integrity: sha512-WxXiHFmD9u/owrzempiDlBB1ZYqiLnm9s6aPc8AlFQalq2tKmqdmMr9GXOupDgzXtqnBipj8Un0gkIm7Sjf8mw==}
 
-  '@hono/node-server@1.19.11':
-    resolution: {integrity: sha512-dr8/3zEaB+p0D2n/IUrlPF1HZm586qgJNXK1a9fhg/PzdtkK7Ksd5l312tJX2yBuALqDYBlG20QEbayqPyxn+g==}
-    engines: {node: '>=18.14.1'}
+  '@hono/node-server@2.0.6':
+    resolution: {integrity: sha512-7DeRlKG57JDBNZ5Qj2jwVdgwQy4b0tLubRLl3zCf91/rCf9i7p1V5FtW/yWibm1uUHE493ts9ZXH/7g/LQWl+g==}
+    engines: {node: '>=20'}
     peerDependencies:
       hono: ^4
 
@@ -1555,7 +1556,7 @@ snapshots:
 
   '@eshaz/web-worker@1.2.2': {}
 
-  '@hono/node-server@1.19.11(hono@4.12.27)':
+  '@hono/node-server@2.0.6(hono@4.12.27)':
     dependencies:
       hono: 4.12.27
 
@@ -1614,7 +1615,7 @@ snapshots:
       '@electric-sql/pglite': 0.4.1
       '@electric-sql/pglite-socket': 0.1.1(@electric-sql/pglite@0.4.1)
       '@electric-sql/pglite-tools': 0.3.1(@electric-sql/pglite@0.4.1)
-      '@hono/node-server': 1.19.11(hono@4.12.27)
+      '@hono/node-server': 2.0.6(hono@4.12.27)
       '@prisma/get-platform': 7.2.0
       '@prisma/query-plan-executor': 7.2.0
       '@prisma/streams-local': 0.1.2
