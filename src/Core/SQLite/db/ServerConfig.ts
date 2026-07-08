@@ -36,7 +36,6 @@ function toServerConfig(data: PrismaServerConfig): IServerConfig {
   }
 }
 
-
 /**
  * This class is kept as a shell to maintain compatibility with the existing MongoDB setup
  * but internally it uses Prisma.
