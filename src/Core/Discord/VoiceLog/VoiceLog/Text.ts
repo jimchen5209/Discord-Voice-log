@@ -2,8 +2,7 @@ import type { Client, Member, Message, MessageContent, PossiblyUncachedTextableC
 import { vsprintf } from 'sprintf-js'
 import type { ILogObj, Logger } from 'tslog'
 import { instances } from '../../../../Utils/Instances'
-import type { DbServerConfigManager } from '../../../SQLite/Core'
-import type { IVoiceMessageTTS } from '../../../SQLite/db/ServerConfig'
+import type { DbServerConfigManager, IVoiceMessageTTS } from '../../../SQLite/db/ServerConfig'
 import type { Discord } from '../../Core'
 import type { VoiceLog } from '../VoiceLog'
 
