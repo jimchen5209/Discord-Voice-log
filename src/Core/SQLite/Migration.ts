@@ -29,30 +29,23 @@ export async function migrateMongoToSqlite(dumpPath: string) {
         voiceName: 'en-US-Wavenet-A'
       }
 
+      const dbObject = {
+        lang: doc.lang,
+        channelID: doc.channelID,
+        lastVoiceChannel: doc.lastVoiceChannel,
+        currentVoiceChannel: doc.currentVoiceChannel,
+        ttsEnabled: tts.enabled,
+        ttsMessageLang: tts.messageLang,
+        ttsType: tts.type,
+        ttsVoiceLang: tts.voiceLang,
+        ttsVoiceName: tts.voiceName
+      }
       await prisma.serverConfig.upsert({
         where: { serverID: doc.serverID },
-        update: {
-          lang: doc.lang,
-          channelID: doc.channelID,
-          lastVoiceChannel: doc.lastVoiceChannel,
-          currentVoiceChannel: doc.currentVoiceChannel,
-          ttsEnabled: tts.enabled,
-          ttsMessageLang: tts.messageLang,
-          ttsType: tts.type,
-          ttsVoiceLang: tts.voiceLang,
-          ttsVoiceName: tts.voiceName
-        },
+        update: dbObject,
         create: {
           serverID: doc.serverID,
-          lang: doc.lang,
-          channelID: doc.channelID,
-          lastVoiceChannel: doc.lastVoiceChannel,
-          currentVoiceChannel: doc.currentVoiceChannel,
-          ttsEnabled: tts.enabled,
-          ttsMessageLang: tts.messageLang,
-          ttsType: tts.type,
-          ttsVoiceLang: tts.voiceLang,
-          ttsVoiceName: tts.voiceName
+          ...dbObject
         }
       })
     }
