@@ -74,10 +74,7 @@ export class DbServerConfigManager {
 
     try {
       const result = await prisma.serverConfig.create({ data })
-      return {
-        ...result,
-        voiceMessageTTS // Add back for compatibility with existing return type
-      }
+      return toServerConfig(result)
     } catch (e) {
       logger.error(`Failed to create server config for ${serverID}:`, e)
       return null
