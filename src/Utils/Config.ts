@@ -5,7 +5,7 @@ export interface ConfigValue {
   configVersion: string | number
   discord: DiscordConfig
   googleTTS: GoogleTTSConfig
-  mongodb: MongoDBConfig
+  sqlite: SQLiteConfig
   debug: boolean
 }
 
@@ -20,9 +20,8 @@ export interface GoogleTTSConfig {
   apiKey: string
 }
 
-export interface MongoDBConfig {
-  host: string
-  name: string
+export interface SQLiteConfig {
+  databaseUrl: string
 }
 
 export const loggerOptions: ISettingsParam<ILogObj> = {
@@ -33,10 +32,10 @@ export const loggerOptions: ISettingsParam<ILogObj> = {
 }
 
 export class Config {
-  private configVersion = 2
+  private configVersion = 3
   private _discord: DiscordConfig
   private _googleTTS: GoogleTTSConfig
-  private _mongodb: MongoDBConfig
+  private _sqlite: SQLiteConfig
   private _debug: boolean
   private logger: Logger<ILogObj>
 
@@ -47,10 +46,7 @@ export class Config {
     admins: []
   }
   private readonly googleTTSDefault = { apiKey: '' }
-  private readonly mongodbDefault = {
-    host: 'mongodb://localhost:27017',
-    name: 'VoiceLog'
-  }
+  private readonly sqliteDefault = { databaseUrl: 'file:./prisma/voice-log.db' }
 
   constructor(mainLogger: Logger<ILogObj>) {
     this.logger = mainLogger.getSubLogger({ name: 'Config' })
@@ -70,22 +66,23 @@ export class Config {
       if (!config.googleTTS) config.googleTTS = {}
       this._googleTTS = this.mergeGoogleTTSConfig(config)
 
-      if (!config.mongodb) config.mongodb = {}
-      this._mongodb = this.mergeMongoDBConfig(config)
+      if (!config.sqlite) config.sqlite = {}
+      this._sqlite = {
+        databaseUrl: config.sqlite.databaseUrl ? config.sqlite.databaseUrl : this.sqliteDefault.databaseUrl
+      }
 
       this._debug = config.debug ? config.debug : config.Debug ? config.Debug : false
-
-      this.save()
 
       if (versionChanged) {
         this.backupAndQuit(config)
       }
+      this.save()
     } else {
       this.logger.fatal("Can't load config.json: File not found.")
       this.logger.info('Generating empty config...')
       this._discord = this.discordDefault
       this._googleTTS = this.googleTTSDefault
-      this._mongodb = this.mongodbDefault
+      this._sqlite = this.sqliteDefault
       this._debug = false
       this.save()
       this.logger.info('Fill your config and try again.')
@@ -127,13 +124,6 @@ export class Config {
     } as GoogleTTSConfig
   }
 
-  private mergeMongoDBConfig(config: { mongodb: { host: string; name: string }; database: { host: string; name: string } }) {
-    return {
-      host: config.mongodb.host ? config.mongodb.host : config.database.host ? config.database.host : this.mongodbDefault.host,
-      name: config.mongodb.name ? config.mongodb.name : config.database.name ? config.database.name : this.mongodbDefault.name
-    } as MongoDBConfig
-  }
-
   private backupAndQuit(config: ConfigValue) {
     if (!config.configVersion) config.configVersion = 'legacy'
     let copyConfigName = `./config-${config.configVersion}.json`
@@ -162,7 +152,7 @@ export class Config {
         configVersion: this.configVersion,
         discord: this._discord,
         googleTTS: this._googleTTS,
-        mongodb: this._mongodb,
+        sqlite: this._sqlite,
         debug: this._debug
       },
       null,
@@ -179,8 +169,8 @@ export class Config {
     return this._googleTTS
   }
 
-  public get mongodb() {
-    return this._mongodb
+  public get sqlite() {
+    return this._sqlite
   }
 
   public get debug() {

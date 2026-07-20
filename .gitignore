@@ -126,10 +126,16 @@ dist
 !.vscode/settings.json
 .idea/
 
+# AI
+.kilo
+
 # project
+prisma/*.db
+prisma/*.db-journal
 assets/
 logs/
 caches/
 config*.json
 vlogdata.json
 vlogdata.json.bak
+mongo*.json
