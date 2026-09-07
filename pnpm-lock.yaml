@@ -53,8 +53,8 @@ importers:
         specifier: ^2.2.5
         version: 2.2.5
       slash-create:
-        specifier: ^6.8.1
-        version: 6.8.1
+        specifier: ^7.0.0
+        version: 7.0.0
       sprintf-js:
         specifier: ^1.1.3
         version: 1.1.3
@@ -740,6 +740,7 @@ packages:
   cron-parser@4.9.0:
     resolution: {integrity: sha512-p0SaNjrHOnQeR8/VnfGbmg9te2kfyYSQ7Sc/j/6DtPL3JQvKxmjO9TSjNFpujqV3vEYYBvNNvXSxzyksBWAx1Q==}
     engines: {node: '>=12.0.0'}
+    deprecated: v4 is no longer maintained, upgrade to v5
 
   cross-spawn@7.0.6:
     resolution: {integrity: sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==}
@@ -782,6 +783,10 @@ packages:
   denque@2.1.0:
     resolution: {integrity: sha512-HVQE3AAb/pxF8fQAoiqpvg9i3evqug3hoiwakOyZAwJm+6vZehbkYXZ0l4JxS+I3QxM97v5aaRNhj8v5oBhekw==}
     engines: {node: '>=0.10'}
+
+  dequal@2.0.3:
+    resolution: {integrity: sha512-0je+qPKHEMohvfRTCEo3CrPG6cAzAYgmzKyxRiYSSDkS6eGJdyVJm7WaYA5ECaAD9wLB2T4EEeymA5aFVcYXCA==}
+    engines: {node: '>=6'}
 
   destr@2.0.5:
     resolution: {integrity: sha512-ugFTXCtDZunbzasqBxrK93Ik/DRYsO6S/fedkWEMKqt04xZ4csmnmwGDBAb07QWNaGMAmnTIemsYZCksjATwsA==}
@@ -983,10 +988,6 @@ packages:
     resolution: {integrity: sha512-XmOWe7eyHYH14cLdVPoyg+GOH3rYX++KpzrylJwSW98t3Nk+U8XOl8FWKOgwtzdb8lXGf6zYwDUzeHMWfxasyg==}
     engines: {node: '>=6'}
     hasBin: true
-
-  lodash.isequal@4.5.0:
-    resolution: {integrity: sha512-pDo3lu8Jhfjqls6GkMgpahsF9kCyayhgykjyLMNFTKWrpVdAQtYyB4muAMWozBB4ig/dtWAmsMxLEI8wuz+DYQ==}
-    deprecated: This package is deprecated. Use require('node:util').isDeepStrictEqual instead.
 
   long-timeout@0.1.1:
     resolution: {integrity: sha512-BFRuQUqc7x2NWxfJBCyUrN8iYUYznzL9JROmRz1gZ6KlOIgmoD+njPVbb+VNn2nGMKggMsK79iUNErillsrx7w==}
@@ -1209,9 +1210,9 @@ packages:
   simple-yenc@1.0.4:
     resolution: {integrity: sha512-5gvxpSd79e9a3V4QDYUqnqxeD4HGlhCakVpb6gMnDD7lexJggSBJRBO5h52y/iJrdXRilX9UCuDaIJhSWm5OWw==}
 
-  slash-create@6.8.1:
-    resolution: {integrity: sha512-5TeRw2xVHPkvO1O+J3bK/9LvU/t65mTqSId0rZHn14EuPBwZIA/f5+lajALTM1BuPt1+INC48MH/eqiVEogLBw==}
-    engines: {node: '>=16'}
+  slash-create@7.0.0:
+    resolution: {integrity: sha512-w80Os5k53ZW2xZYsumxJeV+56mohje5Ujg8eqcRRcnF9NBksfYTS4PbXZGwhnd6CPE5jTEf1+K1X1XqUB/3z8w==}
+    engines: {node: '>=18.17'}
     peerDependencies:
       express: ^4
       fastify: ^3 || ^4
@@ -1232,7 +1233,7 @@ packages:
     engines: {node: '>= 0.6'}
 
   status-client@https://codeload.github.com/jimchen5209/StatusClient_JS/tar.gz/35dbe99adc7aa5c081299ba26483e933c87bcdac:
-    resolution: {gitHosted: true, integrity: sha512-Qr/Vp+SqwxeJBpUOn9Y6WOFU9WrI2vjMC34LpQCQyNzpyb37dktaJszKTz/qDeMNwrK5A6r44epDDajIRDDujw==, tarball: https://codeload.github.com/jimchen5209/StatusClient_JS/tar.gz/35dbe99adc7aa5c081299ba26483e933c87bcdac}
+    resolution: {gitHosted: true, tarball: https://codeload.github.com/jimchen5209/StatusClient_JS/tar.gz/35dbe99adc7aa5c081299ba26483e933c87bcdac}
     version: 2.3.0
 
   std-env@3.10.0:
@@ -1276,9 +1277,9 @@ packages:
   undici-types@7.18.2:
     resolution: {integrity: sha512-AsuCzffGHJybSaRrmr5eHr81mwJU3kjw6M+uprWvCXiNeN9SOGwQ3Jn8jb8m3Z6izVgknn1R0FTCEAP2QrLY/w==}
 
-  undici@8.5.0:
-    resolution: {integrity: sha512-xamtWoB1EshgjpmlXd7GGm2VfdDtw1+rD8uhry8pSNW3If6S8E0m2T2+orSKeZXEn/aPJMviCpDBA65WJt8zhg==}
-    engines: {node: '>=22.19.0'}
+  undici@6.28.0:
+    resolution: {integrity: sha512-LIY910g9TI13YS95lrMFrs8Rm/u/irgHeTWoKCoteeJ04CUJ92eEfj0rVn+7VKMPBpUPiUoBKfhNyLI23EE/KA==}
+    engines: {node: '>=18.17'}
 
   update-browserslist-db@1.1.4:
     resolution: {integrity: sha512-q0SPT4xyU84saUX+tomz1WLkxUbuaJnR1xWt17M7fJtEJigJeWUNGUqrauFXsHnqev9y9JTRGwk13tFBuKby4A==}
@@ -2033,6 +2034,8 @@ snapshots:
 
   denque@2.1.0: {}
 
+  dequal@2.0.3: {}
+
   destr@2.0.5: {}
 
   detect-libc@2.1.2: {}
@@ -2201,8 +2204,6 @@ snapshots:
   json-schema-traverse@1.0.0: {}
 
   json5@2.2.3: {}
-
-  lodash.isequal@4.5.0: {}
 
   long-timeout@0.1.1: {}
 
@@ -2412,12 +2413,12 @@ snapshots:
 
   simple-yenc@1.0.4: {}
 
-  slash-create@6.8.1:
+  slash-create@7.0.0:
     dependencies:
+      dequal: 2.0.3
       eventemitter3: 5.0.1
-      lodash.isequal: 4.5.0
       tweetnacl: 1.0.3
-      undici: 8.5.0
+      undici: 6.28.0
 
   sorted-array-functions@1.3.0: {}
 
@@ -2467,7 +2468,7 @@ snapshots:
 
   undici-types@7.18.2: {}
 
-  undici@8.5.0: {}
+  undici@6.28.0: {}
 
   update-browserslist-db@1.1.4(browserslist@4.27.0):
     dependencies:
