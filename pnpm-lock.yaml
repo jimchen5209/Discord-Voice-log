@@ -14,9 +14,7 @@ overrides:
   ws@>=8.0.0 <8.21.0: '>=8.21.0'
 
 patchedDependencies:
-  '@projectdysnomia/dysnomia':
-    hash: 65aa6fa43bcebdba85b19cb561b3bd58d186f857f3b5ebf30a91f2fc472c6421
-    path: patches/@projectdysnomia__dysnomia.patch
+  '@projectdysnomia/dysnomia': 65aa6fa43bcebdba85b19cb561b3bd58d186f857f3b5ebf30a91f2fc472c6421
 
 importers:
 
