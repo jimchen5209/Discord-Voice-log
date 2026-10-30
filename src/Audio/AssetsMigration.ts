@@ -6,7 +6,7 @@ import { BACKUP_DIR, backupTimestamp } from '../Utils/Backup'
 import type { MemberConfig } from './Audio'
 
 const ASSETS_DIR = 'assets'
-// Old format: use_wave_tts true -> Google Cloud, false / missing -> Google Translate
+// Old format: use_wave_tts true with a voice -> Google Cloud, anything else -> Google Translate
 const LEGACY_KEY = 'use_wave_tts'
 
 // Rewrites old-format assets/<id>.json files to name a provider id. Files that need converting are
@@ -63,8 +63,10 @@ export async function migrateAssets(mainLogger: Logger<ILogObj>) {
 function migrateConfig(config: MemberConfig): MemberConfig | undefined {
   const hasProvider = typeof config.provider === 'string'
   if (hasProvider && !(LEGACY_KEY in config)) return undefined
+  // use_wave_tts without a voice fell back to Google Translate at runtime; match that, not the flag alone
+  const usedWaveTTS = Boolean(config[LEGACY_KEY]) && Boolean(config.voice)
   const migrated: MemberConfig = {
-    provider: hasProvider ? config.provider : config[LEGACY_KEY] ? 'google-cloud' : 'google-translate'
+    provider: hasProvider ? config.provider : usedWaveTTS ? 'google-cloud' : 'google-translate'
   }
   for (const [key, value] of Object.entries(config)) {
     if (key !== LEGACY_KEY && key !== 'provider') migrated[key] = value

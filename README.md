@@ -59,7 +59,7 @@ If you want to use the new google cloud text to speech, be sure to have apiKey i
 ```
 `lang` and `voice` available from https://cloud.google.com/text-to-speech/docs/voices
 
-Files in the old format (`"use_wave_tts": true` / `false` or missing instead of `provider`) are converted when the bot starts; the originals are copied to `backup/assets-<YYYYMMDD-HHmmss>/`. Restart the bot after adding an old-format file.
+Files in the old format (`"use_wave_tts": true` / `false` or missing instead of `provider`) are converted when the bot starts; the originals are copied to `backup/assets-<YYYYMMDD-HHmmss>/`. `"use_wave_tts": true` with a `voice` becomes `"provider": "google-cloud"`; anything else (`false`, missing, or `true` without a `voice`) becomes `"provider": "google-translate"`, matching how it actually behaved before. Restart the bot after adding an old-format file.
 
 Example:
 
