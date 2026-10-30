@@ -1,10 +1,12 @@
 import { existsSync } from 'node:fs'
-import { writeFile } from 'node:fs/promises'
+import { rename, rm, writeFile } from 'node:fs/promises'
 import md5 from 'md5'
 import type { AudioFormat } from './AudioAsset'
 import type { TTSProvider } from './TTSProvider'
 
 const EXTENSIONS: Record<AudioFormat, string> = { ogg: 'opus', pcm: 'pcm' }
+
+let tempCounter = 0
 
 export class AudioCache {
   private readonly dir: string
@@ -33,7 +35,20 @@ export class AudioCache {
   private async create(provider: TTSProvider, path: string, text: string, lang: string, voice: string): Promise<string | null> {
     const data = await provider.synthesize(text, lang, voice)
     if (data === null) return null
-    await writeFile(path, data)
+    await this.writeAtomic(path, data)
     return path
+  }
+
+  // The cache path only ever holds a complete file: a crash mid-write leaves just a *.tmp file,
+  // which never matches a cache key. The temp file must be in the same dir for rename to be atomic.
+  private async writeAtomic(path: string, data: Uint8Array) {
+    const temp = `${path}.${process.pid}.${++tempCounter}.tmp`
+    try {
+      await writeFile(temp, data)
+      await rename(temp, path)
+    } catch (error) {
+      await rm(temp, { force: true })
+      throw error
+    }
   }
 }
