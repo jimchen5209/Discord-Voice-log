@@ -5,12 +5,17 @@ import type { TTSProvider } from '../TTSProvider'
 export class GoogleCloudTTS implements TTSProvider {
   public readonly id = 'google-cloud'
   public readonly format = 'ogg'
+  public readonly usesVoice = true
   private logger: Logger<ILogObj>
   private apiKey: () => string
 
   constructor(apiKey: () => string, logger: Logger<ILogObj>) {
     this.apiKey = apiKey
     this.logger = logger.getSubLogger({ name: 'GoogleCloudTTS' })
+  }
+
+  public unavailableReason() {
+    return this.apiKey() ? undefined : 'googleTTS.apiKey is not set in config.json'
   }
 
   public async synthesize(text: string, lang: string, voice = ''): Promise<Uint8Array | null> {

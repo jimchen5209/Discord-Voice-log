@@ -49,9 +49,17 @@ export class Audio {
     return [...this.providers.keys()]
   }
 
+  // Why the provider cannot be selected, or undefined when it can
+  public unavailableReason(providerId: string): string | undefined {
+    const provider = this.providers.get(providerId)
+    if (!provider) return `Unknown TTS provider: ${providerId} (available: ${this.providerIds().join(', ')})`
+    return provider.unavailableReason()
+  }
+
   // Returns the cached file path for the request, or null on failure
   public async synthesize(request: TTSRequest): Promise<string | null> {
-    return this.cache.getOrCreate(this.provider(request.provider), request.text, request.lang, request.voice)
+    const provider = this.provider(request.provider)
+    return this.cache.getOrCreate(provider, request.text, request.lang, provider.usesVoice ? request.voice : '')
   }
 
   public systemRequests(): TTSRequest[] {

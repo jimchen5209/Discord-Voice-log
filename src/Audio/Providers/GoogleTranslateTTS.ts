@@ -6,12 +6,17 @@ import type { TTSProvider } from '../TTSProvider'
 export class GoogleTranslateTTS implements TTSProvider {
   public readonly id = 'google-translate'
   public readonly format = 'pcm'
+  public readonly usesVoice = false
   private logger: Logger<ILogObj>
   private mp3Decoder: MPEGDecoderWebWorker
 
   constructor(logger: Logger<ILogObj>) {
     this.logger = logger.getSubLogger({ name: 'GoogleTranslateTTS' })
     this.mp3Decoder = new (require('fix-esm').require('mpg123-decoder').MPEGDecoderWebWorker)()
+  }
+
+  public unavailableReason() {
+    return undefined
   }
 
   public async synthesize(text: string, lang: string): Promise<Uint8Array | null> {
