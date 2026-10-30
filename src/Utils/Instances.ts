@@ -1,16 +1,16 @@
 import { type ILogObj, Logger } from 'tslog'
+import { Audio } from '../Audio/Audio'
 import type { Discord } from '../Core/Discord/Core'
 import type { SQLiteCore } from '../Core/SQLite/Core'
 import { PluginManager } from '../Plugin/Core'
 import { Config, loggerOptions } from './Config'
 import { Lang } from './Lang'
-import { TTSHelper } from './TTSHelper'
 
 interface INstances {
   mainLogger: Logger<ILogObj>
   config: Config
   lang: Lang
-  ttsHelper: TTSHelper
+  audio: Audio
   pluginManager: PluginManager
   discord: Discord | undefined
   db: SQLiteCore | undefined
@@ -20,14 +20,14 @@ interface INstances {
 const mainLogger = new Logger(loggerOptions)
 const config = new Config(mainLogger)
 const lang = new Lang(mainLogger)
-const ttsHelper = new TTSHelper(config, mainLogger)
 const pluginManager = new PluginManager(mainLogger)
+const audio = new Audio(config, mainLogger, pluginManager)
 
 export const instances: INstances = {
   mainLogger,
   config,
   lang,
-  ttsHelper,
+  audio,
   pluginManager,
   discord: undefined,
   db: undefined

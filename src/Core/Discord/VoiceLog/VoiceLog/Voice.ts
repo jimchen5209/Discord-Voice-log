@@ -54,7 +54,7 @@ export class VoiceLogVoice {
           this.serverConfig.updateCurrentVoiceChannel(guildId, channelId)
         }
 
-        if (playJoin) this.audios[guildId].playMoved()
+        if (playJoin) instances.audio.announceMoved(this.audios[guildId].playback)
         return this.audios[guildId]
       } else {
         return this.audios[guildId]
@@ -73,7 +73,7 @@ export class VoiceLogVoice {
       this.serverConfig.updateCurrentVoiceChannel(guildId, channelId)
     }
 
-    if (playJoin) this.audios[guildId].playReady()
+    if (playJoin) instances.audio.announceReady(this.audios[guildId].playback)
 
     return this.audios[guildId]
   }
@@ -140,7 +140,7 @@ export class VoiceLogVoice {
         }
         progressMessage = this.genProgressMessage(title, [seekField, progressField])
         await context?.editOriginal({ embeds: [progressMessage] })
-        instances.ttsHelper.getTTSFile(text, lang).then((fileName) => {
+        instances.audio.legacyTTS.synthesize(text, lang).then((fileName) => {
           this.logger.info(`(${progressCount}/${progressTotal}) ${text} in ${lang} -> ${fileName}`)
           if (fileName !== null) ttsList.push(fileName)
           setTimeout(() => {
@@ -159,7 +159,7 @@ export class VoiceLogVoice {
         }
         progressMessage = this.genProgressMessage(title, [seekField, progressField])
         await context?.editOriginal({ embeds: [progressMessage] })
-        instances.ttsHelper.getWaveTTS(text, lang, voice).then((fileName) => {
+        instances.audio.waveTTS.synthesize(text, lang, voice).then((fileName) => {
           this.logger.info(`(${progressCount}/${progressTotal}) ${text} in ${lang} with voice ${voice} -> ${fileName}`)
           if (fileName !== null) ttsList.push(fileName)
           setTimeout(() => {

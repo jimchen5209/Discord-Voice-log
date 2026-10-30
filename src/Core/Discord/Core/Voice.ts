@@ -1,15 +1,14 @@
-import { existsSync as exists, readFileSync as readFile } from 'node:fs'
-import type { Client, Member, VoiceConnection } from '@projectdysnomia/dysnomia'
+import type { Client, VoiceConnection } from '@projectdysnomia/dysnomia'
 import { waitUntil } from 'async-wait-until'
-import Queue from 'promise-queue'
 import type { ILogObj, Logger } from 'tslog'
-import { instances } from '../../../Utils/Instances'
+import type { AudioAsset } from '../../../Audio/AudioAsset'
+import { PlaybackQueue } from '../../../Audio/PlaybackQueue'
 import type { Discord } from '../Core'
 
 export class DiscordVoice {
   private _init = true
   private _channelId: string
-  private queue: Queue = new Queue(1, Infinity)
+  public readonly playback = new PlaybackQueue((asset) => this.play(asset))
   private client: Client
   private voice: VoiceConnection | undefined
   private logger: Logger<ILogObj>
@@ -54,76 +53,6 @@ export class DiscordVoice {
 
   public get init() {
     return this._init
-  }
-
-  public async playReady() {
-    const voiceFile = await instances.ttsHelper.getWaveTTS('VoiceLog is ready.', 'en-US', 'en-US-Wavenet-D')
-    if (voiceFile !== null) this.queue.add(() => this.play(voiceFile, 'ogg'))
-  }
-
-  public async playMoved() {
-    const voiceFile = await instances.ttsHelper.getWaveTTS('VoiceLog is moved to your channel.', 'en-US', 'en-US-Wavenet-D')
-    if (voiceFile !== null) this.queue.add(() => this.play(voiceFile, 'ogg'))
-  }
-
-  public async playVoice(member: Member, type: string) {
-    let overwritten = false
-
-    for (const voice of instances.pluginManager.voiceOverwrites) {
-      const overwrittenFile = await voice.playVoice(member, type)
-      if (overwrittenFile) {
-        this.queue.add(() => this.play(overwrittenFile, 'pcm'))
-        overwritten = true
-        break
-      }
-    }
-
-    if (overwritten) return
-
-    let voiceFile = ''
-    let format: string | undefined
-    if (exists(`assets/${member.id}.json`)) {
-      const tts = JSON.parse(readFile(`assets/${member.id}.json`, { encoding: 'utf-8' }))
-      if (tts.use_wave_tts && tts.lang && tts.voice && tts[type]) {
-        const file = await instances.ttsHelper.getWaveTTS(tts[type], tts.lang, tts.voice)
-        if (file !== null) {
-          voiceFile = file
-          format = 'ogg'
-        }
-      } else if (tts.lang && tts[type]) {
-        const file = await instances.ttsHelper.getTTSFile(tts[type], tts.lang)
-        if (file !== null) {
-          voiceFile = file
-          format = 'pcm'
-        } else if (exists(`assets/${member.id}_${type}.wav`)) {
-          voiceFile = `assets/${member.id}_${type}.wav`
-        }
-      } else if (exists(`assets/${member.id}_${type}.wav`)) {
-        voiceFile = `assets/${member.id}_${type}.wav`
-      }
-    } else if (exists(`assets/${member.id}_${type}.wav`)) {
-      voiceFile = `assets/${member.id}_${type}.wav`
-    }
-    if (voiceFile !== '') this.queue.add(() => this.play(voiceFile, format))
-  }
-
-  public async playTTS(text: string, waveTTS: boolean, lang: string, voice: string) {
-    let voiceFile = ''
-    let format: string | undefined
-    if (waveTTS) {
-      const file = await instances.ttsHelper.getWaveTTS(text, lang, voice)
-      if (file !== null) {
-        voiceFile = file
-        format = 'ogg'
-      }
-    } else {
-      const file = await instances.ttsHelper.getTTSFile(text, lang)
-      if (file !== null) {
-        voiceFile = file
-        format = 'pcm'
-      }
-    }
-    if (voiceFile !== '') this.queue.add(() => this.play(voiceFile, format))
   }
 
   public isReady(): boolean {
@@ -182,14 +111,10 @@ export class DiscordVoice {
     }
   }
 
-  private play(file: string, format: string | undefined = undefined) {
+  public play(asset: AudioAsset) {
     // biome-ignore lint/suspicious/noAsyncPromiseExecutor: Usage of await
     return new Promise<void>(async (res) => {
-      if (file === '') {
-        res()
-        return
-      }
-      this.logger.info(`Playing ${file}`)
+      this.logger.info(`Playing ${asset.path}`)
       try {
         await waitUntil(() => this.voice?.ready)
       } catch (error) {
@@ -197,7 +122,7 @@ export class DiscordVoice {
         return
       }
       this.voice?.once('end', () => res())
-      this.voice?.play(file, { format, inlineVolume: true })
+      this.voice?.play(asset.path, { format: asset.format, inlineVolume: true })
     })
   }
 }

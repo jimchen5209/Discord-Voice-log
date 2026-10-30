@@ -53,7 +53,7 @@ export class VoiceLog {
 
           this._logger.debug(`${message.author} to ${message.channel} ${isContinuous ? '(Continuous)' : ''}: ${text}`)
 
-          voice.playTTS(text, data.voiceMessageTTS.type === VoiceMessageTTSType.WaveNet, data.voiceMessageTTS.voiceLang, data.voiceMessageTTS.voiceName)
+          instances.audio.speak(voice.playback, text, data.voiceMessageTTS.type === VoiceMessageTTSType.WaveNet, data.voiceMessageTTS.voiceLang, data.voiceMessageTTS.voiceName)
           this.continuousUser[guildId] = {
             user: message.author.id,
             timestamp: message.timestamp
@@ -83,7 +83,7 @@ export class VoiceLog {
 
         if (newChannel.id === channelID) {
           if (voice) {
-            voice.playVoice(member, 'join')
+            instances.audio.announceMember(voice.playback, member, 'join')
             this.continuousUser[guildId] = {
               user: this.client.user.id,
               timestamp: 0
@@ -112,7 +112,7 @@ export class VoiceLog {
         }
         if (oldChannel.id === channelID) {
           if (voice) {
-            voice.playVoice(member, 'left')
+            instances.audio.announceMember(voice.playback, member, 'left')
             this.continuousUser[guildId] = {
               user: this.client.user.id,
               timestamp: 0
@@ -148,7 +148,7 @@ export class VoiceLog {
         }
         if (oldChannel.id === channelID) {
           if (voice) {
-            voice.playVoice(member, 'switched_out')
+            instances.audio.announceMember(voice.playback, member, 'switched_out')
             this.continuousUser[guildId] = {
               user: this.client.user.id,
               timestamp: 0
@@ -157,7 +157,7 @@ export class VoiceLog {
         }
         if (newChannel.id === channelID) {
           if (voice) {
-            voice.playVoice(member, 'switched_in')
+            instances.audio.announceMember(voice.playback, member, 'switched_in')
             this.continuousUser[guildId] = {
               user: this.client.user.id,
               timestamp: 0
