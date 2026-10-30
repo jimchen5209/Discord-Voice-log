@@ -2,11 +2,11 @@ import { unlinkSync as deleteFile, readdirSync as readDir } from 'node:fs'
 import { extname } from 'node:path'
 import type { VoiceChannel } from '@projectdysnomia/dysnomia'
 import waitUntil from 'async-wait-until'
-import Queue from 'promise-queue'
 import type { CommandContext, MessageEmbedOptions } from 'slash-create'
 import type { ILogObj, Logger } from 'tslog'
 import { MEMBER_EVENTS, type TTSRequest } from '../../../../Audio/Audio'
 import { instances } from '../../../../Utils/Instances'
+import { SerialQueue } from '../../../../Utils/SerialQueue'
 import type { DbServerConfigManager } from '../../../SQLite/db/ServerConfig'
 import type { Discord } from '../../Core'
 import { DiscordVoice } from '../../Core/Voice'
@@ -130,7 +130,7 @@ export class VoiceLogVoice {
     await context?.send({ embeds: [progressMessage] })
     let progressCount = 0
     let progressTotal = 0
-    const queue = new Queue(1, Infinity)
+    const queue = new SerialQueue()
     const getTTS = (request: TTSRequest) => {
       // biome-ignore lint/suspicious/noAsyncPromiseExecutor: Usage of await
       return new Promise<void>(async (res) => {

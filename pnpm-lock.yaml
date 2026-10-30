@@ -199,9 +199,6 @@ importers:
       node-schedule:
         specifier: ^2.1.1
         version: 2.1.1
-      promise-queue:
-        specifier: ^2.2.5
-        version: 2.2.5
       slash-create:
         specifier: ^7.0.0
         version: 7.0.0
@@ -224,9 +221,6 @@ importers:
       '@types/node-schedule':
         specifier: ^2.1.8
         version: 2.1.8
-      '@types/promise-queue':
-        specifier: ^2.2.3
-        version: 2.2.3
       '@types/sprintf-js':
         specifier: ^1.1.4
         version: 1.1.4
@@ -808,9 +802,6 @@ packages:
 
   '@types/node@24.19.2':
     resolution: {integrity: sha512-93d49wCWJkCyN87MxLpNN6KXPCwFw7bVUg79mGUV1OS40JGWwVCr8n61DXCSqz7CV6/VfPkb7xec7uP2M+QHWQ==}
-
-  '@types/promise-queue@2.2.3':
-    resolution: {integrity: sha512-CuEQpGSYKvHr3SQ7C7WkluLg9CFjVORbn8YFRsQ5u6mqGbZVfSOv03ic9t95HtZuMchnlNqnIsQGFOpxqdhjTQ==}
 
   '@types/react@19.2.17':
     resolution: {integrity: sha512-MXfmqaVPEVgkBT/aY0aGCkRWWtByiYQXo3xdQ8r5RzuFrPiRn8Gar2tQdXSUQ2GKV3bkXckek89V8wQBY2Q/Aw==}
@@ -1404,10 +1395,6 @@ packages:
         optional: true
       typescript:
         optional: true
-
-  promise-queue@2.2.5:
-    resolution: {integrity: sha512-p/iXrPSVfnqPft24ZdNNLECw/UrtLTpT3jpAAMzl/o5/rDsGCPo3/CQS2611flL6LkoEJ3oQZw7C8Q80ZISXRQ==}
-    engines: {node: '>= 0.8.0'}
 
   proper-lockfile@4.1.2:
     resolution: {integrity: sha512-TjNPblN4BwAWMXU8s9AEz4JmQxnD1NNL7bNOY/AKUzyamc379FWASUhc/K1pL2noVb+XmZKLL68cjzLsiOAMaA==}
@@ -2207,8 +2194,6 @@ snapshots:
     dependencies:
       undici-types: 7.24.6
 
-  '@types/promise-queue@2.2.3': {}
-
   '@types/react@19.2.17':
     dependencies:
       csstype: 3.2.3
@@ -2744,8 +2729,6 @@ snapshots:
       - magicast
       - react
       - react-dom
-
-  promise-queue@2.2.5: {}
 
   proper-lockfile@4.1.2:
     dependencies:

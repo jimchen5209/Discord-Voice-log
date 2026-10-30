@@ -1,9 +1,9 @@
 import { existsSync as exists, mkdirSync as mkDir } from 'node:fs'
 import type { Client, Member, VoiceChannel } from '@projectdysnomia/dysnomia'
 import { scheduleJob } from 'node-schedule'
-import Queue from 'promise-queue'
 import type { ILogObj, Logger } from 'tslog'
 import { instances } from '../../../Utils/Instances'
+import { SerialQueue } from '../../../Utils/SerialQueue'
 import { ERR_DB_NOT_INIT } from '../../SQLite/Core'
 import { type DbServerConfigManager, type IServerConfig, VoiceMessageTTSType } from '../../SQLite/db/ServerConfig'
 import type { Discord } from '../Core'
@@ -18,7 +18,7 @@ export class VoiceLog {
   private _logger: Logger<ILogObj>
   private _serverConfig: DbServerConfigManager
   private client: Client
-  private queue: Queue = new Queue(1, Infinity)
+  private queue = new SerialQueue()
   private continuousUser: { [key: string]: { user: string; timestamp: number } } = {}
 
   constructor(discord: Discord) {
@@ -72,7 +72,7 @@ export class VoiceLog {
     this.client.on('voiceChannelJoin', async (member: Member, newChannel: VoiceChannel) => {
       if (member.id === this.client.user.id) return
       this.logger.debug(
-        `Queue (${this.queue.getQueueLength() + 1}): User ${member.username} (${member.id}) joined voice channel ${newChannel.name} (${newChannel.id}) in guild ${member.guild.name} (${member.guild.id})`
+        `Queue (${this.queue.length + 1}): User ${member.username} (${member.id}) joined voice channel ${newChannel.name} (${newChannel.id}) in guild ${member.guild.name} (${member.guild.id})`
       )
       this.queue.add(async () => {
         this.logger.info(`User ${member.username} (${member.id}) joined voice channel ${newChannel.name} (${newChannel.id}) in guild ${member.guild.name} (${member.guild.id})`)
@@ -103,7 +103,7 @@ export class VoiceLog {
     this.client.on('voiceChannelLeave', async (member: Member, oldChannel: VoiceChannel) => {
       if (member.id === this.client.user.id) return
       this.logger.debug(
-        `Queue (${this.queue.getQueueLength() + 1}): User ${member.username} (${member.id}) left voice channel ${oldChannel.name} (${oldChannel.id}) in guild ${member.guild.name} (${member.guild.id})`
+        `Queue (${this.queue.length + 1}): User ${member.username} (${member.id}) left voice channel ${oldChannel.name} (${oldChannel.id}) in guild ${member.guild.name} (${member.guild.id})`
       )
       this.queue.add(async () => {
         this.logger.info(`User ${member.username} (${member.id}) left voice channel ${oldChannel.name} (${oldChannel.id}) in guild ${member.guild.name} (${member.guild.id})`)
@@ -136,7 +136,7 @@ export class VoiceLog {
         return
       }
       this.logger.debug(
-        `Queue (${this.queue.getQueueLength() + 1}): User ${member.username} (${member.id}) switched voice channel from ${oldChannel.name} (${oldChannel.id}) to ${newChannel.name} (${newChannel.id}) in guild ${member.guild.name} (${member.guild.id})`
+        `Queue (${this.queue.length + 1}): User ${member.username} (${member.id}) switched voice channel from ${oldChannel.name} (${oldChannel.id}) to ${newChannel.name} (${newChannel.id}) in guild ${member.guild.name} (${member.guild.id})`
       )
       this.queue.add(async () => {
         this.logger.info(
