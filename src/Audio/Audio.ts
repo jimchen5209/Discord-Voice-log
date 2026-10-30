@@ -1,5 +1,6 @@
 import { existsSync as exists, readFileSync as readFile } from 'node:fs'
 import type { Member } from '@projectdysnomia/dysnomia'
+import type { ILogObj, Logger } from 'tslog'
 import type { PluginManager } from '../Plugin/Core'
 import type { AudioAsset } from './AudioAsset'
 import { AudioCache } from './AudioCache'
@@ -14,10 +15,8 @@ const MOVED_TEXT = 'VoiceLog is moved to your channel.'
 export const MEMBER_EVENTS = ['join', 'left', 'switched_out', 'switched_in']
 
 export interface AudioOptions {
-  // Provider id for the bot's own announcements; uid.json files with use_wave_tts also use it
+  // Provider id for the bot's own announcements
   systemProvider: string
-  // Provider id for uid.json files without use_wave_tts
-  defaultProvider: string
 }
 
 export interface TTSRequest {
@@ -27,7 +26,7 @@ export interface TTSRequest {
   voice: string
 }
 
-// Contents of assets/<id>.json: lang / voice / use_wave_tts plus one text per member event
+// Contents of assets/<id>.json: provider / lang / voice plus one text per member event
 export type MemberConfig = Record<string, unknown>
 
 // Entry point of the audio module: decide which audio file represents an announcement, then queue it.
@@ -37,10 +36,12 @@ export class Audio {
   private pluginManager: PluginManager
   private options: AudioOptions
   private cache: AudioCache
+  private logger: Logger<ILogObj>
 
-  constructor(providers: Map<string, TTSProvider>, pluginManager: PluginManager, options: AudioOptions, cache = new AudioCache()) {
+  constructor(providers: Map<string, TTSProvider>, pluginManager: PluginManager, logger: Logger<ILogObj>, options: AudioOptions, cache = new AudioCache()) {
     this.providers = providers
     this.pluginManager = pluginManager
+    this.logger = logger.getSubLogger({ name: 'Audio' })
     this.options = options
     this.cache = cache
   }
@@ -66,17 +67,26 @@ export class Audio {
     return [this.systemRequest(MOVED_TEXT), this.systemRequest(READY_TEXT)]
   }
 
-  public readMemberConfig(path: string): MemberConfig {
-    return JSON.parse(readFile(path, { encoding: 'utf-8' }))
+  // undefined (with an error log) when the file does not name a usable provider
+  public readMemberConfig(path: string): MemberConfig | undefined {
+    const config: MemberConfig = JSON.parse(readFile(path, { encoding: 'utf-8' }))
+    if (typeof config.provider !== 'string') {
+      this.logger.error(`Skipping ${path}: old format without "provider", restart the bot to migrate it`)
+      return undefined
+    }
+    if (!this.providers.has(config.provider)) {
+      this.logger.error(`Skipping ${path}: unknown TTS provider "${config.provider}" (available: ${this.providerIds().join(', ')})`)
+      return undefined
+    }
+    return config
   }
 
   public memberRequest(config: MemberConfig, type: string): TTSRequest | undefined {
     const text = config[type] as string
     const lang = config.lang as string
-    const voice = config.voice as string
     if (!lang || !text) return undefined
-    if (config.use_wave_tts && voice) return { provider: this.options.systemProvider, text, lang, voice }
-    return { provider: this.options.defaultProvider, text, lang, voice: '' }
+    const provider = this.provider(config.provider as string)
+    return { provider: provider.id, text, lang, voice: provider.usesVoice ? ((config.voice as string | undefined) ?? '') : '' }
   }
 
   public announceReady(queue: PlaybackQueue) {
@@ -122,9 +132,10 @@ export class Audio {
 
     if (!exists(`assets/${member.id}.json`)) return wavAsset()
 
-    const request = this.memberRequest(this.readMemberConfig(`assets/${member.id}.json`), type)
+    const config = this.readMemberConfig(`assets/${member.id}.json`)
+    const request = config && this.memberRequest(config, type)
     if (!request) return wavAsset()
-    // The system provider never fell back to the wav file
+    // Files on the system provider (Google Cloud) never fell back to the wav file
     if (request.provider === this.options.systemProvider) return await this.tts(request)
     return (await this.tts(request)) ?? wavAsset()
   }

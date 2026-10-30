@@ -1,5 +1,6 @@
 import { existsSync as exists } from 'node:fs'
 import { Status } from 'status-client'
+import { migrateAssets } from './Audio/AssetsMigration'
 import { Discord } from './Core/Discord/Core'
 import { SQLiteCore } from './Core/SQLite/Core'
 import { migrateMongoToSqlite } from './Core/SQLite/Migration'
@@ -16,6 +17,7 @@ const status = new Status('VoiceLog')
 
 async function main() {
   await applyPendingMigrations()
+  await migrateAssets(logger)
 
   // Initialize SQLite
   const db = new SQLiteCore()

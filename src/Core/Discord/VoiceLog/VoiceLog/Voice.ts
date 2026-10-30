@@ -164,6 +164,7 @@ export class VoiceLogVoice {
           value: `${seekDone || seekCounter === 0 ? '' : `Current ${seekFilename}, `} Seeked ${seekCounter} files. `
         }
         const config = instances.audio.readMemberConfig(`assets/${file}`)
+        if (!config) return
         for (const type of MEMBER_EVENTS) {
           const request = instances.audio.memberRequest(config, type)
           if (!request) continue

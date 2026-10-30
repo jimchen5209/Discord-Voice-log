@@ -25,9 +25,8 @@ const lang = new Lang(mainLogger)
 const pluginManager = new PluginManager(mainLogger)
 // Composition root: register providers by id here (or inject one) without touching the audio module
 const providers = [new GoogleTranslateTTS(mainLogger), new GoogleCloudTTS(() => config.googleTTS.apiKey, mainLogger)]
-const audio = new Audio(new Map(providers.map((provider) => [provider.id, provider])), pluginManager, {
-  systemProvider: 'google-cloud',
-  defaultProvider: 'google-translate'
+const audio = new Audio(new Map(providers.map((provider) => [provider.id, provider])), pluginManager, mainLogger, {
+  systemProvider: 'google-cloud'
 })
 
 export const instances: INstances = {
