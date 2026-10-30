@@ -140,7 +140,7 @@ export class VoiceLogVoice {
         }
         progressMessage = this.genProgressMessage(title, [seekField, progressField])
         await context?.editOriginal({ embeds: [progressMessage] })
-        instances.audio.legacyTTS.synthesize(text, lang).then((fileName) => {
+        instances.audio.synthesize('legacy', text, lang).then((fileName) => {
           this.logger.info(`(${progressCount}/${progressTotal}) ${text} in ${lang} -> ${fileName}`)
           if (fileName !== null) ttsList.push(fileName)
           setTimeout(() => {
@@ -159,7 +159,7 @@ export class VoiceLogVoice {
         }
         progressMessage = this.genProgressMessage(title, [seekField, progressField])
         await context?.editOriginal({ embeds: [progressMessage] })
-        instances.audio.waveTTS.synthesize(text, lang, voice).then((fileName) => {
+        instances.audio.synthesize('wavenet', text, lang, voice).then((fileName) => {
           this.logger.info(`(${progressCount}/${progressTotal}) ${text} in ${lang} with voice ${voice} -> ${fileName}`)
           if (fileName !== null) ttsList.push(fileName)
           setTimeout(() => {

@@ -1,5 +1,7 @@
 import { type ILogObj, Logger } from 'tslog'
 import { Audio } from '../Audio/Audio'
+import { GoogleCloudTTS } from '../Audio/Providers/GoogleCloudTTS'
+import { GoogleTranslateTTS } from '../Audio/Providers/GoogleTranslateTTS'
 import type { Discord } from '../Core/Discord/Core'
 import type { SQLiteCore } from '../Core/SQLite/Core'
 import { PluginManager } from '../Plugin/Core'
@@ -21,7 +23,14 @@ const mainLogger = new Logger(loggerOptions)
 const config = new Config(mainLogger)
 const lang = new Lang(mainLogger)
 const pluginManager = new PluginManager(mainLogger)
-const audio = new Audio(config, mainLogger, pluginManager)
+// Composition root: swap a provider here (or inject one) without touching the audio module
+const audio = new Audio(
+  {
+    legacy: new GoogleTranslateTTS(mainLogger),
+    wavenet: new GoogleCloudTTS(() => config.googleTTS.apiKey, mainLogger)
+  },
+  pluginManager
+)
 
 export const instances: INstances = {
   mainLogger,

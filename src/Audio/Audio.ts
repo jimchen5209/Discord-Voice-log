@@ -1,27 +1,27 @@
 import type { Member } from '@projectdysnomia/dysnomia'
-import type { ILogObj, Logger } from 'tslog'
 import type { PluginManager } from '../Plugin/Core'
-import type { Config } from '../Utils/Config'
 import type { AudioAsset } from './AudioAsset'
 import { AudioCache } from './AudioCache'
 import { AudioResolver } from './AudioResolver'
-import { LegacyTTSProvider } from './LegacyTTSProvider'
 import type { PlaybackQueue } from './PlaybackQueue'
-import { WaveNetTTSProvider } from './WaveNetTTSProvider'
+import type { TTSProviders, TTSRole } from './TTSProvider'
 
-// Entry point of the audio module: resolve an announcement, then queue it
+// Entry point of the audio module: resolve an announcement, then queue it.
+// Providers are injected; this module never imports a concrete provider.
 export class Audio {
   public readonly cache: AudioCache
-  public readonly legacyTTS: LegacyTTSProvider
-  public readonly waveTTS: WaveNetTTSProvider
   public readonly resolver: AudioResolver
+  private providers: TTSProviders
 
-  constructor(config: Config, mainLogger: Logger<ILogObj>, pluginManager: PluginManager) {
-    const logger = mainLogger.getSubLogger({ name: 'Audio' })
-    this.cache = new AudioCache()
-    this.legacyTTS = new LegacyTTSProvider(this.cache, logger)
-    this.waveTTS = new WaveNetTTSProvider(this.cache, config, logger)
-    this.resolver = new AudioResolver(pluginManager, this.legacyTTS, this.waveTTS)
+  constructor(providers: TTSProviders, pluginManager: PluginManager, cache = new AudioCache()) {
+    this.providers = providers
+    this.cache = cache
+    this.resolver = new AudioResolver(pluginManager, cache, providers)
+  }
+
+  // Returns the cached file path for role's provider, or null on failure
+  public async synthesize(role: TTSRole, text: string, lang: string, voice = ''): Promise<string | null> {
+    return (await this.resolver.synthesize(this.providers[role], text, lang, voice))?.path ?? null
   }
 
   public announceReady(queue: PlaybackQueue) {

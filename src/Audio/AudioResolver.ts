@@ -2,8 +2,8 @@ import { existsSync as exists, readFileSync as readFile } from 'node:fs'
 import type { Member } from '@projectdysnomia/dysnomia'
 import type { PluginManager } from '../Plugin/Core'
 import type { AudioAsset } from './AudioAsset'
-import type { LegacyTTSProvider } from './LegacyTTSProvider'
-import type { WaveNetTTSProvider } from './WaveNetTTSProvider'
+import type { AudioCache } from './AudioCache'
+import type { TTSProvider, TTSProviders } from './TTSProvider'
 
 const SYSTEM_LANG = 'en-US'
 const SYSTEM_VOICE = 'en-US-Wavenet-D'
@@ -11,18 +11,22 @@ const SYSTEM_VOICE = 'en-US-Wavenet-D'
 // Decides which audio file represents an announcement
 export class AudioResolver {
   private pluginManager: PluginManager
-  private legacyTTS: LegacyTTSProvider
-  private waveTTS: WaveNetTTSProvider
+  private cache: AudioCache
+  private providers: TTSProviders
 
-  constructor(pluginManager: PluginManager, legacyTTS: LegacyTTSProvider, waveTTS: WaveNetTTSProvider) {
+  constructor(pluginManager: PluginManager, cache: AudioCache, providers: TTSProviders) {
     this.pluginManager = pluginManager
-    this.legacyTTS = legacyTTS
-    this.waveTTS = waveTTS
+    this.cache = cache
+    this.providers = providers
   }
 
-  public async resolveSystem(text: string): Promise<AudioAsset | undefined> {
-    const path = await this.waveTTS.synthesize(text, SYSTEM_LANG, SYSTEM_VOICE)
-    return path !== null ? { path, format: 'ogg', source: 'waveTTS' } : undefined
+  public async synthesize(provider: TTSProvider, text: string, lang: string, voice = ''): Promise<AudioAsset | undefined> {
+    const path = await this.cache.getOrCreate(provider, text, lang, voice)
+    return path !== null ? { path, format: provider.format, source: 'tts', provider: provider.id } : undefined
+  }
+
+  public resolveSystem(text: string): Promise<AudioAsset | undefined> {
+    return this.synthesize(this.providers.wavenet, text, SYSTEM_LANG, SYSTEM_VOICE)
   }
 
   // Priority: plugin overwrite, assets/<id>.json TTS, assets/<id>_<type>.wav
@@ -39,22 +43,15 @@ export class AudioResolver {
 
     const tts = JSON.parse(readFile(`assets/${member.id}.json`, { encoding: 'utf-8' }))
     if (tts.use_wave_tts && tts.lang && tts.voice && tts[type]) {
-      const path = await this.waveTTS.synthesize(tts[type], tts.lang, tts.voice)
-      return path !== null ? { path, format: 'ogg', source: 'waveTTS' } : undefined
+      return await this.synthesize(this.providers.wavenet, tts[type], tts.lang, tts.voice)
     }
     if (tts.lang && tts[type]) {
-      const path = await this.legacyTTS.synthesize(tts[type], tts.lang)
-      return path !== null ? { path, format: 'pcm', source: 'legacyTTS' } : wavAsset()
+      return (await this.synthesize(this.providers.legacy, tts[type], tts.lang)) ?? wavAsset()
     }
     return wavAsset()
   }
 
-  public async resolveText(text: string, waveTTS: boolean, lang: string, voice: string): Promise<AudioAsset | undefined> {
-    if (waveTTS) {
-      const path = await this.waveTTS.synthesize(text, lang, voice)
-      return path !== null ? { path, format: 'ogg', source: 'waveTTS' } : undefined
-    }
-    const path = await this.legacyTTS.synthesize(text, lang)
-    return path !== null ? { path, format: 'pcm', source: 'legacyTTS' } : undefined
+  public resolveText(text: string, waveTTS: boolean, lang: string, voice: string): Promise<AudioAsset | undefined> {
+    return waveTTS ? this.synthesize(this.providers.wavenet, text, lang, voice) : this.synthesize(this.providers.legacy, text, lang)
   }
 }

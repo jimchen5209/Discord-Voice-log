@@ -1,7 +1,10 @@
 import { existsSync } from 'node:fs'
+import { writeFile } from 'node:fs/promises'
 import md5 from 'md5'
+import type { AudioFormat } from './AudioAsset'
+import type { TTSProvider } from './TTSProvider'
 
-export type AudioProducer = (path: string) => Promise<string | null>
+const EXTENSIONS: Record<AudioFormat, string> = { ogg: 'opus', pcm: 'pcm' }
 
 export class AudioCache {
   private readonly dir: string
@@ -10,13 +13,17 @@ export class AudioCache {
     this.dir = dir
   }
 
-  public pathFor(rawKey: string, ext: string): string {
-    return `${this.dir}/${md5(rawKey)}.${ext}`
+  public pathFor(provider: TTSProvider, text: string, lang: string, voice = ''): string {
+    return `${this.dir}/${md5(`${provider.id}:${text}-${lang}-${voice}`)}.${EXTENSIONS[provider.format]}`
   }
 
-  public async getOrCreate(rawKey: string, ext: string, produce: AudioProducer): Promise<string | null> {
-    const path = this.pathFor(rawKey, ext)
+  // Resolves to the cached file path, synthesizing it on a miss; null when synthesis failed
+  public async getOrCreate(provider: TTSProvider, text: string, lang: string, voice = ''): Promise<string | null> {
+    const path = this.pathFor(provider, text, lang, voice)
     if (existsSync(path)) return path
-    return await produce(path)
+    const data = await provider.synthesize(text, lang, voice)
+    if (data === null) return null
+    await writeFile(path, data)
+    return path
   }
 }
