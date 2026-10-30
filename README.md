@@ -12,10 +12,7 @@
 5. Build with `pnpm build:prod`
 6. Run `node dist` the first time to generate `config.json`
 7. Fill `config.json` with your bot tokens and settings.
-8. Initialize the database:
-  ```bash
-  pnpm db:migrate
-  ```
+8. The database is created and migrated automatically when the bot starts (`prisma migrate deploy`). Before a migration that rewrites existing data, the database file is copied to `backup/<db file>.<YYYYMMDD-HHmmss>.bak`.
   *(Note: This project now uses SQLite via Prisma ORM (v7) with `better-sqlite3` driver for simplified setup)*
 9. Install `pm2` via `npm install -g pm2` (Optional but recommended)
 10. Start the bot with `node dist` or `pm2 reload ecosystem.config.js`
@@ -40,6 +37,7 @@ If you are upgrading from an older version that used MongoDB, please refer to th
 or place `<User ID>.json` into `asset/` folder with:
 ```json
 {
+  "provider": "google-translate",
   "lang": "<language from google translate>",
   "join": "<Text when connected to the channel>",
   "left": "<Text when left the channel>",
@@ -50,7 +48,7 @@ or place `<User ID>.json` into `asset/` folder with:
 If you want to use the new google cloud text to speech, be sure to have apiKey in the config, and json content is:
 ```json
 {
-  "use_wave_tts":true,
+  "provider": "google-cloud",
   "lang": "<language from google cloud>",
   "voice": "<voice from google cloud>",
   "join": "<Text when connected to the channel>",
@@ -61,10 +59,13 @@ If you want to use the new google cloud text to speech, be sure to have apiKey i
 ```
 `lang` and `voice` available from https://cloud.google.com/text-to-speech/docs/voices
 
+Files in the old format (`"use_wave_tts": true` / `false` or missing instead of `provider`) are converted when the bot starts; the originals are copied to `backup/assets-<YYYYMMDD-HHmmss>/`. Restart the bot after adding an old-format file.
+
 Example:
 
 ```json
 {
+  "provider": "google-translate",
   "lang": "en_US",
   "join": "Jim joined the channel",
   "left": "Jim left the channel",
@@ -74,7 +75,7 @@ Example:
 ```
 ```json
 {
-  "use_wave_tts":true,
+  "provider": "google-cloud",
   "lang": "en-GB",
   "voice": "en-GB-Wavenet-B",
   "join": "Jim joined the channel",
