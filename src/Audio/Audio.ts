@@ -8,6 +8,10 @@ import type { TTSProvider } from './TTSProvider'
 
 const SYSTEM_LANG = 'en-US'
 const SYSTEM_VOICE = 'en-US-Wavenet-D'
+const READY_TEXT = 'VoiceLog is ready.'
+const MOVED_TEXT = 'VoiceLog is moved to your channel.'
+
+export const MEMBER_EVENTS = ['join', 'left', 'switched_out', 'switched_in']
 
 export interface AudioOptions {
   // Provider id for the bot's own announcements; uid.json files with use_wave_tts also use it
@@ -15,6 +19,16 @@ export interface AudioOptions {
   // Provider id for uid.json files without use_wave_tts
   defaultProvider: string
 }
+
+export interface TTSRequest {
+  provider: string
+  text: string
+  lang: string
+  voice: string
+}
+
+// Contents of assets/<id>.json: lang / voice / use_wave_tts plus one text per member event
+export type MemberConfig = Record<string, unknown>
 
 // Entry point of the audio module: decide which audio file represents an announcement, then queue it.
 // Providers are injected by id; this module never imports a concrete provider.
@@ -35,25 +49,42 @@ export class Audio {
     return [...this.providers.keys()]
   }
 
-  // Returns the cached file path for the provider, or null on failure
-  public async synthesize(providerId: string, text: string, lang: string, voice = ''): Promise<string | null> {
-    return this.cache.getOrCreate(this.provider(providerId), text, lang, voice)
+  // Returns the cached file path for the request, or null on failure
+  public async synthesize(request: TTSRequest): Promise<string | null> {
+    return this.cache.getOrCreate(this.provider(request.provider), request.text, request.lang, request.voice)
+  }
+
+  public systemRequests(): TTSRequest[] {
+    return [this.systemRequest(MOVED_TEXT), this.systemRequest(READY_TEXT)]
+  }
+
+  public readMemberConfig(path: string): MemberConfig {
+    return JSON.parse(readFile(path, { encoding: 'utf-8' }))
+  }
+
+  public memberRequest(config: MemberConfig, type: string): TTSRequest | undefined {
+    const text = config[type] as string
+    const lang = config.lang as string
+    const voice = config.voice as string
+    if (!lang || !text) return undefined
+    if (config.use_wave_tts && voice) return { provider: this.options.systemProvider, text, lang, voice }
+    return { provider: this.options.defaultProvider, text, lang, voice: '' }
   }
 
   public announceReady(queue: PlaybackQueue) {
-    return this.enqueue(queue, this.tts(this.options.systemProvider, 'VoiceLog is ready.', SYSTEM_LANG, SYSTEM_VOICE))
+    return this.enqueue(queue, this.tts(this.systemRequest(READY_TEXT)))
   }
 
   public announceMoved(queue: PlaybackQueue) {
-    return this.enqueue(queue, this.tts(this.options.systemProvider, 'VoiceLog is moved to your channel.', SYSTEM_LANG, SYSTEM_VOICE))
+    return this.enqueue(queue, this.tts(this.systemRequest(MOVED_TEXT)))
   }
 
   public announceMember(queue: PlaybackQueue, member: Member, type: string) {
     return this.enqueue(queue, this.resolveMember(member, type))
   }
 
-  public speak(queue: PlaybackQueue, text: string, providerId: string, lang: string, voice: string) {
-    return this.enqueue(queue, this.tts(providerId, text, lang, voice))
+  public speak(queue: PlaybackQueue, request: TTSRequest) {
+    return this.enqueue(queue, this.tts(request))
   }
 
   private provider(id: string): TTSProvider {
@@ -62,10 +93,13 @@ export class Audio {
     return provider
   }
 
-  private async tts(providerId: string, text: string, lang: string, voice = ''): Promise<AudioAsset | undefined> {
-    const provider = this.provider(providerId)
-    const path = await this.cache.getOrCreate(provider, text, lang, voice)
-    return path !== null ? { path, format: provider.format } : undefined
+  private systemRequest(text: string): TTSRequest {
+    return { provider: this.options.systemProvider, text, lang: SYSTEM_LANG, voice: SYSTEM_VOICE }
+  }
+
+  private async tts(request: TTSRequest): Promise<AudioAsset | undefined> {
+    const path = await this.synthesize(request)
+    return path !== null ? { path, format: this.provider(request.provider).format } : undefined
   }
 
   // Priority: plugin overwrite, assets/<id>.json TTS, assets/<id>_<type>.wav
@@ -80,14 +114,11 @@ export class Audio {
 
     if (!exists(`assets/${member.id}.json`)) return wavAsset()
 
-    const tts = JSON.parse(readFile(`assets/${member.id}.json`, { encoding: 'utf-8' }))
-    if (tts.use_wave_tts && tts.lang && tts.voice && tts[type]) {
-      return await this.tts(this.options.systemProvider, tts[type], tts.lang, tts.voice)
-    }
-    if (tts.lang && tts[type]) {
-      return (await this.tts(this.options.defaultProvider, tts[type], tts.lang)) ?? wavAsset()
-    }
-    return wavAsset()
+    const request = this.memberRequest(this.readMemberConfig(`assets/${member.id}.json`), type)
+    if (!request) return wavAsset()
+    // The system provider never fell back to the wav file
+    if (request.provider === this.options.systemProvider) return await this.tts(request)
+    return (await this.tts(request)) ?? wavAsset()
   }
 
   private async enqueue(queue: PlaybackQueue, pending: Promise<AudioAsset | undefined>) {

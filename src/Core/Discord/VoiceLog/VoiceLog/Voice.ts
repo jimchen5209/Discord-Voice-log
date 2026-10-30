@@ -1,10 +1,11 @@
-import { unlinkSync as deleteFile, readdirSync as readDir, readFileSync as readFile } from 'node:fs'
+import { unlinkSync as deleteFile, readdirSync as readDir } from 'node:fs'
 import { extname } from 'node:path'
 import type { VoiceChannel } from '@projectdysnomia/dysnomia'
 import waitUntil from 'async-wait-until'
 import Queue from 'promise-queue'
 import type { CommandContext, MessageEmbedOptions } from 'slash-create'
 import type { ILogObj, Logger } from 'tslog'
+import { MEMBER_EVENTS, type TTSRequest } from '../../../../Audio/Audio'
 import { instances } from '../../../../Utils/Instances'
 import type { DbServerConfigManager } from '../../../SQLite/db/ServerConfig'
 import type { Discord } from '../../Core'
@@ -130,37 +131,19 @@ export class VoiceLogVoice {
     let progressCount = 0
     let progressTotal = 0
     const queue = new Queue(1, Infinity)
-    const getTTS = (text: string, lang: string) => {
+    const getTTS = (request: TTSRequest) => {
       // biome-ignore lint/suspicious/noAsyncPromiseExecutor: Usage of await
       return new Promise<void>(async (res) => {
         progressCount++
+        const description = `${request.text} in ${request.lang}${request.voice ? ` with voice ${request.voice}` : ''}`
         const progressField = {
           name: '➡️ Processing texts...',
-          value: `(${progressCount}/${progressTotal}) ${text} in ${lang}`
+          value: `(${progressCount}/${progressTotal}) ${description}`
         }
         progressMessage = this.genProgressMessage(title, [seekField, progressField])
         await context?.editOriginal({ embeds: [progressMessage] })
-        instances.audio.synthesize('google-translate', text, lang).then((fileName) => {
-          this.logger.info(`(${progressCount}/${progressTotal}) ${text} in ${lang} -> ${fileName}`)
-          if (fileName !== null) ttsList.push(fileName)
-          setTimeout(() => {
-            res()
-          }, 500)
-        })
-      })
-    }
-    const getWaveTTS = (text: string, lang: string, voice: string) => {
-      // biome-ignore lint/suspicious/noAsyncPromiseExecutor: Usage of await
-      return new Promise<void>(async (res) => {
-        progressCount++
-        const progressField = {
-          name: '➡️ Processing texts...',
-          value: `(${progressCount}/${progressTotal}) ${text} in ${lang} with voice ${voice}`
-        }
-        progressMessage = this.genProgressMessage(title, [seekField, progressField])
-        await context?.editOriginal({ embeds: [progressMessage] })
-        instances.audio.synthesize('google-cloud', text, lang, voice).then((fileName) => {
-          this.logger.info(`(${progressCount}/${progressTotal}) ${text} in ${lang} with voice ${voice} -> ${fileName}`)
+        instances.audio.synthesize(request).then((fileName) => {
+          this.logger.info(`(${progressCount}/${progressTotal}) ${description} -> ${fileName}`)
           if (fileName !== null) ttsList.push(fileName)
           setTimeout(() => {
             res()
@@ -169,10 +152,8 @@ export class VoiceLogVoice {
       })
     }
     const ttsList: string[] = []
-    queue.add(() => getWaveTTS('VoiceLog is moved to your channel.', 'en-US', 'en-US-Wavenet-D'))
-    queue.add(() => getWaveTTS('VoiceLog is ready.', 'en-US', 'en-US-Wavenet-D'))
+    for (const request of instances.audio.systemRequests()) queue.add(() => getTTS(request))
     progressTotal += 2
-    const typeList = ['join', 'left', 'switched_out', 'switched_in']
     const files = readDir('assets/')
     files.forEach((file) => {
       if (extname(file) === '.json') {
@@ -182,21 +163,12 @@ export class VoiceLogVoice {
           name: `${seekDone ? '✅' : '➡️'} Seeking for files ...${seekDone ? ' Done' : ''}`,
           value: `${seekDone || seekCounter === 0 ? '' : `Current ${seekFilename}, `} Seeked ${seekCounter} files. `
         }
-        const tts = JSON.parse(readFile(`assets/${file}`, { encoding: 'utf-8' }))
-        if (tts.use_wave_tts && tts.lang && tts.voice) {
-          typeList.forEach((type) => {
-            if (tts[type]) {
-              progressTotal++
-              queue.add(() => getWaveTTS(tts[type], tts.lang, tts.voice))
-            }
-          })
-        } else if (tts.lang) {
-          typeList.forEach((type) => {
-            if (tts[type]) {
-              progressTotal++
-              queue.add(() => getTTS(tts[type], tts.lang))
-            }
-          })
+        const config = instances.audio.readMemberConfig(`assets/${file}`)
+        for (const type of MEMBER_EVENTS) {
+          const request = instances.audio.memberRequest(config, type)
+          if (!request) continue
+          progressTotal++
+          queue.add(() => getTTS(request))
         }
       }
     })
