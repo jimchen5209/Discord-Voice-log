@@ -8,9 +8,3 @@ export interface TTSProvider {
   readonly format: AudioFormat
   synthesize(text: string, lang: string, voice?: string): Promise<Uint8Array | null>
 }
-
-// Existing settings pick a provider by role: guild ttsType / uid.json use_wave_tts
-// select "wavenet", everything else uses "legacy". System messages use "wavenet".
-export type TTSRole = 'legacy' | 'wavenet'
-
-export type TTSProviders = Record<TTSRole, TTSProvider>

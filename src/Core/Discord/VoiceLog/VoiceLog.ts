@@ -53,7 +53,9 @@ export class VoiceLog {
 
           this._logger.debug(`${message.author} to ${message.channel} ${isContinuous ? '(Continuous)' : ''}: ${text}`)
 
-          instances.audio.speak(voice.playback, text, data.voiceMessageTTS.type === VoiceMessageTTSType.WaveNet, data.voiceMessageTTS.voiceLang, data.voiceMessageTTS.voiceName)
+          // Guild settings still store the engine as WaveNet / Legacy; Legacy never used a voice name
+          const wave = data.voiceMessageTTS.type === VoiceMessageTTSType.WaveNet
+          instances.audio.speak(voice.playback, text, wave ? 'google-cloud' : 'google-translate', data.voiceMessageTTS.voiceLang, wave ? data.voiceMessageTTS.voiceName : '')
           this.continuousUser[guildId] = {
             user: message.author.id,
             timestamp: message.timestamp
