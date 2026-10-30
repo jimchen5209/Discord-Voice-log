@@ -12,10 +12,13 @@
 5. Build with `pnpm build:prod`
 6. Run `node dist` the first time to generate `config.json`
 7. Fill `config.json` with your bot tokens and settings.
-8. The database is created automatically when the bot starts.
+8. Initialize the database and data with:
+  ```bash
+  pnpm migrate
+  ```
   *(Note: This project now uses SQLite via Prisma ORM (v7) with `better-sqlite3` driver for simplified setup)*
 9. Install `pm2` via `npm install -g pm2` (Optional but recommended)
-10. Start the bot with `node dist` or `pm2 reload ecosystem.config.js`
+10. Start the bot with `pnpm start` (same as `node dist`) or `pm2 reload ecosystem.config.js`
 11. When inviting bot to your server, be sure to enable these permission at least  
 ![image](https://user-images.githubusercontent.com/10269287/149659808-a51a571f-7ef2-43cf-b415-6220a56847a4.png)  
 12. This bot uses slash command, type `/` in server chat and start configuring the bot
@@ -23,17 +26,25 @@
 
 ## Upgrading
 
-1. Stop the bot.
-2. Back up the database file (by default `prisma/voice-log.db`), `assets/` and `mongo_dump.json` yourself: the next start changes them in place and makes no backups.
-3. Start the bot. It applies pending database migrations (`prisma migrate deploy`), converts `assets/<User ID>.json` files in the old format (see [TTS provider migration](docs/migration/TTS_PROVIDER_MIGRATION.md)), and imports `mongo_dump.json` if it is there (see [Database Migration](#database-migration)).
+1. Stop the bot and back up the database file (by default `prisma/voice-log.db`). Database migrations are **not** backed up automatically.
+2. Run `pnpm migrate`. It applies pending database migrations (`prisma migrate deploy`), then upgrades `assets/<User ID>.json` to the current [data version](#data-version). Running it again changes nothing.
+3. Run `pnpm start`.
 
-### A failed database migration
+The bot never migrates on its own: if the database has unapplied migrations or the data version is older than the code's, it logs ``請先執行 `pnpm migrate` `` and exits.
 
-Each database migration runs in one transaction, so when `prisma migrate deploy` fails (or is killed) the failed migration is rolled back and the database is left as it was. The bot logs the error and exits with code 1. Prisma still records the migration as failed: the failing start reports `P3018` with the database error and the migration name, and every later start reports `P3009` until it is resolved. Fix the cause shown by `P3018`, then mark the migration as rolled back and start the bot again:
+## Data version
 
-```bash
-pnpm exec prisma migrate resolve --rolled-back <migration name, e.g. 20261030120000_tts_provider>
-```
+The database is versioned by Prisma's migration history (`prisma/migrations`). The app-side data, `assets/<User ID>.json`, has its own version, `DATA_VERSION` in `src/Core/DataMigration.ts` (currently `2`), recorded in `data-version.json` next to the database file (by default `prisma/data-version.json`), e.g. `{ "version": 2 }`.
+
+`pnpm migrate` and the data version:
+- No record and no `assets/*.json`: a fresh install; the current version is recorded and nothing is converted.
+- No record but some `assets/*.json`: an install from before data versions (version 1).
+- Older version: the files that need converting are copied to `backup/assets-<YYYYMMDD-HHmmss>/` (never overwriting an existing backup), then converted one version at a time. The new version is recorded only after every file was converted; on a failure the old version stays and running `pnpm migrate` again finishes the job.
+- Newer version (a downgrade) or a malformed record: an error is logged, nothing is converted, and both `pnpm migrate` and `pnpm start` exit with an error.
+
+Rules for contributors:
+- Bump `DATA_VERSION` only for a breaking change to the assets format, at most once per PR, with exactly one step for the bump in `ASSET_STEPS` (`src/Audio/AssetsMigration.ts`).
+- Database changes go into a new Prisma migration. Never edit a released migration; this release adds `prisma/migrations/20261030120000_tts_provider`.
 
 ## Database Migration
 
@@ -73,7 +84,7 @@ If you want to use the new google cloud text to speech, be sure to have apiKey i
 ```
 `lang` and `voice` available from https://cloud.google.com/text-to-speech/docs/voices
 
-Files in the old format (`use_wave_tts` instead of `provider`) are converted automatically when the bot starts; see the [TTS provider migration guide](docs/migration/TTS_PROVIDER_MIGRATION.md).
+Files in the old format (`"use_wave_tts": true` / `false` or missing instead of `provider`) are converted by `pnpm migrate` when upgrading to [data version](#data-version) 2: `"use_wave_tts": true` with a `voice` becomes `"provider": "google-cloud"`; anything else (`false`, missing, or `true` without a `voice`) becomes `"provider": "google-translate"`, matching how it actually behaved before. Files that already have `provider` keep it. Files added later must use `provider`; files without a usable `provider` are skipped with an error.
 
 Example:
 
