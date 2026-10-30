@@ -38,10 +38,6 @@ export class PlaybackQueue {
     this.current?.controller.abort()
   }
 
-  public get length() {
-    return this.pending.length + (this.current ? 1 : 0)
-  }
-
   private next() {
     const item = this.pending.shift()
     if (!item) return
