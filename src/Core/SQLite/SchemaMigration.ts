@@ -73,7 +73,7 @@ async function countRows(table: string) {
 async function logUnmappedTTSTypes() {
   const rows = await prisma.$queryRawUnsafe<{ serverID: string; ttsType: string }[]>(`SELECT serverID, ttsType FROM serverConfig WHERE ttsType NOT IN ('WaveNet', 'Legacy')`)
   for (const row of rows) {
-    logger.warn(`Guild ${row.serverID} has unknown TTS type "${row.ttsType}"; kept as-is, set it again with /voice tts`)
+    logger.warn(`Guild ${row.serverID} has unknown TTS type "${row.ttsType}"; migrating to the default provider google-cloud`)
   }
 }
 

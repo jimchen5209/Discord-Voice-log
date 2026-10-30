@@ -47,8 +47,12 @@ export async function migrateMongoToSqlite(dumpPath: string) {
       }
       let ttsProvider = DEFAULT_TTS_PROVIDER
       if (typeof tts.type === 'string') {
-        ttsProvider = MONGO_TTS_PROVIDERS.get(tts.type) ?? tts.type
-        if (!MONGO_TTS_PROVIDERS.has(tts.type)) logger.warn(`Guild ${doc.serverID} has unknown TTS type "${tts.type}"; kept as-is, set it again with /voice tts`)
+        const mapped = MONGO_TTS_PROVIDERS.get(tts.type)
+        if (mapped) {
+          ttsProvider = mapped
+        } else {
+          logger.warn(`Guild ${doc.serverID} has unknown TTS type "${tts.type}"; migrating to the default provider ${DEFAULT_TTS_PROVIDER}`)
+        }
       }
 
       const dbObject = {

@@ -1,5 +1,5 @@
 -- Rename "ttsType" to "ttsProvider" and store TTS provider ids instead of engine names:
--- WaveNet -> google-cloud, Legacy -> google-translate, any other value is kept as-is.
+-- WaveNet -> google-cloud, Legacy -> google-translate, any other value -> google-cloud (the default).
 -- SQLite cannot change a column default in place, so the table is redefined.
 
 -- RedefineTables
@@ -19,7 +19,7 @@ CREATE TABLE "new_serverConfig" (
 );
 INSERT INTO "new_serverConfig" ("serverID", "lang", "channelID", "lastVoiceChannel", "currentVoiceChannel", "ttsEnabled", "ttsMessageLang", "ttsProvider", "ttsVoiceLang", "ttsVoiceName")
 SELECT "serverID", "lang", "channelID", "lastVoiceChannel", "currentVoiceChannel", "ttsEnabled", "ttsMessageLang",
-    CASE "ttsType" WHEN 'WaveNet' THEN 'google-cloud' WHEN 'Legacy' THEN 'google-translate' ELSE "ttsType" END,
+    CASE "ttsType" WHEN 'WaveNet' THEN 'google-cloud' WHEN 'Legacy' THEN 'google-translate' ELSE 'google-cloud' END,
     "ttsVoiceLang", "ttsVoiceName"
 FROM "serverConfig";
 DROP TABLE "serverConfig";
