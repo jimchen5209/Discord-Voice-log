@@ -1,6 +1,6 @@
+import { createHash } from 'node:crypto'
 import { existsSync } from 'node:fs'
 import { rename, rm, writeFile } from 'node:fs/promises'
-import md5 from 'md5'
 import type { AudioFormat } from './AudioAsset'
 import type { TTSProvider } from './TTSProvider'
 
@@ -17,7 +17,7 @@ export class AudioCache {
   }
 
   public pathFor(provider: TTSProvider, text: string, lang: string, voice = ''): string {
-    return `${this.dir}/${md5(`${provider.id}:${text}-${lang}-${voice}`)}.${EXTENSIONS[provider.format]}`
+    return `${this.dir}/${createHash('md5').update(`${provider.id}:${text}-${lang}-${voice}`).digest('hex')}.${EXTENSIONS[provider.format]}`
   }
 
   // Resolves to the cached file path, synthesizing it on a miss; null when synthesis failed.

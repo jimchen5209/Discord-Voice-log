@@ -26,7 +26,6 @@
     "@projectdysnomia/dysnomia": "0.2.4",
     "async-wait-until": "^2.0.31",
     "fix-esm": "^1.0.1",
-    "md5": "^2.3.0",
     "mpg123-decoder": "^1.0.3",
     "node-schedule": "^2.1.1",
     "promise-queue": "^2.2.5",
@@ -37,7 +36,6 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",
-    "@types/md5": "^2.3.6",
     "@types/node": "^24.19.2",
     "@types/node-schedule": "^2.1.8",
     "@types/promise-queue": "^2.2.3",
