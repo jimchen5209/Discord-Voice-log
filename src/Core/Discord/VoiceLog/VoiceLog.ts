@@ -196,6 +196,7 @@ export class VoiceLog {
   public async start() {
     if (!exists('./assets')) mkDir('./assets')
     if (!exists('./caches')) mkDir('./caches')
+    instances.audio.evictCache()
     const channels = await this._serverConfig.getCurrentChannels()
     channels.forEach((element: IServerConfig) => {
       this._logger.info(`Reconnecting to ${element.currentVoiceChannel}...`)
@@ -203,6 +204,10 @@ export class VoiceLog {
     })
     scheduleJob('0 0 * * *', () => {
       this._voice.refreshCache(undefined)
+    })
+    // Away from the midnight refresh, so expired files are not removed just before it re-reads them
+    scheduleJob('0 12 * * *', () => {
+      instances.audio.evictCache()
     })
   }
 

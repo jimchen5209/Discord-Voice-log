@@ -38,7 +38,7 @@ export class Audio {
   private cache: AudioCache
   private logger: Logger<ILogObj>
 
-  constructor(providers: Map<string, TTSProvider>, pluginManager: PluginManager, logger: Logger<ILogObj>, options: AudioOptions, cache = new AudioCache()) {
+  constructor(providers: Map<string, TTSProvider>, pluginManager: PluginManager, logger: Logger<ILogObj>, options: AudioOptions, cache = new AudioCache({ logger })) {
     this.providers = providers
     this.pluginManager = pluginManager
     this.logger = logger.getSubLogger({ name: 'Audio' })
@@ -55,6 +55,10 @@ export class Audio {
     const provider = this.providers.get(providerId)
     if (!provider) return `Unknown TTS provider: ${providerId} (available: ${this.providerIds().join(', ')})`
     return provider.unavailableReason()
+  }
+
+  public evictCache() {
+    return this.cache.evict()
   }
 
   // Returns the cached file path for the request, or null on failure
