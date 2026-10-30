@@ -1,4 +1,3 @@
-import fetch from 'node-fetch'
 import type { ILogObj, Logger } from 'tslog'
 import type { TTSProvider } from '../TTSProvider'
 

@@ -1,5 +1,4 @@
 import type { MPEGDecoderWebWorker } from 'mpg123-decoder'
-import fetch from 'node-fetch'
 import type { ILogObj, Logger } from 'tslog'
 import type { TTSProvider } from '../TTSProvider'
 
