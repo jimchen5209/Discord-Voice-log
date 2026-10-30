@@ -16,7 +16,7 @@ model ServerConfig {
   // TTS Settings
   ttsEnabled          Boolean  @default(false)
   ttsMessageLang      String   @default("en_US")
-  ttsType             String   @default("WaveNet")
+  ttsProvider         String   @default("google-cloud")
   ttsVoiceLang        String   @default("en-US")
   ttsVoiceName        String   @default("en-US-Wavenet-A")
 

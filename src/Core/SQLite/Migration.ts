@@ -1,6 +1,13 @@
 import { readFileSync as readFile, unlinkSync as unlink } from 'node:fs'
 import { instances } from '../../Utils/Instances'
 import { prisma } from './Client'
+import { DEFAULT_TTS_PROVIDER } from './db/ServerConfig'
+
+// MongoDB dumps store the TTS engine name, SQLite stores the provider id
+const MONGO_TTS_PROVIDERS = new Map([
+  ['WaveNet', 'google-cloud'],
+  ['Legacy', 'google-translate']
+])
 
 export async function migrateMongoToSqlite(dumpPath: string) {
   const logger = instances.mainLogger.getSubLogger({ name: 'DBMigrate' })
@@ -34,10 +41,14 @@ export async function migrateMongoToSqlite(dumpPath: string) {
       const tts = {
         enabled: false,
         messageLang: 'en_US',
-        type: 'WaveNet',
         voiceLang: 'en-US',
         voiceName: 'en-US-Wavenet-A',
         ...doc.voiceMessageTTS
+      }
+      let ttsProvider = DEFAULT_TTS_PROVIDER
+      if (typeof tts.type === 'string') {
+        ttsProvider = MONGO_TTS_PROVIDERS.get(tts.type) ?? tts.type
+        if (!MONGO_TTS_PROVIDERS.has(tts.type)) logger.warn(`Guild ${doc.serverID} has unknown TTS type "${tts.type}"; kept as-is, set it again with /voice tts`)
       }
 
       const dbObject = {
@@ -47,7 +58,7 @@ export async function migrateMongoToSqlite(dumpPath: string) {
         currentVoiceChannel: doc.currentVoiceChannel ?? '',
         ttsEnabled: tts.enabled ?? false,
         ttsMessageLang: tts.messageLang ?? 'en_US',
-        ttsType: tts.type ?? 'WaveNet',
+        ttsProvider,
         ttsVoiceLang: tts.voiceLang ?? 'en-US',
         ttsVoiceName: tts.voiceName ?? 'en-US-Wavenet-A'
       }

@@ -5,7 +5,7 @@ import type { ILogObj, Logger } from 'tslog'
 import { instances } from '../../../Utils/Instances'
 import { SerialQueue } from '../../../Utils/SerialQueue'
 import { ERR_DB_NOT_INIT } from '../../SQLite/Core'
-import { type DbServerConfigManager, type IServerConfig, VoiceMessageTTSType } from '../../SQLite/db/ServerConfig'
+import type { DbServerConfigManager, IServerConfig } from '../../SQLite/db/ServerConfig'
 import type { Discord } from '../Core'
 import { VoiceLogCommands } from './VoiceLog/Commands'
 import { VoiceLogText } from './VoiceLog/Text'
@@ -53,14 +53,12 @@ export class VoiceLog {
 
           this._logger.debug(`${message.author} to ${message.channel} ${isContinuous ? '(Continuous)' : ''}: ${text}`)
 
-          // Guild settings still store the engine as WaveNet / Legacy; Legacy never used a voice name
-          const wave = data.voiceMessageTTS.type === VoiceMessageTTSType.WaveNet
-          instances.audio.speak(voice.playback, {
-            provider: wave ? 'google-cloud' : 'google-translate',
-            text,
-            lang: data.voiceMessageTTS.voiceLang,
-            voice: wave ? data.voiceMessageTTS.voiceName : ''
-          })
+          const tts = data.voiceMessageTTS
+          if (!instances.audio.providerIds().includes(tts.provider)) {
+            this._logger.error(`Guild ${guildId} uses unknown TTS provider "${tts.provider}", set it again with /voice tts`)
+            return
+          }
+          instances.audio.speak(voice.playback, { provider: tts.provider, text, lang: tts.voiceLang, voice: tts.voiceName })
           this.continuousUser[guildId] = {
             user: message.author.id,
             timestamp: message.timestamp

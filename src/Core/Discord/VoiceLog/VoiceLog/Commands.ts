@@ -4,7 +4,7 @@ import type { CommandContext, MessageEmbedOptions } from 'slash-create'
 import { vsprintf } from 'sprintf-js'
 import type { ILogObj, Logger } from 'tslog'
 import { instances } from '../../../../Utils/Instances'
-import type { DbServerConfigManager, IVoiceMessageTTS, VoiceMessageTTSType } from '../../../SQLite/db/ServerConfig'
+import type { DbServerConfigManager, IVoiceMessageTTS } from '../../../SQLite/db/ServerConfig'
 import type { Discord } from '../../Core'
 import type { VoiceLog } from '../VoiceLog'
 import { VoiceLogSetStatus } from './Text'
@@ -297,7 +297,17 @@ export class VoiceLogCommands {
 
     const ttsConfig: Partial<IVoiceMessageTTS> = {}
     if (typeof options.enabled === 'boolean') ttsConfig.enabled = options.enabled
-    if (typeof options.type === 'string') ttsConfig.type = options.type as VoiceMessageTTSType
+    if (typeof options.type === 'string') {
+      const reason = instances.audio.unavailableReason(options.type)
+      if (reason) {
+        await context.send({
+          embeds: [this.genErrorMessage(reason)],
+          ephemeral: true
+        })
+        return
+      }
+      ttsConfig.provider = options.type
+    }
     if (typeof options.message_lang === 'string') {
       if (!instances.lang.isExist(options.message_lang)) {
         await context.send({
@@ -372,7 +382,7 @@ export class VoiceLogCommands {
     const translatedFields = [
       { label: l.tts_enabled, value: ttsConfig.enabled ? l.tts_yes : l.tts_no },
       { label: l.tts_message_lang, value: ttsConfig.messageLang },
-      { label: l.tts_type, value: ttsConfig.type },
+      { label: l.tts_type, value: ttsConfig.provider },
       { label: l.tts_voice_lang, value: ttsConfig.voiceLang },
       { label: l.tts_voice_name, value: ttsConfig.voiceName }
     ]
