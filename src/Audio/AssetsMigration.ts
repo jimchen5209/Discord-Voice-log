@@ -26,7 +26,10 @@ export async function migrateAssets(mainLogger: Logger<ILogObj>) {
         logger.error(`Skipping ${ASSETS_DIR}/${file}: invalid JSON`, error)
         continue
       }
-      if (typeof config !== 'object' || config === null || Array.isArray(config)) continue
+      if (typeof config !== 'object' || config === null || Array.isArray(config)) {
+        logger.error(`Skipping ${ASSETS_DIR}/${file}: unsupported format (expected a JSON object)`)
+        continue
+      }
       const migrated = migrateConfig(config as MemberConfig)
       if (migrated) pending.push({ file, config: migrated })
     }

@@ -73,16 +73,17 @@ export class Audio {
 
   // undefined (with an error log) when the file does not name a usable provider
   public readMemberConfig(path: string): MemberConfig | undefined {
-    const config: MemberConfig = JSON.parse(readFile(path, { encoding: 'utf-8' }))
-    if (typeof config.provider !== 'string') {
-      this.logger.error(`Skipping ${path}: old format without "provider", restart the bot to migrate it`)
+    const config: unknown = JSON.parse(readFile(path, { encoding: 'utf-8' }))
+    if (typeof config !== 'object' || config === null || Array.isArray(config) || typeof (config as MemberConfig).provider !== 'string') {
+      this.logger.error(`Skipping ${path}: unsupported format (expected an object with "provider"), fix the file or set it again`)
       return undefined
     }
-    if (!this.providers.has(config.provider)) {
-      this.logger.error(`Skipping ${path}: unknown TTS provider "${config.provider}" (available: ${this.providerIds().join(', ')})`)
+    const provider = (config as MemberConfig).provider as string
+    if (!this.providers.has(provider)) {
+      this.logger.error(`Skipping ${path}: unknown TTS provider "${provider}" (available: ${this.providerIds().join(', ')}), fix the file or set it again`)
       return undefined
     }
-    return config
+    return config as MemberConfig
   }
 
   public memberRequest(config: MemberConfig, type: string): TTSRequest | undefined {
