@@ -2,18 +2,19 @@ import type { Client, VoiceConnection } from '@projectdysnomia/dysnomia'
 import { waitUntil } from 'async-wait-until'
 import type { ILogObj, Logger } from 'tslog'
 import type { AudioAsset } from '../../../Audio/AudioAsset'
-import { PlaybackQueue } from '../../../Audio/PlaybackQueue'
+import { DEFAULT_PLAYBACK_TIMEOUT_MS, PlaybackQueue } from '../../../Audio/PlaybackQueue'
 import type { Discord } from '../Core'
 
 export class DiscordVoice {
   private _init = true
   private _channelId: string
-  public readonly playback = new PlaybackQueue((asset) => this.play(asset))
+  public readonly playback: PlaybackQueue
   private client: Client
   private voice: VoiceConnection | undefined
   private logger: Logger<ILogObj>
 
-  constructor(discord: Discord, channel: string, voice: VoiceConnection | undefined = undefined) {
+  constructor(discord: Discord, channel: string, voice: VoiceConnection | undefined = undefined, playbackTimeoutMs = DEFAULT_PLAYBACK_TIMEOUT_MS) {
+    this.playback = new PlaybackQueue((asset, signal) => this.play(asset, signal), playbackTimeoutMs)
     this.client = discord.client
     this.logger = discord.logger.getSubLogger({
       name: 'Voice',
@@ -60,6 +61,7 @@ export class DiscordVoice {
   }
 
   public destroy() {
+    this.playback.clear()
     if (this.voice) {
       this.logger.info('Ending voice connection...')
       this.voice.stopPlaying()
@@ -111,18 +113,36 @@ export class DiscordVoice {
     }
   }
 
-  public play(asset: AudioAsset) {
-    // biome-ignore lint/suspicious/noAsyncPromiseExecutor: Usage of await
-    return new Promise<void>(async (res) => {
-      this.logger.info(`Playing ${asset.path}`)
-      try {
-        await waitUntil(() => this.voice?.ready)
-      } catch (error) {
-        this.logger.error('Voice timed out, trying to reconnect', error)
-        return
+  // Always resolves: on end, on abort (playback stopped), or on failure (logged)
+  public async play(asset: AudioAsset, signal?: AbortSignal): Promise<void> {
+    this.logger.info(`Playing ${asset.path}`)
+    try {
+      await waitUntil(() => this.voice?.ready)
+    } catch (error) {
+      this.logger.error('Voice timed out, trying to reconnect', error)
+      return
+    }
+    const voice = this.voice
+    if (!voice || signal?.aborted) return
+
+    await new Promise<void>((res) => {
+      const finish = () => {
+        voice.off('end', finish)
+        signal?.removeEventListener('abort', stop)
+        res()
       }
-      this.voice?.once('end', () => res())
-      this.voice?.play(asset.path, { format: asset.format, inlineVolume: true })
+      const stop = () => {
+        voice.stopPlaying()
+        finish()
+      }
+      voice.once('end', finish)
+      signal?.addEventListener('abort', stop, { once: true })
+      try {
+        voice.play(asset.path, { format: asset.format, inlineVolume: true })
+      } catch (error) {
+        this.logger.error(`Failed to play ${asset.path}`, error)
+        finish()
+      }
     })
   }
 }
