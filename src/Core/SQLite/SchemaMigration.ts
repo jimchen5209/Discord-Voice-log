@@ -22,8 +22,23 @@ export async function applyPendingMigrations() {
   await prisma.$disconnect()
 
   const { code, output } = await runPrisma(['migrate', 'deploy'])
-  if (code !== 0) throw new Error(`prisma migrate deploy failed (exit code ${code}):\n${output}`)
+  if (code !== 0) throw new Error(`prisma migrate deploy failed (exit code ${code}):\n${output}\n${await recoveryHint()}`)
   logger.info('Database migrations applied')
+}
+
+// Every migration in prisma/migrations runs in one transaction, so a failed one (P3018, then P3009 on
+// every later deploy) has changed nothing but must be marked as rolled back before it is retried
+async function recoveryHint() {
+  let failed: string[]
+  try {
+    const rows = await prisma.$queryRawUnsafe<{ name: string }[]>('SELECT migration_name AS name FROM _prisma_migrations WHERE finished_at IS NULL AND rolled_back_at IS NULL')
+    failed = rows.map((row) => row.name)
+  } catch {
+    failed = []
+  }
+  if (failed.length === 0) return 'Fix the error above and start the bot again.'
+  const resolve = failed.map((name) => `pnpm exec prisma migrate resolve --rolled-back ${name}`).join(' && ')
+  return `Database migration ${failed.join(', ')} failed and was rolled back; the database is unchanged. Fix the error above (the first failing run shows it), run \`${resolve}\` and start the bot again.`
 }
 
 async function pendingMigrations() {

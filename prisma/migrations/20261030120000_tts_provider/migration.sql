@@ -1,10 +1,14 @@
 -- Rename "ttsType" to "ttsProvider" and store TTS provider ids instead of engine names:
 -- WaveNet -> google-cloud, Legacy -> google-translate, any other value -> google-cloud (the default).
 -- SQLite cannot change a column default in place, so the table is redefined.
+-- Prisma does not wrap SQLite migrations in a transaction, so this one does: a failure (or a crash)
+-- before COMMIT rolls everything back and leaves "serverConfig" as it was. The PRAGMAs stay outside it
+-- because SQLite ignores foreign_keys inside a transaction.
 
 -- RedefineTables
 PRAGMA defer_foreign_keys=ON;
 PRAGMA foreign_keys=OFF;
+BEGIN;
 CREATE TABLE "new_serverConfig" (
     "serverID" TEXT NOT NULL PRIMARY KEY,
     "lang" TEXT NOT NULL DEFAULT 'en_US',
@@ -24,5 +28,6 @@ SELECT "serverID", "lang", "channelID", "lastVoiceChannel", "currentVoiceChannel
 FROM "serverConfig";
 DROP TABLE "serverConfig";
 ALTER TABLE "new_serverConfig" RENAME TO "serverConfig";
+COMMIT;
 PRAGMA foreign_keys=ON;
 PRAGMA defer_foreign_keys=OFF;
