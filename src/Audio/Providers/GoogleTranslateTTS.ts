@@ -20,7 +20,8 @@ export class GoogleTranslateTTS implements TTSProvider {
   }
 
   public async synthesize(text: string, lang: string): Promise<Uint8Array | null> {
-    const ttsURL = encodeURI(`https://translate.google.com.tw/translate_tts?ie=UTF-8&q=${text}&tl=${lang}&client=tw-ob`)
+    // URLSearchParams encodes &, # and ? in the text, which encodeURI left as URL syntax
+    const ttsURL = `https://translate.google.com.tw/translate_tts?${new URLSearchParams({ ie: 'UTF-8', q: text, tl: lang, client: 'tw-ob' })}`
     try {
       const res = await fetch(ttsURL)
       if (!res.ok) {
