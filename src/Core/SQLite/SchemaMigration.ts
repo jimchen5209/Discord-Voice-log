@@ -1,19 +1,17 @@
 import { spawn } from 'node:child_process'
-import { constants, existsSync as exists, mkdirSync as mkDir, readdirSync as readDir } from 'node:fs'
-import { copyFile } from 'node:fs/promises'
-import { basename, resolve } from 'node:path'
-import { BACKUP_DIR, backupTimestamp } from '../../Utils/Backup'
+import { existsSync as exists, readdirSync as readDir } from 'node:fs'
 import { instances } from '../../Utils/Instances'
 import { prisma } from './Client'
 
 const MIGRATIONS_DIR = 'prisma/migrations'
-// Rewrites existing rows (ttsType -> ttsProvider), so the database is backed up before it runs
+// Rewrites existing rows (ttsType -> ttsProvider); unmapped values are logged before it runs
 const TTS_PROVIDER_MIGRATION = '20261030120000_tts_provider'
 
 const logger = instances.mainLogger.getSubLogger({ name: 'SQLite:Schema' })
 
-// Applies pending Prisma migrations with `prisma migrate deploy`. Throws when the backup or the
-// migration fails, so main() logs the reason and exits instead of starting on an unmigrated database.
+// Applies pending Prisma migrations with `prisma migrate deploy`. Nothing is backed up: the operator
+// backs up the database before updating. Throws when the migration fails, so main() logs the reason
+// and exits instead of starting on an unmigrated database.
 export async function applyPendingMigrations() {
   const pending = await pendingMigrations()
   if (pending.length === 0) return
@@ -23,21 +21,9 @@ export async function applyPendingMigrations() {
   if (convertsRows) await logUnmappedTTSTypes()
   await prisma.$disconnect()
 
-  if (convertsRows) {
-    try {
-      logger.info(`Database backed up to ${await backupDatabase()}`)
-    } catch (error) {
-      throw new Error(`Database backup failed, so migrations were not applied and the database is unchanged: ${errorMessage(error)}`, { cause: error })
-    }
-  }
-
   const { code, output } = await runPrisma(['migrate', 'deploy'])
   if (code !== 0) throw new Error(`prisma migrate deploy failed (exit code ${code}):\n${output}`)
   logger.info('Database migrations applied')
-}
-
-function errorMessage(error: unknown) {
-  return error instanceof Error ? error.message : String(error)
 }
 
 async function pendingMigrations() {
@@ -71,17 +57,6 @@ async function logUnmappedTTSTypes() {
   for (const row of rows) {
     logger.warn(`Guild ${row.serverID} has unknown TTS type "${row.ttsType}"; migrating to the default provider google-cloud`)
   }
-}
-
-async function backupDatabase() {
-  const url = instances.config.sqlite.databaseUrl
-  if (!url.startsWith('file:')) throw new Error(`Cannot back up non-file database URL ${url}`)
-  const path = resolve(url.slice('file:'.length).split('?')[0])
-  mkDir(BACKUP_DIR, { recursive: true })
-  const target = `${BACKUP_DIR}/${basename(path)}.${backupTimestamp()}.bak`
-  // COPYFILE_EXCL: never overwrite an existing backup
-  await copyFile(path, target, constants.COPYFILE_EXCL)
-  return target
 }
 
 function runPrisma(args: string[]) {

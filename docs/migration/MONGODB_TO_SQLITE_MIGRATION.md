@@ -66,7 +66,7 @@ If you have an existing MongoDB database and want to move the data to the new SQ
    mongoexport --uri="mongodb://localhost:27017/VoiceLog" --collection=serverConfig --out=mongo_dump.json
    ```
 
-   Place the resulting `mongo_dump.json` file in the project root directory.
+   Place the resulting `mongo_dump.json` file in the project root directory, and keep a copy elsewhere along with the database file and `assets/`: the bot changes them directly on start, makes no backups, and deletes the dump after importing it.
 
 6. **Run Data Migration**:
    Start the bot again. The bot will detect the `mongo_dump.json` and `config.json`, and perform the data migration to SQLite during the boot sequence:

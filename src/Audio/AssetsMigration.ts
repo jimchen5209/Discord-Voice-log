@@ -1,16 +1,15 @@
-import { constants, existsSync as exists, mkdirSync as mkDir, readdirSync as readDir, readFileSync as readFile } from 'node:fs'
-import { copyFile, rename, rm, writeFile } from 'node:fs/promises'
+import { existsSync as exists, readdirSync as readDir, readFileSync as readFile } from 'node:fs'
+import { rename, rm, writeFile } from 'node:fs/promises'
 import { extname } from 'node:path'
 import type { ILogObj, Logger } from 'tslog'
-import { BACKUP_DIR, backupTimestamp } from '../Utils/Backup'
 import type { MemberConfig } from './Audio'
 
 const ASSETS_DIR = 'assets'
 // Old format: use_wave_tts true with a voice -> Google Cloud, anything else -> Google Translate
 const LEGACY_KEY = 'use_wave_tts'
 
-// Rewrites old-format assets/<id>.json files to name a provider id. Files that need converting are
-// first copied to backup/assets-<YYYYMMDD-HHmmss>/; if that fails nothing is rewritten.
+// Rewrites old-format assets/<id>.json files in place to name a provider id. Nothing is backed up:
+// the operator backs up assets/ before updating.
 // .wav files are never touched. Never throws.
 export async function migrateAssets(mainLogger: Logger<ILogObj>) {
   const logger = mainLogger.getSubLogger({ name: 'AssetsMigration' })
@@ -35,17 +34,6 @@ export async function migrateAssets(mainLogger: Logger<ILogObj>) {
     }
     if (pending.length === 0) return
 
-    const backupDir = `${BACKUP_DIR}/assets-${backupTimestamp()}`
-    try {
-      mkDir(BACKUP_DIR, { recursive: true })
-      // Not recursive: fails if the directory exists, so an existing backup is never overwritten
-      mkDir(backupDir)
-      for (const { file } of pending) await copyFile(`${ASSETS_DIR}/${file}`, `${backupDir}/${file}`, constants.COPYFILE_EXCL)
-    } catch (error) {
-      logger.error('Assets backup failed; assets migration skipped and the files are left unchanged:', error)
-      return
-    }
-
     let migratedCount = 0
     for (const { file, config } of pending) {
       try {
@@ -56,7 +44,7 @@ export async function migrateAssets(mainLogger: Logger<ILogObj>) {
         logger.error(`Failed to migrate ${ASSETS_DIR}/${file}:`, error)
       }
     }
-    logger.info(`Migrated ${migratedCount}/${pending.length} asset files, originals backed up to ${backupDir}`)
+    logger.info(`Migrated ${migratedCount}/${pending.length} asset files`)
   } catch (error) {
     logger.error('Assets migration failed:', error)
   }

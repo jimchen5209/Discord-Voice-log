@@ -12,7 +12,7 @@
 5. Build with `pnpm build:prod`
 6. Run `node dist` the first time to generate `config.json`
 7. Fill `config.json` with your bot tokens and settings.
-8. The database is created and migrated automatically when the bot starts (`prisma migrate deploy`). Before a migration that rewrites existing data, the database file is copied to `backup/<db file>.<YYYYMMDD-HHmmss>.bak`.
+8. The database is created and migrated automatically when the bot starts (`prisma migrate deploy`). Before you update and start the bot, back up the database file, `assets/` and `mongo_dump.json` yourself: starting the bot changes them directly and makes no backups.
   *(Note: This project now uses SQLite via Prisma ORM (v7) with `better-sqlite3` driver for simplified setup)*
 9. Install `pm2` via `npm install -g pm2` (Optional but recommended)
 10. Start the bot with `node dist` or `pm2 reload ecosystem.config.js`
@@ -59,7 +59,7 @@ If you want to use the new google cloud text to speech, be sure to have apiKey i
 ```
 `lang` and `voice` available from https://cloud.google.com/text-to-speech/docs/voices
 
-Files in the old format (`"use_wave_tts": true` / `false` or missing instead of `provider`) are converted when the bot starts; the originals are copied to `backup/assets-<YYYYMMDD-HHmmss>/`. `"use_wave_tts": true` with a `voice` becomes `"provider": "google-cloud"`; anything else (`false`, missing, or `true` without a `voice`) becomes `"provider": "google-translate"`, matching how it actually behaved before. Restart the bot after adding an old-format file.
+Files in the old format (`"use_wave_tts": true` / `false` or missing instead of `provider`) are converted in place when the bot starts (not backed up; back up `assets/` first). `"use_wave_tts": true` with a `voice` becomes `"provider": "google-cloud"`; anything else (`false`, missing, or `true` without a `voice`) becomes `"provider": "google-translate"`, matching how it actually behaved before. Restart the bot after adding an old-format file.
 
 Example:
 
