@@ -300,8 +300,10 @@ export class VoiceLogCommands {
     if (typeof options.type === 'string') {
       const reason = instances.audio.unavailableReason(options.type)
       if (reason) {
+        // The reason can name config keys, so it only goes to the log
+        this.logger.warn(`Guild ${context.guildID} cannot use TTS provider "${options.type}": ${reason}`)
         await context.send({
-          embeds: [this.genErrorMessage(reason)],
+          embeds: [this.genErrorMessage('This voice is currently unavailable.')],
           ephemeral: true
         })
         return
