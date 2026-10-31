@@ -154,7 +154,13 @@ export class AudioCache {
   private async create(provider: TTSProvider, path: string, text: string, lang: string, voice: string): Promise<string | null> {
     const data = await provider.synthesize(text, lang, voice)
     if (data === null) return null
-    await this.writeAtomic(path, data)
+    try {
+      await this.writeAtomic(path, data)
+    } catch (error) {
+      // Same as a failed synthesis: log it and play nothing, never reject the caller
+      this.logger?.error(`Failed to write cache file ${path}:`, error)
+      return null
+    }
     this.scheduleEviction()
     return path
   }

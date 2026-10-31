@@ -145,8 +145,13 @@ export class Audio {
     return (await this.tts(request)) ?? wavAsset()
   }
 
+  // Callers fire and forget, so this never rejects: a failure is logged and nothing is played
   private async enqueue(queue: PlaybackQueue, pending: Promise<AudioAsset | undefined>) {
-    const asset = await pending
-    if (asset) queue.enqueue(asset)
+    try {
+      const asset = await pending
+      if (asset) queue.enqueue(asset)
+    } catch (error) {
+      this.logger.error('Failed to prepare audio:', error)
+    }
   }
 }
