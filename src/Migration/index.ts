@@ -3,7 +3,6 @@ import { existsSync as exists, readdirSync as readDir, readFileSync as readFile 
 import { instances } from '../Utils/Instances'
 import { writeAtomic } from '../Utils/WriteAtomic'
 import { ASSET_STEPS, ASSETS_DIR, assetConfigFiles } from './assets/steps'
-import { backupAssets } from './backup'
 import { importMongoDump, preflightMongoDump } from './import-mongo'
 import { databasePath, readRecord, recordFilePath, writeRecord } from './record'
 
@@ -17,8 +16,8 @@ export const DATA_VERSION = 2
 // pm2 does not restart into the same error.
 export const EXIT_DATA_CHECK_FAILED = 78
 
-// Default MongoDB export to import into SQLite with `pnpm migrate --import-mongo`, which moves it to
-// backup/ afterwards; the bot refuses to start while it exists
+// Default MongoDB export to import into SQLite with `pnpm migrate --import-mongo`, which deletes it
+// afterwards; the bot refuses to start while it exists
 export const MONGODB_DUMP_PATH = process.env.MONGODB_DUMP_PATH ?? './mongo_dump.json'
 
 const MIGRATIONS_DIR = 'prisma/migrations'
@@ -78,14 +77,6 @@ async function migrateData({ skipInvalid = false } = {}): Promise<boolean> {
     return false
   }
 
-  if (pending.length > 0) {
-    try {
-      logger.info(`Assets to convert backed up to ${await backupAssets(pending.map(({ file }) => file))}`)
-    } catch (error) {
-      logger.error('Assets backup failed; nothing was converted:', error)
-      return false
-    }
-  }
   let failed = 0
   for (const { file, config } of pending) {
     try {

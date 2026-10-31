@@ -1,6 +1,6 @@
 import { existsSync as exists, readFileSync as readFile } from 'node:fs'
+import { unlink } from 'node:fs/promises'
 import { instances } from '../Utils/Instances'
-import { BACKUP_DIR, moveToBackup } from './backup'
 
 // MongoDB dumps store the TTS engine name, SQLite stores the provider id
 const MONGO_TTS_PROVIDERS = new Map([
@@ -97,7 +97,7 @@ export function preflightMongoDump(dumpPath: string): boolean {
 }
 
 // Upserts every document by serverID in one transaction, so a failure writes nothing and running it again
-// is safe, then moves the dump to backup/mongo_dump-<YYYYMMDD-HHmmss>.json. Returns false on failure.
+// is safe, then deletes the dump. Returns false on failure.
 export async function importMongoDump(dumpPath: string): Promise<boolean> {
   let rows: DumpRow[]
   try {
@@ -137,10 +137,11 @@ export async function importMongoDump(dumpPath: string): Promise<boolean> {
   logger.info('MongoDB dump migration completed!')
 
   try {
-    logger.info(`Moved ${dumpPath} to ${await moveToBackup(dumpPath, 'mongo_dump')}`)
+    await unlink(dumpPath)
+    logger.info(`Deleted ${dumpPath}`)
     return true
   } catch (error) {
-    logger.error(`The dump was imported, but moving ${dumpPath} to ${BACKUP_DIR}/ failed; move it away yourself (running \`pnpm migrate --import-mongo\` again is safe):`, error)
+    logger.error(`The dump was imported, but deleting ${dumpPath} failed; move it away yourself (running \`pnpm migrate --import-mongo\` again is safe):`, error)
     return false
   }
 }

@@ -59,16 +59,16 @@ If you have an existing MongoDB database and want to move the data to the new SQ
    mongoexport --uri="mongodb://localhost:27017/VoiceLog" --collection=serverConfig --out=mongo_dump.json
    ```
 
-   Place the resulting `mongo_dump.json` file in the project root directory, and keep a copy elsewhere along with the database file and `assets/`: the bot changes them directly on start, makes no backups, and deletes the dump after importing it.
+   Place the resulting `mongo_dump.json` file in the project root directory, and keep a copy elsewhere: `pnpm migrate --import-mongo` deletes it after importing.
 
 5. **Run Data Migration**:
-   Run `pnpm migrate --import-mongo`. It checks that the dump parses and that every field has the right type, creates the SQLite database (or applies pending migrations), imports every document of `mongo_dump.json` in one transaction, moves the dump to `backup/mongo_dump-<YYYYMMDD-HHmmss>.json`, and then upgrades the rest of the data:
+   Run `pnpm migrate --import-mongo`. It checks that the dump parses and that every field has the right type, creates the SQLite database (or applies pending migrations), imports every document of `mongo_dump.json` in one transaction, deletes the dump, and then upgrades the rest of the data:
 
    ```bash
    pnpm migrate --import-mongo
    ```
 
-   Without `--import-mongo`, `pnpm migrate` never imports the dump. If the dump is invalid or the import fails, `pnpm migrate` exits with an error, nothing is imported and the dump stays where it is; fix the problem and run it again. Documents are upserted by `serverID`, so running it again with the same dump is safe. If only the move to `backup/` fails, the data is already imported: move the dump away yourself. The bot never imports the dump on its own: while the dump file is present, `pnpm start` logs an error asking you to run `pnpm migrate --import-mongo` (or move the file away) and exits with code 78.
+   Without `--import-mongo`, `pnpm migrate` never imports the dump. If the dump is invalid or the import fails, `pnpm migrate` exits with an error, nothing is imported and the dump stays where it is; fix the problem and run it again. Documents are upserted by `serverID`, so running it again with the same dump is safe. If only deleting the dump fails, the data is already imported: move the dump away yourself. The bot never imports the dump on its own: while the dump file is present, `pnpm start` logs an error asking you to run `pnpm migrate --import-mongo` (or move the file away) and exits with code 78.
 
    *Note: If your dump file has a different name or location, pass its path to `--import-mongo`, or set `MONGODB_DUMP_PATH` for both `pnpm migrate` and `pnpm start`:*
 
