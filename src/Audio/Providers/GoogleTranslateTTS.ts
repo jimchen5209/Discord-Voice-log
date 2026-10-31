@@ -9,6 +9,8 @@ export class GoogleTranslateTTS implements TTSProvider {
   public readonly usesVoice = false
   private logger: Logger<ILogObj>
   private mp3Decoder: MPEGDecoderWebWorker
+  // The decoder keeps state between decode() and reset(), so decodes run one at a time
+  private decoding: Promise<unknown> = Promise.resolve()
 
   constructor(logger: Logger<ILogObj>) {
     this.logger = logger.getSubLogger({ name: 'GoogleTranslateTTS' })
@@ -17,6 +19,19 @@ export class GoogleTranslateTTS implements TTSProvider {
 
   public unavailableReason() {
     return undefined
+  }
+
+  private decode(mp3: Uint8Array) {
+    const run = this.decoding.then(async () => {
+      await this.mp3Decoder.ready
+      try {
+        return await this.mp3Decoder.decode(mp3)
+      } finally {
+        await this.mp3Decoder.reset()
+      }
+    })
+    this.decoding = run.catch(() => undefined)
+    return run
   }
 
   public async synthesize(text: string, lang: string): Promise<Uint8Array | null> {
@@ -28,12 +43,9 @@ export class GoogleTranslateTTS implements TTSProvider {
         this.logger.error(`TTS ${text} in ${lang} download failed. response code: ${res.status}`)
         return null
       }
-      const mp3 = res.arrayBuffer()
-      await this.mp3Decoder.ready
-
+      const mp3 = new Uint8Array(await res.arrayBuffer())
       // Decode mp3 to PCM 24kHz mono f32
-      const { channelData } = await this.mp3Decoder.decode(new Uint8Array(await mp3))
-      await this.mp3Decoder.reset()
+      const { channelData } = await this.decode(mp3)
 
       // Covent to 48kHz stereo s16
       const pcm = new Int16Array(channelData[0].length * 4)
