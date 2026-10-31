@@ -12,11 +12,7 @@
 5. Build with `pnpm build:prod`
 6. Run `node dist` the first time to generate `config.json`
 7. Fill `config.json` with your bot tokens and settings.
-8. The database is created and migrated automatically when the bot starts (`prisma migrate deploy`). Before you update and start the bot, back up the database file, `assets/` and `mongo_dump.json` yourself: starting the bot changes them directly and makes no backups.
-  If a database migration fails, the bot logs the error and exits with code 1. Each migration runs in one transaction, so the failed one is rolled back and the database is left as it was, but Prisma records it as failed: the failing start reports `P3018` with the database error, and every later start reports `P3009` until it is resolved. Fix the cause shown by the first failure, then mark the migration as rolled back and start the bot again:
-  ```bash
-  pnpm exec prisma migrate resolve --rolled-back <migration name, e.g. 20261030120000_tts_provider>
-  ```
+8. The database is created automatically when the bot starts.
   *(Note: This project now uses SQLite via Prisma ORM (v7) with `better-sqlite3` driver for simplified setup)*
 9. Install `pm2` via `npm install -g pm2` (Optional but recommended)
 10. Start the bot with `node dist` or `pm2 reload ecosystem.config.js`
@@ -24,6 +20,20 @@
 ![image](https://user-images.githubusercontent.com/10269287/149659808-a51a571f-7ef2-43cf-b415-6220a56847a4.png)  
 12. This bot uses slash command, type `/` in server chat and start configuring the bot
 ![image](https://user-images.githubusercontent.com/10269287/149659879-8be3aecb-d8b6-4a7c-b06f-43776dfe2233.png)
+
+## Upgrading
+
+1. Stop the bot.
+2. Back up the database file (by default `prisma/voice-log.db`), `assets/` and `mongo_dump.json` yourself: the next start changes them in place and makes no backups.
+3. Start the bot. It applies pending database migrations (`prisma migrate deploy`) before anything else, then converts `assets/<User ID>.json` files in the old format (see [Voice Activity Sound](#voice-activity-sound)).
+
+### A failed database migration
+
+Each database migration runs in one transaction, so when `prisma migrate deploy` fails (or is killed) the failed migration is rolled back and the database is left as it was. The bot logs the error and exits with code 1. Prisma still records the migration as failed: the failing start reports `P3018` with the database error and the migration name, and every later start reports `P3009` until it is resolved. Fix the cause shown by `P3018`, then mark the migration as rolled back and start the bot again:
+
+```bash
+pnpm exec prisma migrate resolve --rolled-back <migration name, e.g. 20261030120000_tts_provider>
+```
 
 ## Database Migration
 
