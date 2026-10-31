@@ -194,15 +194,20 @@ export class VoiceLogVoice {
     progressMessage = this.genProgressMessage(title, [seekField, progressField, cacheField])
     await context?.editOriginal({ embeds: [progressMessage] })
     const cacheFiles = readDir('caches/')
-    cacheFiles.forEach(async (file) => {
-      if (!ttsList.includes(`./caches/${file}`)) {
-        deleteFile(`./caches/${file}`)
+    for (const file of cacheFiles) {
+      if (!ttsList.includes(`./caches/${file}`) && instances.audio.isCacheFileRemovable(`./caches/${file}`)) {
+        try {
+          deleteFile(`./caches/${file}`)
+        } catch (error) {
+          this.logger.warn(`Failed to delete ./caches/${file}:`, error)
+          continue
+        }
         this.logger.info(`Deleted unused file ./caches/${file}`)
         cacheRemoveCount++
         progressMessage = this.genProgressMessage(title, [seekField, progressField, cacheField])
         await context?.editOriginal({ embeds: [progressMessage] })
       }
-    })
+    }
     cacheField = {
       name: '✅ Removing unused cache... Done',
       value: cacheRemoveCount === 0 ? 'No unused caches found.' : `Removed ${cacheRemoveCount} unused ${cacheRemoveCount === 1 ? 'cache' : 'caches'}.`

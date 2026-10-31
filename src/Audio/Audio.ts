@@ -61,6 +61,11 @@ export class Audio {
     return this.cache.evict()
   }
 
+  // Same rule as eviction: *.tmp and in-flight files are never deleted
+  public isCacheFileRemovable(path: string) {
+    return this.cache.isEvictable(path)
+  }
+
   // Returns the cached file path for the request, or null on failure
   public async synthesize(request: TTSRequest): Promise<string | null> {
     const provider = this.provider(request.provider)

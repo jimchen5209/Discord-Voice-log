@@ -120,7 +120,8 @@ export class AudioCache {
     return result
   }
 
-  private isEvictable(path: string) {
+  // Whether a file in the cache dir may be deleted now: never a *.tmp file or one being written
+  public isEvictable(path: string) {
     return !path.endsWith(TEMP_SUFFIX) && !this.inFlight.has(path)
   }
 
