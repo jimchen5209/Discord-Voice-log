@@ -12,36 +12,32 @@ const TTS_PROVIDER_MIGRATION = '20261030120000_tts_provider'
 
 const logger = instances.mainLogger.getSubLogger({ name: 'SQLite:Schema' })
 
-// Applies pending Prisma migrations with `prisma migrate deploy`. Never throws: on failure the
-// database is left as it was and the bot keeps starting.
+// Applies pending Prisma migrations with `prisma migrate deploy`. Throws when the backup or the
+// migration fails, so main() logs the reason and exits instead of starting on an unmigrated database.
 export async function applyPendingMigrations() {
-  try {
-    const pending = await pendingMigrations()
-    if (pending.length === 0) return
-    logger.info(`Applying pending database migrations: ${pending.join(', ')}`)
+  const pending = await pendingMigrations()
+  if (pending.length === 0) return
+  logger.info(`Applying pending database migrations: ${pending.join(', ')}`)
 
-    const convertsRows = pending.includes(TTS_PROVIDER_MIGRATION) && (await hasTable('serverConfig')) && (await countRows('serverConfig')) > 0
-    if (convertsRows) await logUnmappedTTSTypes()
-    await prisma.$disconnect()
+  const convertsRows = pending.includes(TTS_PROVIDER_MIGRATION) && (await hasTable('serverConfig')) && (await countRows('serverConfig')) > 0
+  if (convertsRows) await logUnmappedTTSTypes()
+  await prisma.$disconnect()
 
-    if (convertsRows) {
-      try {
-        logger.info(`Database backed up to ${await backupDatabase()}`)
-      } catch (error) {
-        logger.error('Database backup failed; migrations skipped and the database is left unchanged:', error)
-        return
-      }
+  if (convertsRows) {
+    try {
+      logger.info(`Database backed up to ${await backupDatabase()}`)
+    } catch (error) {
+      throw new Error(`Database backup failed, so migrations were not applied and the database is unchanged: ${errorMessage(error)}`, { cause: error })
     }
-
-    const { code, output } = await runPrisma(['migrate', 'deploy'])
-    if (code !== 0) {
-      logger.error(`prisma migrate deploy failed (exit code ${code}):\n${output}`)
-      return
-    }
-    logger.info('Database migrations applied')
-  } catch (error) {
-    logger.error('Database migration failed:', error)
   }
+
+  const { code, output } = await runPrisma(['migrate', 'deploy'])
+  if (code !== 0) throw new Error(`prisma migrate deploy failed (exit code ${code}):\n${output}`)
+  logger.info('Database migrations applied')
+}
+
+function errorMessage(error: unknown) {
+  return error instanceof Error ? error.message : String(error)
 }
 
 async function pendingMigrations() {
