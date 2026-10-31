@@ -25,7 +25,7 @@
 
 1. Stop the bot.
 2. Back up the database file (by default `prisma/voice-log.db`), `assets/` and `mongo_dump.json` yourself: the next start changes them in place and makes no backups.
-3. Start the bot. It applies pending database migrations (`prisma migrate deploy`) before anything else, then converts `assets/<User ID>.json` files in the old format (see [Voice Activity Sound](#voice-activity-sound)).
+3. Start the bot. It applies pending database migrations (`prisma migrate deploy`), converts `assets/<User ID>.json` files in the old format (see [TTS provider migration](docs/migration/TTS_PROVIDER_MIGRATION.md)), and imports `mongo_dump.json` if it is there (see [Database Migration](#database-migration)).
 
 ### A failed database migration
 
@@ -73,7 +73,7 @@ If you want to use the new google cloud text to speech, be sure to have apiKey i
 ```
 `lang` and `voice` available from https://cloud.google.com/text-to-speech/docs/voices
 
-Files in the old format (`"use_wave_tts": true` / `false` or missing instead of `provider`) are converted in place when the bot starts (not backed up; back up `assets/` first). `"use_wave_tts": true` with a `voice` becomes `"provider": "google-cloud"`; anything else (`false`, missing, or `true` without a `voice`) becomes `"provider": "google-translate"`, matching how it actually behaved before. Restart the bot after adding an old-format file.
+Files in the old format (`use_wave_tts` instead of `provider`) are converted automatically when the bot starts; see the [TTS provider migration guide](docs/migration/TTS_PROVIDER_MIGRATION.md).
 
 Example:
 
