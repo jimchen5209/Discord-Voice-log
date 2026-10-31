@@ -33,12 +33,9 @@ export class VoiceCommand extends SlashCommand {
             },
             {
               name: 'type',
-              description: 'TTS Type',
+              description: 'TTS provider',
               type: CommandOptionType.STRING,
-              choices: [
-                { name: 'WaveNet', value: 'WaveNet' },
-                { name: 'Legacy', value: 'Legacy' }
-              ]
+              choices: instances.audio.providerIds().map((id) => ({ name: id, value: id }))
             },
             {
               name: 'message_lang',
