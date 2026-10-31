@@ -4,15 +4,13 @@ import { prisma } from '../Client'
 
 const logger = instances.mainLogger.getSubLogger({ name: 'SQLite:ServerConfig' })
 
-export enum VoiceMessageTTSType {
-  WaveNet = 'WaveNet',
-  Legacy = 'Legacy'
-}
+export const DEFAULT_TTS_PROVIDER = 'google-cloud'
 
 export interface IVoiceMessageTTS {
   enabled: boolean
   messageLang: string
-  type: VoiceMessageTTSType
+  // TTS provider id, see Audio.providerIds()
+  provider: string
   voiceLang: string
   voiceName: string
 }
@@ -32,7 +30,7 @@ function toServerConfig(data: PrismaServerConfig): IServerConfig {
     voiceMessageTTS: {
       enabled: data.ttsEnabled,
       messageLang: data.ttsMessageLang,
-      type: data.ttsType as VoiceMessageTTSType,
+      provider: data.ttsProvider,
       voiceLang: data.ttsVoiceLang,
       voiceName: data.ttsVoiceName
     }
@@ -53,7 +51,7 @@ export class DbServerConfigManager {
     voiceMessageTTS: IVoiceMessageTTS = {
       enabled: false,
       messageLang: 'en_US',
-      type: VoiceMessageTTSType.WaveNet,
+      provider: DEFAULT_TTS_PROVIDER,
       voiceLang: 'en-US',
       voiceName: 'en-US-Wavenet-A'
     }
@@ -67,7 +65,7 @@ export class DbServerConfigManager {
       currentVoiceChannel,
       ttsEnabled: voiceMessageTTS.enabled,
       ttsMessageLang: voiceMessageTTS.messageLang,
-      ttsType: voiceMessageTTS.type,
+      ttsProvider: voiceMessageTTS.provider,
       ttsVoiceLang: voiceMessageTTS.voiceLang,
       ttsVoiceName: voiceMessageTTS.voiceName
     }
@@ -152,13 +150,13 @@ export class DbServerConfigManager {
   }
 
   public async updateVoiceMessageTTS(serverID: string, voiceMessageTTS: IVoiceMessageTTS) {
-    logger.debug(`Updating TTS config for ${serverID}: type=${voiceMessageTTS.type}, lang=${voiceMessageTTS.voiceLang}`)
+    logger.debug(`Updating TTS config for ${serverID}: provider=${voiceMessageTTS.provider}, lang=${voiceMessageTTS.voiceLang}`)
     const result = await prisma.serverConfig.update({
       where: { serverID },
       data: {
         ttsEnabled: voiceMessageTTS.enabled,
         ttsMessageLang: voiceMessageTTS.messageLang,
-        ttsType: voiceMessageTTS.type,
+        ttsProvider: voiceMessageTTS.provider,
         ttsVoiceLang: voiceMessageTTS.voiceLang,
         ttsVoiceName: voiceMessageTTS.voiceName
       }

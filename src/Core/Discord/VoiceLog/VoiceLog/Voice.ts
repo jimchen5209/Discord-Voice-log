@@ -1,10 +1,10 @@
-import { unlinkSync as deleteFile, readdirSync as readDir, readFileSync as readFile } from 'node:fs'
+import { unlinkSync as deleteFile, readdirSync as readDir } from 'node:fs'
 import { extname } from 'node:path'
 import type { VoiceChannel } from '@projectdysnomia/dysnomia'
 import waitUntil from 'async-wait-until'
-import Queue from 'promise-queue'
 import type { CommandContext, MessageEmbedOptions } from 'slash-create'
 import type { ILogObj, Logger } from 'tslog'
+import { MEMBER_EVENTS, type TTSRequest } from '../../../../Audio/Audio'
 import { instances } from '../../../../Utils/Instances'
 import type { DbServerConfigManager } from '../../../SQLite/db/ServerConfig'
 import type { Discord } from '../../Core'
@@ -54,7 +54,7 @@ export class VoiceLogVoice {
           this.serverConfig.updateCurrentVoiceChannel(guildId, channelId)
         }
 
-        if (playJoin) this.audios[guildId].playMoved()
+        if (playJoin) instances.audio.announceMoved(this.audios[guildId].playback)
         return this.audios[guildId]
       } else {
         return this.audios[guildId]
@@ -73,7 +73,7 @@ export class VoiceLogVoice {
       this.serverConfig.updateCurrentVoiceChannel(guildId, channelId)
     }
 
-    if (playJoin) this.audios[guildId].playReady()
+    if (playJoin) instances.audio.announceReady(this.audios[guildId].playback)
 
     return this.audios[guildId]
   }
@@ -116,6 +116,18 @@ export class VoiceLogVoice {
       return
     }
     this.updateLock = true
+    try {
+      await this.runRefreshCache(context)
+    } catch (error) {
+      // Callers (the midnight job, /refresh) do not await this, so never reject
+      this.logger.error('Cache refresh failed:', error)
+    } finally {
+      // Released even when a step throws, or every later refresh would be skipped
+      this.updateLock = false
+    }
+  }
+
+  private async runRefreshCache(context: CommandContext | undefined) {
     this.logger.info('Starting cache refresh...')
     const title = '➡️ Refreshing Caches'
     let seekCounter = 0
@@ -129,50 +141,9 @@ export class VoiceLogVoice {
     await context?.send({ embeds: [progressMessage] })
     let progressCount = 0
     let progressTotal = 0
-    const queue = new Queue(1, Infinity)
-    const getTTS = (text: string, lang: string) => {
-      // biome-ignore lint/suspicious/noAsyncPromiseExecutor: Usage of await
-      return new Promise<void>(async (res) => {
-        progressCount++
-        const progressField = {
-          name: '➡️ Processing texts...',
-          value: `(${progressCount}/${progressTotal}) ${text} in ${lang}`
-        }
-        progressMessage = this.genProgressMessage(title, [seekField, progressField])
-        await context?.editOriginal({ embeds: [progressMessage] })
-        instances.ttsHelper.getTTSFile(text, lang).then((fileName) => {
-          this.logger.info(`(${progressCount}/${progressTotal}) ${text} in ${lang} -> ${fileName}`)
-          if (fileName !== null) ttsList.push(fileName)
-          setTimeout(() => {
-            res()
-          }, 500)
-        })
-      })
-    }
-    const getWaveTTS = (text: string, lang: string, voice: string) => {
-      // biome-ignore lint/suspicious/noAsyncPromiseExecutor: Usage of await
-      return new Promise<void>(async (res) => {
-        progressCount++
-        const progressField = {
-          name: '➡️ Processing texts...',
-          value: `(${progressCount}/${progressTotal}) ${text} in ${lang} with voice ${voice}`
-        }
-        progressMessage = this.genProgressMessage(title, [seekField, progressField])
-        await context?.editOriginal({ embeds: [progressMessage] })
-        instances.ttsHelper.getWaveTTS(text, lang, voice).then((fileName) => {
-          this.logger.info(`(${progressCount}/${progressTotal}) ${text} in ${lang} with voice ${voice} -> ${fileName}`)
-          if (fileName !== null) ttsList.push(fileName)
-          setTimeout(() => {
-            res()
-          }, 500)
-        })
-      })
-    }
     const ttsList: string[] = []
-    queue.add(() => getWaveTTS('VoiceLog is moved to your channel.', 'en-US', 'en-US-Wavenet-D'))
-    queue.add(() => getWaveTTS('VoiceLog is ready.', 'en-US', 'en-US-Wavenet-D'))
+    const requests: TTSRequest[] = [...instances.audio.systemRequests()]
     progressTotal += 2
-    const typeList = ['join', 'left', 'switched_out', 'switched_in']
     const files = readDir('assets/')
     files.forEach((file) => {
       if (extname(file) === '.json') {
@@ -182,21 +153,13 @@ export class VoiceLogVoice {
           name: `${seekDone ? '✅' : '➡️'} Seeking for files ...${seekDone ? ' Done' : ''}`,
           value: `${seekDone || seekCounter === 0 ? '' : `Current ${seekFilename}, `} Seeked ${seekCounter} files. `
         }
-        const tts = JSON.parse(readFile(`assets/${file}`, { encoding: 'utf-8' }))
-        if (tts.use_wave_tts && tts.lang && tts.voice) {
-          typeList.forEach((type) => {
-            if (tts[type]) {
-              progressTotal++
-              queue.add(() => getWaveTTS(tts[type], tts.lang, tts.voice))
-            }
-          })
-        } else if (tts.lang) {
-          typeList.forEach((type) => {
-            if (tts[type]) {
-              progressTotal++
-              queue.add(() => getTTS(tts[type], tts.lang))
-            }
-          })
+        const config = instances.audio.readMemberConfig(`assets/${file}`)
+        if (!config) return
+        for (const type of MEMBER_EVENTS) {
+          const request = instances.audio.memberRequest(config, type)
+          if (!request) continue
+          progressTotal++
+          requests.push(request)
         }
       }
     })
@@ -205,41 +168,52 @@ export class VoiceLogVoice {
       name: `${seekDone ? '✅' : '➡️'} Seeking for files ...${seekDone ? ' Done' : ''}`,
       value: `${seekDone || seekCounter === 0 ? '' : `Current ${seekFilename}, `} Seeked ${seekCounter} files. `
     }
-    const afterWork = () => {
-      // biome-ignore lint/suspicious/noAsyncPromiseExecutor: Usage of await
-      return new Promise<void>(async (res) => {
-        const progressField = {
-          name: '✅ Processing files... Done',
-          value: `Processed ${progressTotal} texts.`
+    for (const request of requests) {
+      progressCount++
+      const description = `${request.text} in ${request.lang}${request.voice ? ` with voice ${request.voice}` : ''}`
+      const progressField = {
+        name: '➡️ Processing texts...',
+        value: `(${progressCount}/${progressTotal}) ${description}`
+      }
+      progressMessage = this.genProgressMessage(title, [seekField, progressField])
+      await context?.editOriginal({ embeds: [progressMessage] })
+      const fileName = await instances.audio.synthesize(request)
+      this.logger.info(`(${progressCount}/${progressTotal}) ${description} -> ${fileName}`)
+      if (fileName !== null) ttsList.push(fileName)
+      await new Promise((res) => setTimeout(res, 500))
+    }
+    const progressField = {
+      name: '✅ Processing files... Done',
+      value: `Processed ${progressTotal} texts.`
+    }
+    let cacheRemoveCount = 0
+    let cacheField = {
+      name: '➡️ Removing unused cache...',
+      value: cacheRemoveCount === 0 ? 'Seeking...' : `Removed ${cacheRemoveCount} unused ${cacheRemoveCount === 1 ? 'cache' : 'caches'}.`
+    }
+    progressMessage = this.genProgressMessage(title, [seekField, progressField, cacheField])
+    await context?.editOriginal({ embeds: [progressMessage] })
+    const cacheFiles = readDir('caches/')
+    for (const file of cacheFiles) {
+      if (!ttsList.includes(`./caches/${file}`) && instances.audio.isCacheFileRemovable(`./caches/${file}`)) {
+        try {
+          deleteFile(`./caches/${file}`)
+        } catch (error) {
+          this.logger.warn(`Failed to delete ./caches/${file}:`, error)
+          continue
         }
-        let cacheRemoveCount = 0
-        let cacheField = {
-          name: '➡️ Removing unused cache...',
-          value: cacheRemoveCount === 0 ? 'Seeking...' : `Removed ${cacheRemoveCount} unused ${cacheRemoveCount === 1 ? 'cache' : 'caches'}.`
-        }
+        this.logger.info(`Deleted unused file ./caches/${file}`)
+        cacheRemoveCount++
         progressMessage = this.genProgressMessage(title, [seekField, progressField, cacheField])
         await context?.editOriginal({ embeds: [progressMessage] })
-        const cacheFiles = readDir('caches/')
-        cacheFiles.forEach(async (file) => {
-          if (!ttsList.includes(`./caches/${file}`)) {
-            deleteFile(`./caches/${file}`)
-            this.logger.info(`Deleted unused file ./caches/${file}`)
-            cacheRemoveCount++
-            progressMessage = this.genProgressMessage(title, [seekField, progressField, cacheField])
-            await context?.editOriginal({ embeds: [progressMessage] })
-          }
-        })
-        cacheField = {
-          name: '✅ Removing unused cache... Done',
-          value: cacheRemoveCount === 0 ? 'No unused caches found.' : `Removed ${cacheRemoveCount} unused ${cacheRemoveCount === 1 ? 'cache' : 'caches'}.`
-        }
-        progressMessage = this.genProgressMessage('✅ Refresh Caches Done', [seekField, progressField, cacheField], true)
-        await context?.editOriginal({ embeds: [progressMessage] })
-        this.updateLock = false
-        res()
-      })
+      }
     }
-    queue.add(() => afterWork())
+    cacheField = {
+      name: '✅ Removing unused cache... Done',
+      value: cacheRemoveCount === 0 ? 'No unused caches found.' : `Removed ${cacheRemoveCount} unused ${cacheRemoveCount === 1 ? 'cache' : 'caches'}.`
+    }
+    progressMessage = this.genProgressMessage('✅ Refresh Caches Done', [seekField, progressField, cacheField], true)
+    await context?.editOriginal({ embeds: [progressMessage] })
   }
 
   private genProgressMessage(title: string, fields: Array<{ name: string; value: string }>, isDone = false) {

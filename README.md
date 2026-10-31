@@ -12,10 +12,7 @@
 5. Build with `pnpm build:prod`
 6. Run `node dist` the first time to generate `config.json`
 7. Fill `config.json` with your bot tokens and settings.
-8. Initialize the database:
-  ```bash
-  pnpm db:migrate
-  ```
+8. The database is created automatically when the bot starts.
   *(Note: This project now uses SQLite via Prisma ORM (v7) with `better-sqlite3` driver for simplified setup)*
 9. Install `pm2` via `npm install -g pm2` (Optional but recommended)
 10. Start the bot with `node dist` or `pm2 reload ecosystem.config.js`
@@ -23,6 +20,20 @@
 ![image](https://user-images.githubusercontent.com/10269287/149659808-a51a571f-7ef2-43cf-b415-6220a56847a4.png)  
 12. This bot uses slash command, type `/` in server chat and start configuring the bot
 ![image](https://user-images.githubusercontent.com/10269287/149659879-8be3aecb-d8b6-4a7c-b06f-43776dfe2233.png)
+
+## Upgrading
+
+1. Stop the bot.
+2. Back up the database file (by default `prisma/voice-log.db`), `assets/` and `mongo_dump.json` yourself: the next start changes them in place and makes no backups.
+3. Start the bot. It applies pending database migrations (`prisma migrate deploy`), converts `assets/<User ID>.json` files in the old format (see [TTS provider migration](docs/migration/TTS_PROVIDER_MIGRATION.md)), and imports `mongo_dump.json` if it is there (see [Database Migration](#database-migration)).
+
+### A failed database migration
+
+Each database migration runs in one transaction, so when `prisma migrate deploy` fails (or is killed) the failed migration is rolled back and the database is left as it was. The bot logs the error and exits with code 1. Prisma still records the migration as failed: the failing start reports `P3018` with the database error and the migration name, and every later start reports `P3009` until it is resolved. Fix the cause shown by `P3018`, then mark the migration as rolled back and start the bot again:
+
+```bash
+pnpm exec prisma migrate resolve --rolled-back <migration name, e.g. 20261030120000_tts_provider>
+```
 
 ## Database Migration
 
@@ -40,6 +51,7 @@ If you are upgrading from an older version that used MongoDB, please refer to th
 or place `<User ID>.json` into `asset/` folder with:
 ```json
 {
+  "provider": "google-translate",
   "lang": "<language from google translate>",
   "join": "<Text when connected to the channel>",
   "left": "<Text when left the channel>",
@@ -50,7 +62,7 @@ or place `<User ID>.json` into `asset/` folder with:
 If you want to use the new google cloud text to speech, be sure to have apiKey in the config, and json content is:
 ```json
 {
-  "use_wave_tts":true,
+  "provider": "google-cloud",
   "lang": "<language from google cloud>",
   "voice": "<voice from google cloud>",
   "join": "<Text when connected to the channel>",
@@ -61,10 +73,13 @@ If you want to use the new google cloud text to speech, be sure to have apiKey i
 ```
 `lang` and `voice` available from https://cloud.google.com/text-to-speech/docs/voices
 
+Files in the old format (`use_wave_tts` instead of `provider`) are converted automatically when the bot starts; see the [TTS provider migration guide](docs/migration/TTS_PROVIDER_MIGRATION.md).
+
 Example:
 
 ```json
 {
+  "provider": "google-translate",
   "lang": "en_US",
   "join": "Jim joined the channel",
   "left": "Jim left the channel",
@@ -74,7 +89,7 @@ Example:
 ```
 ```json
 {
-  "use_wave_tts":true,
+  "provider": "google-cloud",
   "lang": "en-GB",
   "voice": "en-GB-Wavenet-B",
   "join": "Jim joined the channel",
