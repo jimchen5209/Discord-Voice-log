@@ -116,6 +116,18 @@ export class VoiceLogVoice {
       return
     }
     this.updateLock = true
+    try {
+      await this.runRefreshCache(context)
+    } catch (error) {
+      // Callers (the midnight job, /refresh) do not await this, so never reject
+      this.logger.error('Cache refresh failed:', error)
+    } finally {
+      // Released even when a step throws, or every later refresh would be skipped
+      this.updateLock = false
+    }
+  }
+
+  private async runRefreshCache(context: CommandContext | undefined) {
     this.logger.info('Starting cache refresh...')
     const title = '➡️ Refreshing Caches'
     let seekCounter = 0
@@ -197,7 +209,6 @@ export class VoiceLogVoice {
     }
     progressMessage = this.genProgressMessage('✅ Refresh Caches Done', [seekField, progressField, cacheField], true)
     await context?.editOriginal({ embeds: [progressMessage] })
-    this.updateLock = false
   }
 
   private genProgressMessage(title: string, fields: Array<{ name: string; value: string }>, isDone = false) {
