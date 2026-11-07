@@ -7,6 +7,7 @@ import type { DbServerConfigManager, IServerConfig } from '../Db/ServerConfig'
 import { ERR_DB_NOT_INIT } from '../Db/SQLiteCore'
 import type { Discord } from '../Discord/Discord'
 import { VoiceLogCommands } from './Commands'
+import { genVoiceLogEmbed } from './Embeds'
 import { VoiceLogText } from './Text'
 import { VoiceLogVoice } from './VoiceLogVoice'
 
@@ -84,7 +85,7 @@ export class VoiceLog {
 
         if (data) {
           if (data.channelID !== '') {
-            this.client.createMessage(data.channelID, this._text.genVoiceLogEmbed(member, data.lang, 'join', undefined, newChannel))
+            this.client.createMessage(data.channelID, genVoiceLogEmbed(member, data.lang, 'join', undefined, newChannel))
           }
         }
 
@@ -114,7 +115,7 @@ export class VoiceLog {
         const data = await this._serverConfig.get(guildId)
         if (data) {
           if (data.channelID !== '') {
-            this.client.createMessage(data.channelID, this._text.genVoiceLogEmbed(member, data.lang, 'leave', oldChannel, undefined))
+            this.client.createMessage(data.channelID, genVoiceLogEmbed(member, data.lang, 'leave', oldChannel, undefined))
           }
         }
         if (oldChannel.id === channelID) {
@@ -150,7 +151,7 @@ export class VoiceLog {
 
         if (data) {
           if (data.channelID !== '') {
-            this.client.createMessage(data.channelID, this._text.genVoiceLogEmbed(member, data.lang, 'move', oldChannel, newChannel))
+            this.client.createMessage(data.channelID, genVoiceLogEmbed(member, data.lang, 'move', oldChannel, newChannel))
           }
         }
         if (oldChannel.id === channelID) {

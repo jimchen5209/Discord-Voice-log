@@ -1,11 +1,12 @@
 import type { Client } from '@projectdysnomia/dysnomia'
 import waitUntil from 'async-wait-until'
-import type { CommandContext, MessageEmbedOptions } from 'slash-create'
+import type { CommandContext } from 'slash-create'
 import { vsprintf } from 'sprintf-js'
 import type { ILogObj, Logger } from 'tslog'
 import { instances } from '../App/App'
 import type { DbServerConfigManager, IVoiceMessageTTS } from '../Db/ServerConfig'
 import type { Discord } from '../Discord/Discord'
+import { genErrorMessage, genNotChangedMessage, genSuccessMessage, genTTSSuccessMessage } from './Embeds'
 import { VoiceLogSetStatus } from './Text'
 import type { VoiceLog } from './VoiceLog'
 
@@ -34,7 +35,7 @@ export class VoiceLogCommands {
 
     if (!member.permissions.has('manageMessages') && !instances.config.discord.admins.includes(member.id)) {
       await context.send({
-        embeds: [this.genErrorMessage(instances.lang.get(data.lang).display.command.no_permission)],
+        embeds: [genErrorMessage(instances.lang.get(data.lang).display.command.no_permission)],
         ephemeral: true
       })
       return
@@ -46,7 +47,7 @@ export class VoiceLogCommands {
       const voice = this.voiceLog.voice.getCurrentVoice(guildId)
       if (voice && voice.channelId === channelID) {
         await context.send({
-          embeds: [this.genNotChangedMessage(instances.lang.get(data.lang).display.command.already_connected)],
+          embeds: [genNotChangedMessage(instances.lang.get(data.lang).display.command.already_connected)],
           ephemeral: true
         })
       } else {
@@ -56,18 +57,18 @@ export class VoiceLogCommands {
         } catch (error) {
           this.logger.error('Voice timed out', error)
           await context.send({
-            embeds: [this.genErrorMessage(instances.lang.get(data.lang).display.command.error)],
+            embeds: [genErrorMessage(instances.lang.get(data.lang).display.command.error)],
             ephemeral: true
           })
           return
         }
         await context.send({
-          embeds: [this.genSuccessMessage(instances.lang.get(data.lang).display.command.join_success)]
+          embeds: [genSuccessMessage(instances.lang.get(data.lang).display.command.join_success)]
         })
       }
     } else {
       await context.send({
-        embeds: [this.genErrorMessage(instances.lang.get(data.lang).display.command.not_in_channel)],
+        embeds: [genErrorMessage(instances.lang.get(data.lang).display.command.not_in_channel)],
         ephemeral: true
       })
     }
@@ -82,7 +83,7 @@ export class VoiceLogCommands {
 
     if (!member.permissions.has('manageMessages') && !instances.config.discord.admins.includes(member.id)) {
       await context.send({
-        embeds: [this.genErrorMessage(instances.lang.get(data.lang).display.command.no_permission)],
+        embeds: [genErrorMessage(instances.lang.get(data.lang).display.command.no_permission)],
         ephemeral: true
       })
       return
@@ -94,11 +95,11 @@ export class VoiceLogCommands {
     if (voice) {
       await this.voiceLog.voice.destroy(guildId, true)
       await context.send({
-        embeds: [this.genSuccessMessage(instances.lang.get(data.lang).display.command.leave_success)]
+        embeds: [genSuccessMessage(instances.lang.get(data.lang).display.command.leave_success)]
       })
     } else {
       await context.send({
-        embeds: [this.genNotChangedMessage(instances.lang.get(data.lang).display.command.bot_not_connected)],
+        embeds: [genNotChangedMessage(instances.lang.get(data.lang).display.command.bot_not_connected)],
         ephemeral: true
       })
     }
@@ -113,7 +114,7 @@ export class VoiceLogCommands {
 
     if (!member.permissions.has('manageMessages') && !instances.config.discord.admins.includes(member.id)) {
       await context.send({
-        embeds: [this.genErrorMessage(instances.lang.get(data.lang).display.command.no_permission)],
+        embeds: [genErrorMessage(instances.lang.get(data.lang).display.command.no_permission)],
         ephemeral: true
       })
       return
@@ -127,18 +128,18 @@ export class VoiceLogCommands {
         switch (await this.voiceLog.text.setVoiceLog(guildId, channelId)) {
           case VoiceLogSetStatus.NotChanged:
             await context.send({
-              embeds: [this.genNotChangedMessage(instances.lang.get(data.lang).display.config.exist)],
+              embeds: [genNotChangedMessage(instances.lang.get(data.lang).display.config.exist)],
               ephemeral: true
             })
             return
           case VoiceLogSetStatus.ChannelSuccess:
             await context.send({
-              embeds: [this.genSuccessMessage(instances.lang.get(data.lang).display.config.success)]
+              embeds: [genSuccessMessage(instances.lang.get(data.lang).display.config.success)]
             })
         }
       } catch {
         await context.send({
-          embeds: [this.genErrorMessage(instances.lang.get(data.lang).display.config.error)],
+          embeds: [genErrorMessage(instances.lang.get(data.lang).display.config.error)],
           ephemeral: true
         })
       }
@@ -150,56 +151,56 @@ export class VoiceLogCommands {
           case VoiceLogSetStatus.AllSuccess:
             await context.send({
               embeds: [
-                this.genSuccessMessage(vsprintf(instances.lang.get(newLang).display.config.lang_success, [instances.lang.get(newLang).displayName])),
-                this.genSuccessMessage(instances.lang.get(newLang).display.config.success)
+                genSuccessMessage(vsprintf(instances.lang.get(newLang).display.config.lang_success, [instances.lang.get(newLang).displayName])),
+                genSuccessMessage(instances.lang.get(newLang).display.config.success)
               ]
             })
             return
           case VoiceLogSetStatus.ChannelSuccess:
             await context.send({
-              embeds: [this.genNotChangedMessage(vsprintf(instances.lang.get(data.lang).display.config.lang_exist, [instances.lang.get(data.lang).displayName]))],
+              embeds: [genNotChangedMessage(vsprintf(instances.lang.get(data.lang).display.config.lang_exist, [instances.lang.get(data.lang).displayName]))],
               ephemeral: true
             })
             await context.send({
-              embeds: [this.genSuccessMessage(instances.lang.get(data.lang).display.config.success)]
+              embeds: [genSuccessMessage(instances.lang.get(data.lang).display.config.success)]
             })
             return
           case VoiceLogSetStatus.ChannelSuccessMissingLang:
             await context.send({
-              embeds: [this.genErrorMessage(ERR_MISSING_LANG_DEFAULT)],
+              embeds: [genErrorMessage(ERR_MISSING_LANG_DEFAULT)],
               ephemeral: true
             })
             await context.send({
-              embeds: [this.genSuccessMessage(instances.lang.get(data.lang).display.config.success)]
+              embeds: [genSuccessMessage(instances.lang.get(data.lang).display.config.success)]
             })
             return
           case VoiceLogSetStatus.LangSuccess:
             await context.send({
-              embeds: [this.genSuccessMessage(vsprintf(instances.lang.get(newLang).display.config.lang_success, [instances.lang.get(newLang).displayName]))]
+              embeds: [genSuccessMessage(vsprintf(instances.lang.get(newLang).display.config.lang_success, [instances.lang.get(newLang).displayName]))]
             })
             await context.send({
-              embeds: [this.genNotChangedMessage(instances.lang.get(newLang).display.config.exist)],
+              embeds: [genNotChangedMessage(instances.lang.get(newLang).display.config.exist)],
               ephemeral: true
             })
             return
           case VoiceLogSetStatus.MissingLang:
             await context.send({
-              embeds: [this.genErrorMessage(ERR_MISSING_LANG_DEFAULT), this.genNotChangedMessage(instances.lang.get(data.lang).display.config.exist)],
+              embeds: [genErrorMessage(ERR_MISSING_LANG_DEFAULT), genNotChangedMessage(instances.lang.get(data.lang).display.config.exist)],
               ephemeral: true
             })
             return
           case VoiceLogSetStatus.NotChanged:
             await context.send({
               embeds: [
-                this.genNotChangedMessage(vsprintf(instances.lang.get(data.lang).display.config.lang_exist, [instances.lang.get(data.lang).displayName])),
-                this.genNotChangedMessage(instances.lang.get(data.lang).display.config.exist)
+                genNotChangedMessage(vsprintf(instances.lang.get(data.lang).display.config.lang_exist, [instances.lang.get(data.lang).displayName])),
+                genNotChangedMessage(instances.lang.get(data.lang).display.config.exist)
               ],
               ephemeral: true
             })
         }
       } catch {
         await context.send({
-          embeds: [this.genErrorMessage(instances.lang.get(data.lang).display.config.error)],
+          embeds: [genErrorMessage(instances.lang.get(data.lang).display.config.error)],
           ephemeral: true
         })
       }
@@ -215,7 +216,7 @@ export class VoiceLogCommands {
 
     if (!member.permissions.has('manageMessages') && !instances.config.discord.admins.includes(member.id)) {
       await context.send({
-        embeds: [this.genErrorMessage(instances.lang.get(data.lang).display.command.no_permission)],
+        embeds: [genErrorMessage(instances.lang.get(data.lang).display.command.no_permission)],
         ephemeral: true
       })
       return
@@ -227,24 +228,24 @@ export class VoiceLogCommands {
     switch (await this.voiceLog.text.setLang(guildId, newLang)) {
       case VoiceLogSetStatus.LangSuccess:
         await context.send({
-          embeds: [this.genSuccessMessage(vsprintf(instances.lang.get(newLang).display.config.lang_success, [instances.lang.get(newLang).displayName]))]
+          embeds: [genSuccessMessage(vsprintf(instances.lang.get(newLang).display.config.lang_success, [instances.lang.get(newLang).displayName]))]
         })
         return
       case VoiceLogSetStatus.MissingLang:
         await context.send({
-          embeds: [this.genErrorMessage(ERR_MISSING_LANG)],
+          embeds: [genErrorMessage(ERR_MISSING_LANG)],
           ephemeral: true
         })
         return
       case VoiceLogSetStatus.NotChanged:
         await context.send({
-          embeds: [this.genNotChangedMessage(vsprintf(instances.lang.get(data.lang).display.config.lang_exist, [instances.lang.get(data.lang).displayName]))],
+          embeds: [genNotChangedMessage(vsprintf(instances.lang.get(data.lang).display.config.lang_exist, [instances.lang.get(data.lang).displayName]))],
           ephemeral: true
         })
         return
       default:
         await context.send({
-          embeds: [this.genErrorMessage(instances.lang.get(data.lang).display.config.error)],
+          embeds: [genErrorMessage(instances.lang.get(data.lang).display.config.error)],
           ephemeral: true
         })
     }
@@ -259,7 +260,7 @@ export class VoiceLogCommands {
 
     if (!member.permissions.has('manageMessages') && !instances.config.discord.admins.includes(member.id)) {
       await context.send({
-        embeds: [this.genErrorMessage(instances.lang.get(data.lang).display.command.no_permission)],
+        embeds: [genErrorMessage(instances.lang.get(data.lang).display.command.no_permission)],
         ephemeral: true
       })
       return
@@ -267,7 +268,7 @@ export class VoiceLogCommands {
 
     await this.voiceLog.text.unsetVoiceLog(member.guild.id)
     await context.send({
-      embeds: [this.genSuccessMessage(instances.lang.get(data.lang).display.config.unset_success)]
+      embeds: [genSuccessMessage(instances.lang.get(data.lang).display.config.unset_success)]
     })
   }
 
@@ -280,7 +281,7 @@ export class VoiceLogCommands {
 
     if (!member.permissions.has('manageMessages') && !instances.config.discord.admins.includes(member.id)) {
       await context.send({
-        embeds: [this.genErrorMessage(instances.lang.get(data.lang).display.command.no_permission)],
+        embeds: [genErrorMessage(instances.lang.get(data.lang).display.command.no_permission)],
         ephemeral: true
       })
       return
@@ -289,7 +290,7 @@ export class VoiceLogCommands {
     const options = context.options.tts as Partial<Record<string, unknown>>
     if (!options) {
       await context.send({
-        embeds: [this.genErrorMessage('Please provide at least one option to change.')],
+        embeds: [genErrorMessage('Please provide at least one option to change.')],
         ephemeral: true
       })
       return
@@ -303,7 +304,7 @@ export class VoiceLogCommands {
         // The reason can name config keys, so it only goes to the log
         this.logger.warn(`Guild ${context.guildID} cannot use TTS provider "${options.type}": ${reason}`)
         await context.send({
-          embeds: [this.genErrorMessage('This voice is currently unavailable.')],
+          embeds: [genErrorMessage('This voice is currently unavailable.')],
           ephemeral: true
         })
         return
@@ -313,7 +314,7 @@ export class VoiceLogCommands {
     if (typeof options.message_lang === 'string') {
       if (!instances.lang.isExist(options.message_lang)) {
         await context.send({
-          embeds: [this.genErrorMessage(ERR_MISSING_LANG)],
+          embeds: [genErrorMessage(ERR_MISSING_LANG)],
           ephemeral: true
         })
         return
@@ -326,12 +327,12 @@ export class VoiceLogCommands {
     try {
       const updated = await this.voiceLog.text.setVoiceMessageTTS(member.guild.id, ttsConfig)
       await context.send({
-        embeds: [this.genTTSSuccessMessage(instances.lang.get(data.lang).display.config.tts_success, updated, data.lang)]
+        embeds: [genTTSSuccessMessage(instances.lang.get(data.lang).display.config.tts_success, updated, data.lang)]
       })
     } catch (error) {
       this.logger.error('Failed to update TTS config', error)
       await context.send({
-        embeds: [this.genErrorMessage(instances.lang.get(data.lang).display.config.error)],
+        embeds: [genErrorMessage(instances.lang.get(data.lang).display.config.error)],
         ephemeral: true
       })
     }
@@ -346,53 +347,12 @@ export class VoiceLogCommands {
 
     if (!instances.config.discord.admins.includes(member.id)) {
       await context.send({
-        embeds: [this.genErrorMessage(instances.lang.get(data.lang).display.command.no_permission)],
+        embeds: [genErrorMessage(instances.lang.get(data.lang).display.command.no_permission)],
         ephemeral: true
       })
       return
     }
 
     this.voiceLog.voice.refreshCache(context)
-  }
-
-  private genSuccessMessage(msg: string) {
-    return {
-      title: 'Success',
-      color: 4289797,
-      description: msg
-    } as MessageEmbedOptions
-  }
-
-  private genNotChangedMessage(msg: string) {
-    return {
-      title: 'Nothing Changed',
-      color: 9274675,
-      description: msg
-    } as MessageEmbedOptions
-  }
-
-  private genErrorMessage(msg: string) {
-    return {
-      title: 'Error',
-      color: 13632027,
-      description: msg
-    } as MessageEmbedOptions
-  }
-
-  private genTTSSuccessMessage(title: string, ttsConfig: IVoiceMessageTTS, lang: string) {
-    const l = instances.lang.get(lang).display.config
-    const translatedFields = [
-      { label: l.tts_enabled, value: ttsConfig.enabled ? l.tts_yes : l.tts_no },
-      { label: l.tts_message_lang, value: ttsConfig.messageLang },
-      { label: l.tts_type, value: ttsConfig.provider },
-      { label: l.tts_voice_lang, value: ttsConfig.voiceLang },
-      { label: l.tts_voice_name, value: ttsConfig.voiceName }
-    ]
-    const description = translatedFields.map((f) => `**${f.label}**: ${f.value}`).join('\n')
-    return {
-      title,
-      color: 4289797,
-      description
-    } as MessageEmbedOptions
   }
 }
