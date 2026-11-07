@@ -6,8 +6,6 @@ import { EXIT_NO_RESTART } from './ExitCode'
 export interface ConfigValue {
   configVersion: string | number
   discord: DiscordConfig
-  googleTTS: GoogleTTSConfig
-  xaiTTS: XaiTTSConfig
   tts: TtsConfig
   sqlite: SQLiteConfig
   debug: boolean
@@ -34,7 +32,13 @@ export interface SystemVoiceConfig {
   voice: string
 }
 
+export interface TtsProvidersConfig {
+  googleTTS: GoogleTTSConfig
+  xaiTTS: XaiTTSConfig
+}
+
 export interface TtsConfig {
+  providers: TtsProvidersConfig
   systemVoice: SystemVoiceConfig
 }
 
@@ -52,8 +56,6 @@ export const loggerOptions: ISettingsParam<ILogObj> = {
 export class Config {
   private configVersion = 5
   private _discord: DiscordConfig
-  private _googleTTS: GoogleTTSConfig
-  private _xaiTTS: XaiTTSConfig
   private _tts: TtsConfig
   private _sqlite: SQLiteConfig
   private _debug: boolean
@@ -73,6 +75,10 @@ export class Config {
     voice: 'en-US-Wavenet-D'
   }
   private readonly ttsDefault: TtsConfig = {
+    providers: {
+      googleTTS: this.googleTTSDefault,
+      xaiTTS: this.xaiTTSDefault
+    },
     systemVoice: this.systemVoiceDefault
   }
   private readonly sqliteDefault = { databaseUrl: 'file:./prisma/voice-log.db' }
@@ -92,17 +98,7 @@ export class Config {
       if (!config.discord) config.discord = {}
       this._discord = this.mergeDiscordConfig(config)
 
-      if (!config.googleTTS) config.googleTTS = {}
-      this._googleTTS = this.mergeGoogleTTSConfig(config)
-
-      if (!config.xaiTTS) config.xaiTTS = {}
-      this._xaiTTS = {
-        apiKey: config.xaiTTS.apiKey ? config.xaiTTS.apiKey : this.xaiTTSDefault.apiKey
-      }
-
-      this._tts = {
-        systemVoice: this.mergeSystemVoice(config.tts?.systemVoice ?? config.systemVoice)
-      }
+      this._tts = this.mergeTts(config)
 
       if (!config.sqlite) config.sqlite = {}
       this._sqlite = {
@@ -119,8 +115,6 @@ export class Config {
       this.logger.fatal("Can't load config.json: File not found.")
       this.logger.info('Generating empty config...')
       this._discord = this.discordDefault
-      this._googleTTS = this.googleTTSDefault
-      this._xaiTTS = this.xaiTTSDefault
       this._tts = this.ttsDefault
       this._sqlite = this.sqliteDefault
       this._debug = false
@@ -158,10 +152,30 @@ export class Config {
     } as DiscordConfig
   }
 
-  private mergeGoogleTTSConfig(config: { googleTTS: { apiKey: string }; googleAPIKey: string }) {
+  private mergeTts(config: {
+    tts?: {
+      providers?: { googleTTS?: { apiKey?: string }; xaiTTS?: { apiKey?: string } }
+      systemVoice?: Partial<SystemVoiceConfig>
+    }
+    googleTTS?: { apiKey?: string }
+    xaiTTS?: { apiKey?: string }
+    googleAPIKey?: string
+    systemVoice?: Partial<SystemVoiceConfig>
+  }): TtsConfig {
+    const providers = config.tts?.providers
+    const googleFromFile = providers?.googleTTS?.apiKey ? providers.googleTTS.apiKey : config.googleTTS?.apiKey
+    const xaiFromFile = providers?.xaiTTS?.apiKey ? providers.xaiTTS.apiKey : config.xaiTTS?.apiKey
     return {
-      apiKey: config.googleTTS.apiKey ? config.googleTTS.apiKey : config.googleAPIKey ? config.googleAPIKey : this.googleTTSDefault.apiKey
-    } as GoogleTTSConfig
+      providers: {
+        googleTTS: {
+          apiKey: googleFromFile ? googleFromFile : config.googleAPIKey ? config.googleAPIKey : this.googleTTSDefault.apiKey
+        },
+        xaiTTS: {
+          apiKey: xaiFromFile ? xaiFromFile : this.xaiTTSDefault.apiKey
+        }
+      },
+      systemVoice: this.mergeSystemVoice(config.tts?.systemVoice ?? config.systemVoice)
+    }
   }
 
   private mergeSystemVoice(systemVoice: Partial<SystemVoiceConfig> | undefined): SystemVoiceConfig {
@@ -199,8 +213,6 @@ export class Config {
         '//configVersion': 'DO NOT MODIFY THIS UNLESS YOU KNOW WHAT YOU ARE DOING!!!!!',
         configVersion: this.configVersion,
         discord: this._discord,
-        googleTTS: this._googleTTS,
-        xaiTTS: this._xaiTTS,
         tts: this._tts,
         sqlite: this._sqlite,
         debug: this._debug
@@ -213,14 +225,6 @@ export class Config {
 
   public get discord() {
     return this._discord
-  }
-
-  public get googleTTS() {
-    return this._googleTTS
-  }
-
-  public get xaiTTS() {
-    return this._xaiTTS
   }
 
   public get tts() {
