@@ -6,6 +6,7 @@ import { instances } from '../App/App'
 import type { DbServerConfigManager, IServerConfig } from '../Db/ServerConfig'
 import { ERR_DB_NOT_INIT } from '../Db/SQLiteCore'
 import type { Discord } from '../Discord/Discord'
+import { CacheRefresh } from './CacheRefresh'
 import { VoiceLogCommands } from './Commands'
 import { genVoiceLogEmbed } from './Embeds'
 import { VoiceLogText } from './Text'
@@ -13,6 +14,7 @@ import { VoiceLogVoice } from './VoiceLogVoice'
 
 export class VoiceLog {
   private _voice: VoiceLogVoice
+  private _cacheRefresh: CacheRefresh
   private _text: VoiceLogText
   private _command: VoiceLogCommands
   private _logger: Logger<ILogObj>
@@ -27,6 +29,7 @@ export class VoiceLog {
   constructor(discord: Discord) {
     this.client = discord.client
     this._logger = discord.logger.getSubLogger({ name: 'VoiceLog' })
+    this._cacheRefresh = new CacheRefresh(this._logger.getSubLogger({ name: 'Voice' }))
 
     const serverConfig = instances.db?.serverConfig
     if (!serverConfig) throw ERR_DB_NOT_INIT
@@ -190,6 +193,10 @@ export class VoiceLog {
     return this._voice
   }
 
+  public get cacheRefresh() {
+    return this._cacheRefresh
+  }
+
   public get text() {
     return this._text
   }
@@ -216,7 +223,7 @@ export class VoiceLog {
       this._voice.join(element.serverID, element.currentVoiceChannel)
     })
     scheduleJob('0 0 * * *', () => {
-      this._voice.refreshCache(undefined)
+      this._cacheRefresh.refreshCache(undefined)
     })
     // Away from the midnight refresh, so expired files are not removed just before it re-reads them
     scheduleJob('0 12 * * *', () => {
