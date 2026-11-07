@@ -57,7 +57,7 @@ async function run() {
   if (flags.has('--yolo') && flags.has('--backup-dir')) problems.push('--yolo makes no backup, so it cannot be used with --backup-dir')
 
   // Loaded only now: loading the config rewrites config.json, or creates it and exits, which --help must not do
-  const { instances } = await import('./Utils/Instances')
+  const { instances } = await import('./App/App')
   if (problems.length > 0) {
     instances.mainLogger.error(`${problems.join('; ')} (available: ${OPTIONS.map(usage).join(', ')}; see \`pnpm migrate --help\`); nothing was changed`)
     return false
@@ -73,7 +73,7 @@ async function run() {
 run()
   .then((ok) => process.exit(ok ? 0 : 1))
   .catch(async (error) => {
-    const { instances } = await import('./Utils/Instances')
+    const { instances } = await import('./App/App')
     instances.mainLogger.fatal('Data migration failed:', error)
     process.exit(1)
   })

@@ -1,6 +1,6 @@
 import { type CommandContext, CommandOptionType, SlashCommand, type SlashCreator } from 'slash-create'
-import { instances } from '../../../../Utils/Instances'
-import type { VoiceLog } from '../../VoiceLog/VoiceLog'
+import { instances } from '../../App/App'
+import type { VoiceLog } from '../VoiceLog'
 
 export class LogCommand extends SlashCommand {
   private voiceLog: VoiceLog

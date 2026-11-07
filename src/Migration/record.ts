@@ -1,7 +1,7 @@
 import { existsSync as exists, readFileSync as readFile } from 'node:fs'
 import { dirname, resolve } from 'node:path'
-import { instances } from '../Utils/Instances'
-import { writeAtomic } from '../Utils/WriteAtomic'
+import { instances } from '../App/App'
+import { writeAtomic } from '../Shared/WriteAtomic'
 
 // data-version.json: the data version the app-side data was last migrated to
 const RECORD_FILE = 'data-version.json'

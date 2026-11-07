@@ -2,7 +2,7 @@ import { existsSync as exists, mkdirSync as mkdir } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3'
 import { PrismaClient } from '@prisma/client'
-import { instances } from '../../Utils/Instances'
+import { instances } from '../App/App'
 
 const dbUrl = instances.config.sqlite.databaseUrl
 

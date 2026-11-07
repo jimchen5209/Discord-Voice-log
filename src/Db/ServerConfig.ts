@@ -1,6 +1,6 @@
 import type { ServerConfig as PrismaServerConfig } from '@prisma/client'
-import { instances } from '../../../Utils/Instances'
-import { prisma } from '../Client'
+import { instances } from '../App/App'
+import { prisma } from './Client'
 
 const logger = instances.mainLogger.getSubLogger({ name: 'SQLite:ServerConfig' })
 
