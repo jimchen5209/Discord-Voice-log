@@ -34,20 +34,29 @@ export class VoiceLogCommands {
     this.audio = audio
   }
 
-  public async commandJoin(context: CommandContext) {
+  // Member, then server config, then permission. refresh_cache is admins only; the others allow manageMessages or admins.
+  private async beginCommand(context: CommandContext, access: 'manageMessages' | 'admin') {
     if (!context.guildID || !context.member) return
     const member = await this.client.getRESTGuildMember(context.guildID, context.member.id)
     if (!member) return
 
     const data = await this.serverConfig.getOrCreate(member.guild.id)
-
-    if (!member.permissions.has('manageMessages') && !this.config.discord.admins.includes(member.id)) {
+    const isAdmin = this.config.discord.admins.includes(member.id)
+    const allowed = access === 'admin' ? isAdmin : member.permissions.has('manageMessages') || isAdmin
+    if (!allowed) {
       await context.send({
         embeds: [genErrorMessage(this.lang.get(data.lang).display.command.no_permission)],
         ephemeral: true
       })
       return
     }
+    return { member, data }
+  }
+
+  public async commandJoin(context: CommandContext) {
+    const begun = await this.beginCommand(context, 'manageMessages')
+    if (!begun) return
+    const { member, data } = begun
 
     const guildId = member.guild.id
     const channelID = member.voiceState.channelID
@@ -83,19 +92,9 @@ export class VoiceLogCommands {
   }
 
   public async commandLeave(context: CommandContext) {
-    if (!context.guildID || !context.member) return
-    const member = await this.client.getRESTGuildMember(context.guildID, context.member.id)
-    if (!member) return
-
-    const data = await this.serverConfig.getOrCreate(member.guild.id)
-
-    if (!member.permissions.has('manageMessages') && !this.config.discord.admins.includes(member.id)) {
-      await context.send({
-        embeds: [genErrorMessage(this.lang.get(data.lang).display.command.no_permission)],
-        ephemeral: true
-      })
-      return
-    }
+    const begun = await this.beginCommand(context, 'manageMessages')
+    if (!begun) return
+    const { member, data } = begun
     const guildId = member.guild.id
 
     const voice = this.voiceLog.voice.getCurrentVoice(guildId)
@@ -114,19 +113,9 @@ export class VoiceLogCommands {
   }
 
   public async commandSetVoiceLog(context: CommandContext) {
-    if (!context.guildID || !context.member) return
-    const member = await this.client.getRESTGuildMember(context.guildID, context.member.id)
-    if (!member) return
-
-    const data = await this.serverConfig.getOrCreate(member.guild.id)
-
-    if (!member.permissions.has('manageMessages') && !this.config.discord.admins.includes(member.id)) {
-      await context.send({
-        embeds: [genErrorMessage(this.lang.get(data.lang).display.command.no_permission)],
-        ephemeral: true
-      })
-      return
-    }
+    const begun = await this.beginCommand(context, 'manageMessages')
+    if (!begun) return
+    const { member, data } = begun
 
     const guildId = member.guild.id
     const channelId = context.channelID
@@ -216,19 +205,9 @@ export class VoiceLogCommands {
   }
 
   public async commandLang(context: CommandContext) {
-    if (!context.guildID || !context.member) return
-    const member = await this.client.getRESTGuildMember(context.guildID, context.member.id)
-    if (!member) return
-
-    const data = await this.serverConfig.getOrCreate(member.guild.id)
-
-    if (!member.permissions.has('manageMessages') && !this.config.discord.admins.includes(member.id)) {
-      await context.send({
-        embeds: [genErrorMessage(this.lang.get(data.lang).display.command.no_permission)],
-        ephemeral: true
-      })
-      return
-    }
+    const begun = await this.beginCommand(context, 'manageMessages')
+    if (!begun) return
+    const { member, data } = begun
 
     const guildId = member.guild.id
     const newLang = context.options.language.language as string
@@ -260,19 +239,9 @@ export class VoiceLogCommands {
   }
 
   public async commandUnsetVoiceLog(context: CommandContext) {
-    if (!context.guildID || !context.member) return
-    const member = await this.client.getRESTGuildMember(context.guildID, context.member.id)
-    if (!member) return
-
-    const data = await this.serverConfig.getOrCreate(member.guild.id)
-
-    if (!member.permissions.has('manageMessages') && !this.config.discord.admins.includes(member.id)) {
-      await context.send({
-        embeds: [genErrorMessage(this.lang.get(data.lang).display.command.no_permission)],
-        ephemeral: true
-      })
-      return
-    }
+    const begun = await this.beginCommand(context, 'manageMessages')
+    if (!begun) return
+    const { member, data } = begun
 
     await this.voiceLog.text.unsetVoiceLog(member.guild.id)
     await context.send({
@@ -281,19 +250,9 @@ export class VoiceLogCommands {
   }
 
   public async commandSetTTS(context: CommandContext) {
-    if (!context.guildID || !context.member) return
-    const member = await this.client.getRESTGuildMember(context.guildID, context.member.id)
-    if (!member) return
-
-    const data = await this.serverConfig.getOrCreate(member.guild.id)
-
-    if (!member.permissions.has('manageMessages') && !this.config.discord.admins.includes(member.id)) {
-      await context.send({
-        embeds: [genErrorMessage(this.lang.get(data.lang).display.command.no_permission)],
-        ephemeral: true
-      })
-      return
-    }
+    const begun = await this.beginCommand(context, 'manageMessages')
+    if (!begun) return
+    const { member, data } = begun
 
     const options = context.options.tts as Partial<Record<string, unknown>>
     if (!options) {
@@ -347,19 +306,8 @@ export class VoiceLogCommands {
   }
 
   public async commandRefreshCache(context: CommandContext) {
-    if (!context.guildID || !context.member) return
-    const member = await this.client.getRESTGuildMember(context.guildID, context.member.id)
-    if (!member) return
-
-    const data = await this.serverConfig.getOrCreate(member.guild.id)
-
-    if (!this.config.discord.admins.includes(member.id)) {
-      await context.send({
-        embeds: [genErrorMessage(this.lang.get(data.lang).display.command.no_permission)],
-        ephemeral: true
-      })
-      return
-    }
+    const begun = await this.beginCommand(context, 'admin')
+    if (!begun) return
 
     this.voiceLog.cacheRefresh.refreshCache(context)
   }
