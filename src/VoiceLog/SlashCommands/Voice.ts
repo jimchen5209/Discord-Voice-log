@@ -1,6 +1,7 @@
 import { type CommandContext, CommandOptionType, SlashCommand, type SlashCreator } from 'slash-create'
 import { instances } from '../../App/App'
 import type { VoiceLog } from '../VoiceLog'
+import { genChoice } from './options'
 
 export class VoiceCommand extends SlashCommand {
   private voiceLog: VoiceLog
@@ -41,7 +42,7 @@ export class VoiceCommand extends SlashCommand {
               name: 'message_lang',
               description: 'Message language for TTS parsing',
               type: CommandOptionType.STRING,
-              choices: instances.lang.genChoice()
+              choices: genChoice(instances.lang)
             },
             {
               name: 'voice_lang',
