@@ -1,33 +1,30 @@
 import { Client } from '@projectdysnomia/dysnomia'
-import { instances } from '../App/App'
-import { VoiceLog } from '../VoiceLog/VoiceLog'
+import type { ILogObj, Logger } from 'tslog'
+import type { Config } from '../Shared/Config'
 import { Command } from './Command'
 
-const ERR_MISSING_TOKEN = Error('Discord token missing')
-
-const token = instances.config.discord.botToken
-if (!token) throw ERR_MISSING_TOKEN
+export function assertDiscordToken(config: Config) {
+  if (!config.discord.botToken) throw Error('Discord token missing')
+}
 
 export class Discord {
   private _client: Client
-  private _voiceLog: VoiceLog
-  private command: Command
-  private _logger = instances.mainLogger.getSubLogger({ name: 'Discord' })
+  private _command: Command
+  private _logger: Logger<ILogObj>
 
-  constructor() {
-    this._client = new Client(token, {
+  constructor(config: Config, mainLogger: Logger<ILogObj>) {
+    this._logger = mainLogger.getSubLogger({ name: 'Discord' })
+    this._client = new Client(config.discord.botToken, {
       restMode: true,
       gateway: {
         intents: ['guilds', 'guildMessages', 'guildVoiceStates', 'messageContent']
       }
     })
-    this._voiceLog = new VoiceLog(this)
-    this.command = new Command(this)
+    this._command = new Command(this, config)
 
     this._client.on('ready', async () => {
       this._logger.info(`Logged in as ${this._client.user.username} (${this._client.user.id})`)
-      this.command.refreshCommands()
-      this._voiceLog.start()
+      this._command.refreshCommands()
     })
 
     this._client.on('warn', (message) => {
@@ -47,8 +44,8 @@ export class Discord {
     return this._logger
   }
 
-  public get voiceLog() {
-    return this._voiceLog
+  public get command() {
+    return this._command
   }
 
   public start() {
@@ -57,7 +54,6 @@ export class Discord {
 
   public async stop() {
     this._logger.info('Logging out...')
-    await this._voiceLog.end()
     await new Promise<void>((resolve) => {
       this._client.once('disconnect', resolve)
       this._client.disconnect({ reconnect: false })

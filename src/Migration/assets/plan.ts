@@ -1,9 +1,11 @@
 import { readFileSync as readFile } from 'node:fs'
-import { instances } from '../../App/App'
+import type { ILogObj, Logger } from 'tslog'
+import { getApp } from '../../App/App'
 import { DATA_VERSION, type UsableRecord } from '../record'
 import { ASSET_STEPS, ASSETS_DIR, assetConfigFiles } from './steps'
 
-const logger = instances.mainLogger.getSubLogger({ name: 'DataMigration' })
+let _logger: Logger<ILogObj> | undefined
+const logger = () => (_logger ??= getApp().mainLogger.getSubLogger({ name: 'DataMigration' }))
 
 // Run by `pnpm migrate` before `prisma migrate deploy` (after readUsableRecord rejected a malformed
 // record or one newer than DATA_VERSION), so (unless skipInvalid) an invalid asset file that migrateData
@@ -17,7 +19,7 @@ export function preflightData(record: UsableRecord, { skipInvalid = false } = {}
 }
 
 export function logInvalidAssets(invalid: string[], outcome: string) {
-  logger.error(
+  logger().error(
     `${invalid.length} asset files are not valid: ${invalid.join(', ')}; ${outcome}. Fix or remove them and run \`pnpm migrate\` again, or run \`pnpm migrate --skip-invalid\` to leave them unconverted`
   )
 }
@@ -34,12 +36,12 @@ export function planAssets(files: string[], from: number, skipInvalid: boolean) 
     try {
       config = JSON.parse(readFile(path, { encoding: 'utf-8' }))
     } catch (error) {
-      logger.error(`${label} ${path}: invalid JSON`, error)
+      logger().error(`${label} ${path}: invalid JSON`, error)
       invalid.push(path)
       continue
     }
     if (typeof config !== 'object' || config === null || Array.isArray(config)) {
-      logger.error(`${label} ${path}: unsupported format (expected a JSON object)`)
+      logger().error(`${label} ${path}: unsupported format (expected a JSON object)`)
       invalid.push(path)
       continue
     }

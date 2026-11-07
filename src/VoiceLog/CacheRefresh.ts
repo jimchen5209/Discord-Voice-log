@@ -2,15 +2,16 @@ import { unlinkSync as deleteFile, readdirSync as readDir } from 'node:fs'
 import { extname } from 'node:path'
 import type { CommandContext, MessageEmbedOptions } from 'slash-create'
 import type { ILogObj, Logger } from 'tslog'
-import { instances } from '../App/App'
-import { MEMBER_EVENTS, type TTSRequest } from '../Audio/Audio'
+import { type Audio, MEMBER_EVENTS, type TTSRequest } from '../Audio/Audio'
 import { genProgressMessage } from './Embeds'
 
 export class CacheRefresh {
   private updateLock = false
   private logger: Logger<ILogObj>
-  constructor(logger: Logger<ILogObj>) {
+  private audio: Audio
+  constructor(logger: Logger<ILogObj>, audio: Audio) {
     this.logger = logger
+    this.audio = audio
   }
 
   public async refreshCache(context: CommandContext | undefined) {
@@ -55,7 +56,7 @@ export class CacheRefresh {
     let progressCount = 0
     let progressTotal = 0
     const ttsList: string[] = []
-    const requests: TTSRequest[] = [...instances.audio.systemRequests()]
+    const requests: TTSRequest[] = [...this.audio.systemRequests()]
     progressTotal += 2
     const files = readDir('assets/')
     files.forEach((file) => {
@@ -66,10 +67,10 @@ export class CacheRefresh {
           name: `${seekDone ? '✅' : '➡️'} Seeking for files ...${seekDone ? ' Done' : ''}`,
           value: `${seekDone || seekCounter === 0 ? '' : `Current ${seekFilename}, `} Seeked ${seekCounter} files. `
         }
-        const config = instances.audio.readMemberConfig(`assets/${file}`)
+        const config = this.audio.readMemberConfig(`assets/${file}`)
         if (!config) return
         for (const type of MEMBER_EVENTS) {
-          const request = instances.audio.memberRequest(config, type)
+          const request = this.audio.memberRequest(config, type)
           if (!request) continue
           progressTotal++
           requests.push(request)
@@ -90,7 +91,7 @@ export class CacheRefresh {
       }
       progressMessage = genProgressMessage(title, [seekField, progressField])
       await context?.editOriginal({ embeds: [progressMessage] })
-      const fileName = await instances.audio.synthesize(request)
+      const fileName = await this.audio.synthesize(request)
       this.logger.info(`(${progressCount}/${progressTotal}) ${description} -> ${fileName}`)
       if (fileName !== null) ttsList.push(fileName)
       await new Promise((res) => setTimeout(res, 500))
@@ -108,7 +109,7 @@ export class CacheRefresh {
     await context?.editOriginal({ embeds: [progressMessage] })
     const cacheFiles = readDir('caches/')
     for (const file of cacheFiles) {
-      if (!ttsList.includes(`./caches/${file}`) && instances.audio.isCacheFileRemovable(`./caches/${file}`)) {
+      if (!ttsList.includes(`./caches/${file}`) && this.audio.isCacheFileRemovable(`./caches/${file}`)) {
         try {
           deleteFile(`./caches/${file}`)
         } catch (error) {
