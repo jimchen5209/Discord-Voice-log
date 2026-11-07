@@ -353,6 +353,6 @@ export class VoiceLogCommands {
       return
     }
 
-    this.voiceLog.voice.refreshCache(context)
+    this.voiceLog.cacheRefresh.refreshCache(context)
   }
 }
