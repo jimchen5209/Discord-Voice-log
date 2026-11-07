@@ -2,14 +2,18 @@ import { existsSync as exists, mkdirSync as mkDir } from 'node:fs'
 import type { Client, Member, Message, PossiblyUncachedTextableChannel, VoiceChannel } from '@projectdysnomia/dysnomia'
 import { scheduleJob } from 'node-schedule'
 import type { ILogObj, Logger } from 'tslog'
-import { instances } from '../App/App'
+import type { App } from '../App/App'
+import type { Audio } from '../Audio/Audio'
 import type { DbServerConfigManager, IServerConfig } from '../Db/ServerConfig'
-import { ERR_DB_NOT_INIT } from '../Db/SQLiteCore'
 import type { Discord } from '../Discord/Discord'
+import type { Lang } from '../Shared/Lang'
 import { CacheRefresh } from './CacheRefresh'
 import { VoiceLogCommands } from './Commands'
 import { genVoiceLogEmbed } from './Embeds'
 import { parseMessage } from './MessageText'
+import { LogCommand } from './SlashCommands/Log'
+import { RefreshCacheCommand } from './SlashCommands/RefreshCache'
+import { VoiceCommand } from './SlashCommands/Voice'
 import { VoiceLogText } from './Text'
 import { VoiceLogVoice } from './VoiceLogVoice'
 
@@ -21,6 +25,8 @@ export class VoiceLog {
   private _logger: Logger<ILogObj>
   private textLogger: Logger<ILogObj>
   private _serverConfig: DbServerConfigManager
+  private lang: Lang
+  private audio: Audio
   private client: Client
   // Message and join/leave tasks run one at a time in order; a rejected task does not stop the ones after it
   private queueTail: Promise<unknown> = Promise.resolve()
@@ -28,24 +34,30 @@ export class VoiceLog {
   private queueLength = 0
   private continuousUser: { [key: string]: { user: string; timestamp: number } } = {}
 
-  constructor(discord: Discord) {
+  constructor(discord: Discord, serverConfig: DbServerConfigManager, app: App) {
     this.client = discord.client
     this._logger = discord.logger.getSubLogger({ name: 'VoiceLog' })
-    this._cacheRefresh = new CacheRefresh(this._logger.getSubLogger({ name: 'Voice' }))
+    this.lang = app.lang
+    this.audio = app.audio
+    this._cacheRefresh = new CacheRefresh(this._logger.getSubLogger({ name: 'Voice' }), app.audio)
     this.textLogger = this._logger.getSubLogger({ name: 'Text' })
-
-    const serverConfig = instances.db?.serverConfig
-    if (!serverConfig) throw ERR_DB_NOT_INIT
     this._serverConfig = serverConfig
 
-    this._voice = new VoiceLogVoice(this, discord)
-    this._text = new VoiceLogText(this, discord)
-    this._command = new VoiceLogCommands(this, discord)
+    this._voice = new VoiceLogVoice(this, discord, app.audio)
+    this._text = new VoiceLogText(this, discord, app.lang)
+    this._command = new VoiceLogCommands(this, discord, app.config, app.lang, app.audio)
 
     this.client.on('messageCreate', (message) => this.onMessage(message))
     this.client.on('voiceChannelJoin', (member: Member, newChannel: VoiceChannel) => this.onJoin(member, newChannel))
     this.client.on('voiceChannelLeave', (member: Member, oldChannel: VoiceChannel) => this.onLeave(member, oldChannel))
     this.client.on('voiceChannelSwitch', (member: Member, newChannel: VoiceChannel, oldChannel: VoiceChannel) => this.onSwitch(member, newChannel, oldChannel))
+
+    discord.command.register(
+      (creator) => new VoiceCommand(creator, this, app.lang, app.audio),
+      (creator) => new LogCommand(creator, this, app.lang),
+      (creator) => new RefreshCacheCommand(creator, this)
+    )
+    this.client.on('ready', () => this.start())
   }
 
   private async onMessage(message: Message<PossiblyUncachedTextableChannel>) {
@@ -59,7 +71,7 @@ export class VoiceLog {
       const voice = this._voice.getCurrentVoice(guildId)
       if (voice?.channelId === message.channel.id) {
         const isContinuous = this.continuousUser[guildId]?.user === message.author.id && message.timestamp - this.continuousUser[guildId]?.timestamp < 5 * 1000
-        const text = parseMessage(this.client, this.textLogger, message, isContinuous, data.voiceMessageTTS.messageLang)
+        const text = parseMessage(this.client, this.textLogger, message, isContinuous, data.voiceMessageTTS.messageLang, this.lang)
 
         if (text === '') {
           this._logger.debug('Skipped empty message')
@@ -69,11 +81,11 @@ export class VoiceLog {
         this._logger.debug(`${message.author} to ${message.channel} ${isContinuous ? '(Continuous)' : ''}: ${text}`)
 
         const tts = data.voiceMessageTTS
-        if (!instances.audio.providerIds().includes(tts.provider)) {
+        if (!this.audio.providerIds().includes(tts.provider)) {
           this._logger.error(`Guild ${guildId} uses unknown TTS provider "${tts.provider}", set it again with /voice tts`)
           return
         }
-        instances.audio.speak(voice.playback, { provider: tts.provider, text, lang: tts.voiceLang, voice: tts.voiceName })
+        this.audio.speak(voice.playback, { provider: tts.provider, text, lang: tts.voiceLang, voice: tts.voiceName })
         this.continuousUser[guildId] = {
           user: message.author.id,
           timestamp: message.timestamp
@@ -97,13 +109,13 @@ export class VoiceLog {
 
       if (data) {
         if (data.channelID !== '') {
-          this.client.createMessage(data.channelID, genVoiceLogEmbed(member, data.lang, 'join', undefined, newChannel))
+          this.client.createMessage(data.channelID, genVoiceLogEmbed(this.lang, member, data.lang, 'join', undefined, newChannel))
         }
       }
 
       if (newChannel.id === channelID) {
         if (voice) {
-          instances.audio.announceMember(voice.playback, member, 'join')
+          this.audio.announceMember(voice.playback, member, 'join')
           this.continuousUser[guildId] = {
             user: this.client.user.id,
             timestamp: 0
@@ -127,12 +139,12 @@ export class VoiceLog {
       const data = await this._serverConfig.get(guildId)
       if (data) {
         if (data.channelID !== '') {
-          this.client.createMessage(data.channelID, genVoiceLogEmbed(member, data.lang, 'leave', oldChannel, undefined))
+          this.client.createMessage(data.channelID, genVoiceLogEmbed(this.lang, member, data.lang, 'leave', oldChannel, undefined))
         }
       }
       if (oldChannel.id === channelID) {
         if (voice) {
-          instances.audio.announceMember(voice.playback, member, 'left')
+          this.audio.announceMember(voice.playback, member, 'left')
           this.continuousUser[guildId] = {
             user: this.client.user.id,
             timestamp: 0
@@ -163,12 +175,12 @@ export class VoiceLog {
 
       if (data) {
         if (data.channelID !== '') {
-          this.client.createMessage(data.channelID, genVoiceLogEmbed(member, data.lang, 'move', oldChannel, newChannel))
+          this.client.createMessage(data.channelID, genVoiceLogEmbed(this.lang, member, data.lang, 'move', oldChannel, newChannel))
         }
       }
       if (oldChannel.id === channelID) {
         if (voice) {
-          instances.audio.announceMember(voice.playback, member, 'switched_out')
+          this.audio.announceMember(voice.playback, member, 'switched_out')
           this.continuousUser[guildId] = {
             user: this.client.user.id,
             timestamp: 0
@@ -177,7 +189,7 @@ export class VoiceLog {
       }
       if (newChannel.id === channelID) {
         if (voice) {
-          instances.audio.announceMember(voice.playback, member, 'switched_in')
+          this.audio.announceMember(voice.playback, member, 'switched_in')
           this.continuousUser[guildId] = {
             user: this.client.user.id,
             timestamp: 0
@@ -224,7 +236,7 @@ export class VoiceLog {
   public async start() {
     if (!exists('./assets')) mkDir('./assets')
     if (!exists('./caches')) mkDir('./caches')
-    instances.audio.evictCache()
+    this.audio.evictCache()
     const channels = await this._serverConfig.getCurrentChannels()
     channels.forEach((element: IServerConfig) => {
       this._logger.info(`Reconnecting to ${element.currentVoiceChannel}...`)
@@ -235,7 +247,7 @@ export class VoiceLog {
     })
     // Away from the midnight refresh, so expired files are not removed just before it re-reads them
     scheduleJob('0 12 * * *', () => {
-      instances.audio.evictCache()
+      this.audio.evictCache()
     })
   }
 

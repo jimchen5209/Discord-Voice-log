@@ -1,15 +1,18 @@
 import { Status } from 'status-client'
-import { instances } from './App/App'
-import { SQLiteCore } from './Db/SQLiteCore'
-import { Discord } from './Discord/Discord'
+import { createApp } from './App/App'
+import { createBot } from './App/Bot'
+import { assertDiscordToken } from './Discord/Discord'
 import { checkData, warnRemovedDumpEnv } from './Migration'
 import { EXIT_NO_RESTART } from './Shared/ExitCode'
 
 let quitting = false
+let bot: ReturnType<typeof createBot> | undefined
 
-const logger = instances.mainLogger
+const app = createApp()
+const logger = app.mainLogger
 logger.info('Starting...')
-if (instances.config.debug) instances.mainLogger.settings.minLevel = 0 // Silly
+if (app.config.debug) app.mainLogger.settings.minLevel = 0 // Silly
+assertDiscordToken(app.config)
 
 const status = new Status('VoiceLog')
 
@@ -18,20 +21,16 @@ async function main() {
   if (!(await checkData())) process.exit(EXIT_NO_RESTART)
 
   // Initialize SQLite
-  const db = new SQLiteCore()
-  instances.db = db
-
   // Since SQLite/Prisma is synchronous initialization for the client
   // (connection is lazy), we can start the bot immediately.
-  const discord = new Discord()
-  instances.discord = discord
+  bot = createBot(app)
 
-  discord.start()
+  bot.discord.start()
   status.set_status()
 }
 
 main().catch((err) => {
-  instances.mainLogger.fatal(err)
+  app.mainLogger.fatal(err)
   process.exit(1)
 })
 
@@ -55,11 +54,14 @@ const stop = () => {
     process.exit(1)
   }, 60 * 1000)
 
-  const discordShutdown = instances.discord?.stop() ?? Promise.resolve()
+  const discordShutdown = (async () => {
+    await bot?.voiceLog.end()
+    await bot?.discord.stop()
+  })()
 
   const dbShutdown = new Promise<void>((resolve) => {
-    if (instances.db) {
-      instances.db.close().then(() => resolve())
+    if (bot?.db) {
+      bot.db.close().then(() => resolve())
     } else {
       resolve()
     }

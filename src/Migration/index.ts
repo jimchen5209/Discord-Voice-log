@@ -1,6 +1,7 @@
 import { existsSync as exists } from 'node:fs'
 import { resolve } from 'node:path'
-import { instances } from '../App/App'
+import type { ILogObj, Logger } from 'tslog'
+import { getApp } from '../App/App'
 import { writeAtomic } from '../Shared/WriteAtomic'
 import { logInvalidAssets, planAssets, preflightData } from './assets/plan'
 import { ASSETS_DIR, assetConfigFiles } from './assets/steps'
@@ -22,7 +23,8 @@ const TTS_PROVIDER_MIGRATION = '20261030120000_tts_provider'
 const MAPPED_TTS_TYPES = [...MONGO_TTS_PROVIDERS.keys()]
 const UNMAPPED_TTS_PROVIDER = 'google-cloud'
 
-const logger = instances.mainLogger.getSubLogger({ name: 'DataMigration' })
+let _logger: Logger<ILogObj> | undefined
+const logger = () => (_logger ??= getApp().mainLogger.getSubLogger({ name: 'DataMigration' }))
 
 // What a `pnpm migrate` run has done so far, for the message on a failure
 type RunState = { yolo: boolean; backupDir?: string }
@@ -48,7 +50,7 @@ export async function migrate({
 }) {
   // A path given with --mongo-dump must exist; the default one is imported only when it does
   if (mongoDump !== undefined && !exists(mongoDump)) {
-    logger.error(`MongoDB dump ${mongoDump} (--mongo-dump) not found; nothing was changed`)
+    logger().error(`MongoDB dump ${mongoDump} (--mongo-dump) not found; nothing was changed`)
     return false
   }
   const dumpPath = mongoDump ?? (exists(DEFAULT_MONGODB_DUMP) ? DEFAULT_MONGODB_DUMP : undefined)
@@ -62,20 +64,20 @@ export async function migrate({
   if (reasons.length === 0) {
     const unused = [...(yolo ? ['--yolo'] : []), ...(backupDir !== undefined ? ['--backup-dir'] : [])]
     if (unused.length > 0) {
-      logger.error(`Nothing to migrate, so no backup is made and ${unused.join(' and ')} cannot be used; nothing was changed`)
+      logger().error(`Nothing to migrate, so no backup is made and ${unused.join(' and ')} cannot be used; nothing was changed`)
       return false
     }
-    logger.info(`Nothing to migrate (database migrations applied, data version ${DATA_VERSION}, no MongoDB dump); no backup was made`)
+    logger().info(`Nothing to migrate (database migrations applied, data version ${DATA_VERSION}, no MongoDB dump); no backup was made`)
     return true
   }
-  logger.info(`To migrate: ${reasons.join('; ')}`)
+  logger().info(`To migrate: ${reasons.join('; ')}`)
   const run: RunState = { yolo }
   const dataVersion = record.kind === 'ok' ? record.version : null
   if (!(await backupData({ yolo, dumpPath, backupDir: backupDir ?? BACKUP_DIR, dataVersion, run }))) return false
   if (pending.includes(TTS_PROVIDER_MIGRATION)) logUnmappedTTSTypes()
   if (!deployDatabaseMigrations()) return failed(run)
   if (dumpPath !== undefined && !(await importMongoDump(dumpPath))) {
-    logger.error('The database migrations of this run were applied; assets/*.json and data-version.json were not changed')
+    logger().error('The database migrations of this run were applied; assets/*.json and data-version.json were not changed')
     return failed(run)
   }
   return (await migrateData(record, { skipInvalid })) || failed(run)
@@ -84,15 +86,15 @@ export async function migrate({
 // MONGODB_DUMP_PATH was replaced by --mongo-dump; only warn, so a leftover setting does not stop an upgrade
 export function warnRemovedDumpEnv() {
   if (process.env.MONGODB_DUMP_PATH !== undefined) {
-    logger.warn('MONGODB_DUMP_PATH is no longer read; pass the dump with `pnpm migrate --mongo-dump <path>`')
+    logger().warn('MONGODB_DUMP_PATH is no longer read; pass the dump with `pnpm migrate --mongo-dump <path>`')
   }
 }
 
 // Logs how to undo a run that failed after it started changing data; returns false
 function failed({ yolo, backupDir }: RunState) {
-  if (backupDir !== undefined) logger.error(`To undo this run, stop the bot and run \`pnpm migrate --restore ${backupDir}\` (the backup made before it changed anything)`)
-  else if (yolo) logger.error('No backup was made (--yolo); restore your own backup to undo this run')
-  else logger.error('No backup was made: this run found no existing data to change')
+  if (backupDir !== undefined) logger().error(`To undo this run, stop the bot and run \`pnpm migrate --restore ${backupDir}\` (the backup made before it changed anything)`)
+  else if (yolo) logger().error('No backup was made (--yolo); restore your own backup to undo this run')
+  else logger().error('No backup was made: this run found no existing data to change')
   return false
 }
 
@@ -103,13 +105,13 @@ export async function restoreBackup({ dir, backupDir = BACKUP_DIR }: { dir: stri
   if (!(await databaseUnlocked('nothing was restored'))) return false
   try {
     const { manifest, replaced } = await restore(dir, { baseDir: backupDir, dataVersion: currentDataVersion() })
-    logger.info(`Restored ${dir} (made ${manifest.createdAt} by version ${manifest.appVersion}, data version ${manifest.dataVersion ?? 'none'})`)
-    logger.info(`The data from before the restore is in ${replaced}; run \`pnpm migrate --restore ${replaced}\` to go back to it`)
-    logger.info('Nothing was migrated: run `pnpm migrate` to upgrade the restored data (the bot refuses to start until then), or run the version of the bot that matches it')
+    logger().info(`Restored ${dir} (made ${manifest.createdAt} by version ${manifest.appVersion}, data version ${manifest.dataVersion ?? 'none'})`)
+    logger().info(`The data from before the restore is in ${replaced}; run \`pnpm migrate --restore ${replaced}\` to go back to it`)
+    logger().info('Nothing was migrated: run `pnpm migrate` to upgrade the restored data (the bot refuses to start until then), or run the version of the bot that matches it')
     return true
   } catch (error) {
-    if (error instanceof RestoreError) logger.error(error.message)
-    else logger.error(`Restoring ${dir} failed:`, error)
+    if (error instanceof RestoreError) logger().error(error.message)
+    else logger().error(`Restoring ${dir} failed:`, error)
     return false
   }
 }
@@ -138,7 +140,7 @@ function outdatedReasons(pending: string[], record: UsableRecord, noRecord: stri
 // them exists yet (a fresh install). Returns false, having changed nothing, when the backup fails.
 async function backupData({ yolo, dumpPath, backupDir, dataVersion, run }: { yolo: boolean; dumpPath?: string; backupDir: string; dataVersion: number | null; run: RunState }) {
   if (yolo) {
-    logger.warn('--yolo: no backup was made')
+    logger().warn('--yolo: no backup was made')
     return true
   }
   const database = databasePath()
@@ -148,10 +150,10 @@ async function backupData({ yolo, dumpPath, backupDir, dataVersion, run }: { yol
     // A path that does not exist (no database or record yet) is recorded as absent, so restoring
     // deletes the one this run creates
     run.backupDir = await backup({ database, dirs: [ASSETS_DIR], files, baseDir: backupDir, reason: 'migrate', dataVersion })
-    logger.info(`Backed up to ${resolve(run.backupDir)}; to undo this run, stop the bot and run \`pnpm migrate --restore ${run.backupDir}\``)
+    logger().info(`Backed up to ${resolve(run.backupDir)}; to undo this run, stop the bot and run \`pnpm migrate --restore ${run.backupDir}\``)
     return true
   } catch (error) {
-    logger.error('Backup failed; nothing was changed. Fix the problem and run `pnpm migrate` again, or run `pnpm migrate --yolo` to migrate without a backup:', error)
+    logger().error('Backup failed; nothing was changed. Fix the problem and run `pnpm migrate` again, or run `pnpm migrate --yolo` to migrate without a backup:', error)
     return false
   }
 }
@@ -161,7 +163,7 @@ async function backupData({ yolo, dumpPath, backupDir, dataVersion, run }: { yol
 function logUnmappedTTSTypes() {
   // better-sqlite3 (see sqlite.ts): the generated client follows the new schema and has no ttsType
   for (const row of unmappedTTSTypes(databasePath(), MAPPED_TTS_TYPES)) {
-    logger.warn(`Guild ${row.serverID} has unknown TTS type "${row.ttsType}"; migrating to the default provider ${UNMAPPED_TTS_PROVIDER}`)
+    logger().warn(`Guild ${row.serverID} has unknown TTS type "${row.ttsType}"; migrating to the default provider ${UNMAPPED_TTS_PROVIDER}`)
   }
 }
 
@@ -172,20 +174,20 @@ function logUnmappedTTSTypes() {
 async function migrateData(record: UsableRecord, { skipInvalid = false } = {}): Promise<boolean> {
   const path = recordFilePath()
   if (record.kind === 'ok' && record.version === DATA_VERSION) {
-    logger.info(`Data is already at version ${DATA_VERSION}`)
+    logger().info(`Data is already at version ${DATA_VERSION}`)
     return true
   }
 
   const files = assetConfigFiles()
   if (record.kind === 'none' && files.length === 0) {
     await writeRecord(path, DATA_VERSION)
-    logger.info(`Fresh install, data version ${DATA_VERSION} recorded in ${path}`)
+    logger().info(`Fresh install, data version ${DATA_VERSION} recorded in ${path}`)
     return true
   }
 
   // No record but existing assets/<id>.json: the install predates data versions, so version 1
   const from = record.kind === 'ok' ? record.version : 1
-  logger.info(`Upgrading data from version ${from} to ${DATA_VERSION}`)
+  logger().info(`Upgrading data from version ${from} to ${DATA_VERSION}`)
   const { pending, invalid } = planAssets(files, from, skipInvalid)
   if (invalid.length > 0 && !skipInvalid) {
     logInvalidAssets(invalid, `nothing was converted and data version is still ${from}`)
@@ -196,19 +198,19 @@ async function migrateData(record: UsableRecord, { skipInvalid = false } = {}): 
   for (const { file, config } of pending) {
     try {
       await writeAtomic(`${ASSETS_DIR}/${file}`, `${JSON.stringify(config, null, 2)}\n`)
-      logger.info(`Migrated ${ASSETS_DIR}/${file} to provider ${config.provider}`)
+      logger().info(`Migrated ${ASSETS_DIR}/${file} to provider ${config.provider}`)
     } catch (error) {
       failed++
-      logger.error(`Failed to migrate ${ASSETS_DIR}/${file}:`, error)
+      logger().error(`Failed to migrate ${ASSETS_DIR}/${file}:`, error)
     }
   }
   if (failed > 0) {
-    logger.error(`${failed} asset files could not be migrated; data version is still ${from}, run \`pnpm migrate\` again`)
+    logger().error(`${failed} asset files could not be migrated; data version is still ${from}, run \`pnpm migrate\` again`)
     return false
   }
 
   await writeRecord(path, DATA_VERSION)
-  logger.info(`Data version ${DATA_VERSION} recorded in ${path}`)
+  logger().info(`Data version ${DATA_VERSION} recorded in ${path}`)
   return true
 }
 
@@ -224,6 +226,6 @@ export async function checkData(): Promise<boolean> {
   const problems = outdatedReasons(await pendingMigrations(), record, `no data version recorded in ${path}`, dump)
   if (problems.length === 0) return true
 
-  logger.error(`Data is not up to date (${problems.join('; ')}). Run \`pnpm migrate\` first`)
+  logger().error(`Data is not up to date (${problems.join('; ')}). Run \`pnpm migrate\` first`)
   return false
 }
