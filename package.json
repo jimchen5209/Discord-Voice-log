@@ -28,7 +28,7 @@
     "@prisma/client": "^7.10.0",
     "@projectdysnomia/dysnomia": "0.2.4",
     "async-wait-until": "^2.0.31",
-    "better-sqlite3": "^12.11.1",
+    "better-sqlite3": "^13.0.0",
     "fix-esm": "^1.0.1",
     "mpg123-decoder": "^1.0.3",
     "node-schedule": "^2.1.1",
