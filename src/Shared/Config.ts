@@ -1,5 +1,6 @@
 import { constants, copyFileSync as copyFile, existsSync as exists, readFileSync as readFile, writeFileSync as writeFile } from 'node:fs'
 import type { ILogObj, ISettingsParam, Logger } from 'tslog'
+import { GoogleCloudTTS } from '../Audio/Providers/GoogleCloudTTS'
 import { EXIT_NO_RESTART } from './ExitCode'
 
 export interface ConfigValue {
@@ -7,6 +8,7 @@ export interface ConfigValue {
   discord: DiscordConfig
   googleTTS: GoogleTTSConfig
   xaiTTS: XaiTTSConfig
+  systemVoice: SystemVoiceConfig
   sqlite: SQLiteConfig
   debug: boolean
 }
@@ -26,6 +28,12 @@ export interface XaiTTSConfig {
   apiKey: string
 }
 
+export interface SystemVoiceConfig {
+  provider: string
+  lang: string
+  voice: string
+}
+
 export interface SQLiteConfig {
   databaseUrl: string
 }
@@ -38,10 +46,11 @@ export const loggerOptions: ISettingsParam<ILogObj> = {
 }
 
 export class Config {
-  private configVersion = 4
+  private configVersion = 5
   private _discord: DiscordConfig
   private _googleTTS: GoogleTTSConfig
   private _xaiTTS: XaiTTSConfig
+  private _systemVoice: SystemVoiceConfig
   private _sqlite: SQLiteConfig
   private _debug: boolean
   private logger: Logger<ILogObj>
@@ -54,6 +63,11 @@ export class Config {
   }
   private readonly googleTTSDefault = { apiKey: '' }
   private readonly xaiTTSDefault = { apiKey: '' }
+  private readonly systemVoiceDefault: SystemVoiceConfig = {
+    provider: GoogleCloudTTS.id,
+    lang: 'en-US',
+    voice: 'en-US-Wavenet-D'
+  }
   private readonly sqliteDefault = { databaseUrl: 'file:./prisma/voice-log.db' }
 
   constructor(mainLogger: Logger<ILogObj>) {
@@ -79,6 +93,13 @@ export class Config {
         apiKey: config.xaiTTS.apiKey ? config.xaiTTS.apiKey : this.xaiTTSDefault.apiKey
       }
 
+      if (!config.systemVoice) config.systemVoice = {}
+      this._systemVoice = {
+        provider: config.systemVoice.provider ? config.systemVoice.provider : this.systemVoiceDefault.provider,
+        lang: config.systemVoice.lang ? config.systemVoice.lang : this.systemVoiceDefault.lang,
+        voice: config.systemVoice.voice ? config.systemVoice.voice : this.systemVoiceDefault.voice
+      }
+
       if (!config.sqlite) config.sqlite = {}
       this._sqlite = {
         databaseUrl: config.sqlite.databaseUrl ? config.sqlite.databaseUrl : this.sqliteDefault.databaseUrl
@@ -96,6 +117,7 @@ export class Config {
       this._discord = this.discordDefault
       this._googleTTS = this.googleTTSDefault
       this._xaiTTS = this.xaiTTSDefault
+      this._systemVoice = this.systemVoiceDefault
       this._sqlite = this.sqliteDefault
       this._debug = false
       this.save()
@@ -167,6 +189,7 @@ export class Config {
         discord: this._discord,
         googleTTS: this._googleTTS,
         xaiTTS: this._xaiTTS,
+        systemVoice: this._systemVoice,
         sqlite: this._sqlite,
         debug: this._debug
       },
@@ -186,6 +209,10 @@ export class Config {
 
   public get xaiTTS() {
     return this._xaiTTS
+  }
+
+  public get systemVoice() {
+    return this._systemVoice
   }
 
   public get sqlite() {
