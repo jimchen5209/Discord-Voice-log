@@ -9,6 +9,7 @@ import type { Discord } from '../Discord/Discord'
 import { CacheRefresh } from './CacheRefresh'
 import { VoiceLogCommands } from './Commands'
 import { genVoiceLogEmbed } from './Embeds'
+import { parseMessage } from './MessageText'
 import { VoiceLogText } from './Text'
 import { VoiceLogVoice } from './VoiceLogVoice'
 
@@ -18,6 +19,7 @@ export class VoiceLog {
   private _text: VoiceLogText
   private _command: VoiceLogCommands
   private _logger: Logger<ILogObj>
+  private textLogger: Logger<ILogObj>
   private _serverConfig: DbServerConfigManager
   private client: Client
   // Message and join/leave tasks run one at a time in order; a rejected task does not stop the ones after it
@@ -30,6 +32,7 @@ export class VoiceLog {
     this.client = discord.client
     this._logger = discord.logger.getSubLogger({ name: 'VoiceLog' })
     this._cacheRefresh = new CacheRefresh(this._logger.getSubLogger({ name: 'Voice' }))
+    this.textLogger = this._logger.getSubLogger({ name: 'Text' })
 
     const serverConfig = instances.db?.serverConfig
     if (!serverConfig) throw ERR_DB_NOT_INIT
@@ -50,7 +53,7 @@ export class VoiceLog {
         const voice = this._voice.getCurrentVoice(guildId)
         if (voice?.channelId === message.channel.id) {
           const isContinuous = this.continuousUser[guildId]?.user === message.author.id && message.timestamp - this.continuousUser[guildId]?.timestamp < 5 * 1000
-          const text = this._text.parseMessage(message, isContinuous, data.voiceMessageTTS.messageLang)
+          const text = parseMessage(this.client, this.textLogger, message, isContinuous, data.voiceMessageTTS.messageLang)
 
           if (text === '') {
             this._logger.debug('Skipped empty message')
