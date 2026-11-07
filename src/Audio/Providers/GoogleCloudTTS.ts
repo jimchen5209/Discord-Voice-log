@@ -17,7 +17,7 @@ export class GoogleCloudTTS implements TTSProvider {
   }
 
   public unavailableReason() {
-    return this.apiKey() ? undefined : 'googleTTS.apiKey is not set in config.json'
+    return this.apiKey() ? undefined : 'tts.providers.googleTTS.apiKey is not set in config.json'
   }
 
   public async synthesize(text: string, lang: string, voice: string, signal: AbortSignal): Promise<Uint8Array | null> {
