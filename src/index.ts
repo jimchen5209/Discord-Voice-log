@@ -1,9 +1,9 @@
 import { Status } from 'status-client'
-import { Discord } from './Core/Discord/Core'
-import { SQLiteCore } from './Core/SQLite/Core'
+import { instances } from './App/App'
+import { SQLiteCore } from './Db/SQLiteCore'
+import { Discord } from './Discord/Discord'
 import { checkData, warnRemovedDumpEnv } from './Migration'
-import { EXIT_NO_RESTART } from './Utils/ExitCode'
-import { instances } from './Utils/Instances'
+import { EXIT_NO_RESTART } from './Shared/ExitCode'
 
 let quitting = false
 
