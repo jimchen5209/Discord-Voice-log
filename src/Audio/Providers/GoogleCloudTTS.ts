@@ -4,7 +4,8 @@ import type { TTSProvider } from '../TTSProvider'
 
 // Google Cloud Text-to-Speech (WaveNet voices), OGG Opus
 export class GoogleCloudTTS implements TTSProvider {
-  public readonly id = 'google-cloud'
+  public static readonly id = 'google-cloud'
+  public readonly id = GoogleCloudTTS.id
   public readonly format = 'ogg'
   public readonly usesVoice = true
   private logger: Logger<ILogObj>
