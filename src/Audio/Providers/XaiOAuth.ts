@@ -13,7 +13,7 @@ interface XaiTokens {
 }
 
 // Fixed path in the project root (cwd), same as config.json. Not configurable, so pnpm xai:login and the bot must
-// run in the same directory. Mode 0600, since it holds the tokens. Not read while xaiTTS.apiKey is set. Each machine
+// run in the same directory. Mode 0600, since it holds the tokens. Not read while tts.providers.xaiTTS.apiKey is set. Each machine
 // needs its own login: a copy would spend the same single-use refresh token.
 export const XAI_TOKEN_FILE = './xai-oauth.json'
 

@@ -24,9 +24,9 @@ Add an instance to `providers` in `src/Utils/Instances.ts`. Nothing else lists p
 
 ## Credentials
 
-An API key goes in `config.json` as `<name>TTS.apiKey`, like `googleTTS.apiKey` and `xaiTTS.apiKey`. Pass it to the provider as a getter, `() => config.<name>TTS.apiKey`. Tokens from a login (OAuth) go in a fixed file in the project root with mode 0600, added to `.gitignore`, like `xai-oauth.json`. Never use `.env`, the home directory or any path outside the project.
+An API key goes in `config.json` as `tts.providers.<name>TTS.apiKey`, like `tts.providers.googleTTS.apiKey` and `tts.providers.xaiTTS.apiKey`. Pass it to the provider as a getter, `() => config.tts.providers.<name>TTS.apiKey`. Tokens from a login (OAuth) go in a fixed file in the project root with mode 0600, added to `.gitignore`, like `xai-oauth.json`. Never use `.env`, the home directory or any path outside the project.
 
-A new config section in `src/Utils/Config.ts` needs its interface, a field in `ConfigValue`, a default, the merge in the constructor (`if (!config.<name>TTS) config.<name>TTS = {}` and then one value per field, like `xaiTTS`), the default in the branch that creates a new config, a line in `save()` and a getter. Any config addition bumps `configVersion`: on the first start with the new code, the bot backs up the old file to `config-<old version>.json`, writes the new one and exits with code 78 (see [Exit code 78](UPGRADING.md#exit-code-78)). Update the README note about the first start after upgrading to name the new version.
+A new config section in `src/Utils/Config.ts` needs its interface, a field in `ConfigValue`, a default, the merge in the constructor (`if (!config.tts.providers.<name>TTS) config.tts.providers.<name>TTS = {}` and then one value per field, like `xaiTTS`), the default in the branch that creates a new config, a line in `save()` and a getter. Any config addition bumps `configVersion`: on the first start with the new code, the bot backs up the old file to `config-<old version>.json`, writes the new one and exits with code 78 (see [Exit code 78](UPGRADING.md#exit-code-78)). Update the README note about the first start after upgrading to name the new version.
 
 ## Checklist
 

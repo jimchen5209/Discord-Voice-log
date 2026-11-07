@@ -7,16 +7,16 @@ import { AudioCache } from './AudioCache'
 import type { PlaybackQueue } from './PlaybackQueue'
 import type { TTSProvider } from './TTSProvider'
 
-const SYSTEM_LANG = 'en-US'
-const SYSTEM_VOICE = 'en-US-Wavenet-D'
 const READY_TEXT = 'VoiceLog is ready.'
 const MOVED_TEXT = 'VoiceLog is moved to your channel.'
 
 export const MEMBER_EVENTS = ['join', 'left', 'switched_out', 'switched_in']
 
 export interface AudioOptions {
-  // Provider id for the bot's own announcements
+  // Provider, language and voice for the bot's own announcements
   systemProvider: string
+  systemLang: string
+  systemVoice: string
 }
 
 export interface TTSRequest {
@@ -122,7 +122,7 @@ export class Audio {
   }
 
   private systemRequest(text: string): TTSRequest {
-    return { provider: this.options.systemProvider, text, lang: SYSTEM_LANG, voice: SYSTEM_VOICE }
+    return { provider: this.options.systemProvider, text, lang: this.options.systemLang, voice: this.options.systemVoice }
   }
 
   private async tts(request: TTSRequest): Promise<AudioAsset | undefined> {
