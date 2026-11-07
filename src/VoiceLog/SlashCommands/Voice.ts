@@ -1,12 +1,13 @@
 import { type CommandContext, CommandOptionType, SlashCommand, type SlashCreator } from 'slash-create'
-import { instances } from '../../App/App'
+import type { Audio } from '../../Audio/Audio'
+import type { Lang } from '../../Shared/Lang'
 import type { VoiceLog } from '../VoiceLog'
 import { genChoice } from './options'
 
 export class VoiceCommand extends SlashCommand {
   private voiceLog: VoiceLog
 
-  constructor(creator: SlashCreator) {
+  constructor(creator: SlashCreator, voiceLog: VoiceLog, lang: Lang, audio: Audio) {
     super(creator, {
       name: 'voice',
       description: 'VoiceLog voice option',
@@ -36,13 +37,13 @@ export class VoiceCommand extends SlashCommand {
               name: 'type',
               description: 'TTS provider',
               type: CommandOptionType.STRING,
-              choices: instances.audio.providerIds().map((id) => ({ name: id, value: id }))
+              choices: audio.providerIds().map((id) => ({ name: id, value: id }))
             },
             {
               name: 'message_lang',
               description: 'Message language for TTS parsing',
               type: CommandOptionType.STRING,
-              choices: genChoice(instances.lang)
+              choices: genChoice(lang)
             },
             {
               name: 'voice_lang',
@@ -58,7 +59,7 @@ export class VoiceCommand extends SlashCommand {
         }
       ]
     })
-    this.voiceLog = creator.client.voiceLog
+    this.voiceLog = voiceLog
   }
 
   async run(ctx: CommandContext) {

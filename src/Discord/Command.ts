@@ -1,10 +1,7 @@
 import type { Client } from '@projectdysnomia/dysnomia'
 import { type AnyRequestData, GatewayServer, type SlashCommand, SlashCreator } from 'slash-create'
 import type { ILogObj, Logger } from 'tslog'
-import { instances } from '../App/App'
-import { LogCommand } from '../VoiceLog/SlashCommands/Log'
-import { RefreshCacheCommand } from '../VoiceLog/SlashCommands/RefreshCache'
-import { VoiceCommand } from '../VoiceLog/SlashCommands/Voice'
+import type { Config } from '../Shared/Config'
 import type { Discord } from './Discord'
 
 export class Command {
@@ -12,19 +9,19 @@ export class Command {
   private creator: SlashCreator
   private logger: Logger<ILogObj>
   private registered = false
+  private factories: ((creator: SlashCreator) => SlashCommand)[] = []
 
-  constructor(discord: Discord) {
+  constructor(discord: Discord, config: Config) {
     this.client = discord.client
     this.logger = discord.logger.getSubLogger({ name: 'Command' })
 
     this.creator = new SlashCreator({
       client: {
-        voiceLog: discord.voiceLog,
         discord: this.client
       },
-      applicationID: instances.config.discord.applicationID,
-      publicKey: instances.config.discord.publicKey,
-      token: instances.config.discord.botToken
+      applicationID: config.discord.applicationID,
+      publicKey: config.discord.publicKey,
+      token: config.discord.botToken
     })
 
     this.creator.withServer(
@@ -36,6 +33,11 @@ export class Command {
     )
   }
 
+  public register(...factories: ((creator: SlashCreator) => SlashCommand)[]) {
+    if (this.registered) throw new Error('Command.register() called after commands were refreshed')
+    this.factories.push(...factories)
+  }
+
   public refreshCommands() {
     if (this.registered) return
 
@@ -44,7 +46,7 @@ export class Command {
     this.client.getRESTGuilds({ limit: 200 }).then((value) => {
       this.creator.client.guildIDs = value.map((value) => value.id)
 
-      const commands: SlashCommand[] = [new VoiceCommand(this.creator), new LogCommand(this.creator), new RefreshCacheCommand(this.creator)]
+      const commands = this.factories.map((factory) => factory(this.creator))
 
       this.creator.registerCommands(commands)
       this.registered = true
