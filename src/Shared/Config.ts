@@ -8,7 +8,7 @@ export interface ConfigValue {
   discord: DiscordConfig
   googleTTS: GoogleTTSConfig
   xaiTTS: XaiTTSConfig
-  systemVoice: SystemVoiceConfig
+  tts: TtsConfig
   sqlite: SQLiteConfig
   debug: boolean
 }
@@ -34,6 +34,10 @@ export interface SystemVoiceConfig {
   voice: string
 }
 
+export interface TtsConfig {
+  systemVoice: SystemVoiceConfig
+}
+
 export interface SQLiteConfig {
   databaseUrl: string
 }
@@ -50,7 +54,7 @@ export class Config {
   private _discord: DiscordConfig
   private _googleTTS: GoogleTTSConfig
   private _xaiTTS: XaiTTSConfig
-  private _systemVoice: SystemVoiceConfig
+  private _tts: TtsConfig
   private _sqlite: SQLiteConfig
   private _debug: boolean
   private logger: Logger<ILogObj>
@@ -67,6 +71,9 @@ export class Config {
     provider: GoogleCloudTTS.id,
     lang: 'en-US',
     voice: 'en-US-Wavenet-D'
+  }
+  private readonly ttsDefault: TtsConfig = {
+    systemVoice: this.systemVoiceDefault
   }
   private readonly sqliteDefault = { databaseUrl: 'file:./prisma/voice-log.db' }
 
@@ -93,11 +100,8 @@ export class Config {
         apiKey: config.xaiTTS.apiKey ? config.xaiTTS.apiKey : this.xaiTTSDefault.apiKey
       }
 
-      if (!config.systemVoice) config.systemVoice = {}
-      this._systemVoice = {
-        provider: config.systemVoice.provider ? config.systemVoice.provider : this.systemVoiceDefault.provider,
-        lang: config.systemVoice.lang ? config.systemVoice.lang : this.systemVoiceDefault.lang,
-        voice: config.systemVoice.voice ? config.systemVoice.voice : this.systemVoiceDefault.voice
+      this._tts = {
+        systemVoice: this.mergeSystemVoice(config.tts?.systemVoice ?? config.systemVoice)
       }
 
       if (!config.sqlite) config.sqlite = {}
@@ -117,7 +121,7 @@ export class Config {
       this._discord = this.discordDefault
       this._googleTTS = this.googleTTSDefault
       this._xaiTTS = this.xaiTTSDefault
-      this._systemVoice = this.systemVoiceDefault
+      this._tts = this.ttsDefault
       this._sqlite = this.sqliteDefault
       this._debug = false
       this.save()
@@ -160,6 +164,14 @@ export class Config {
     } as GoogleTTSConfig
   }
 
+  private mergeSystemVoice(systemVoice: Partial<SystemVoiceConfig> | undefined): SystemVoiceConfig {
+    return {
+      provider: systemVoice?.provider ? systemVoice.provider : this.systemVoiceDefault.provider,
+      lang: systemVoice?.lang ? systemVoice.lang : this.systemVoiceDefault.lang,
+      voice: systemVoice?.voice ? systemVoice.voice : this.systemVoiceDefault.voice
+    }
+  }
+
   private backupAndQuit(config: ConfigValue) {
     if (!config.configVersion) config.configVersion = 'legacy'
     let copyConfigName = `./config-${config.configVersion}.json`
@@ -189,7 +201,7 @@ export class Config {
         discord: this._discord,
         googleTTS: this._googleTTS,
         xaiTTS: this._xaiTTS,
-        systemVoice: this._systemVoice,
+        tts: this._tts,
         sqlite: this._sqlite,
         debug: this._debug
       },
@@ -211,8 +223,8 @@ export class Config {
     return this._xaiTTS
   }
 
-  public get systemVoice() {
-    return this._systemVoice
+  public get tts() {
+    return this._tts
   }
 
   public get sqlite() {
