@@ -183,7 +183,7 @@ importers:
         version: 7.10.1
       '@prisma/client':
         specifier: ^7.10.0
-        version: 7.10.1(prisma@7.10.1(@types/node@24.19.2)(@types/react@19.2.17)(better-sqlite3@12.11.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(typescript@7.0.2))(typescript@7.0.2)
+        version: 7.10.1(prisma@7.10.1(@types/node@24.19.2)(@types/react@19.2.17)(better-sqlite3@13.0.3)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(typescript@7.0.2))(typescript@7.0.2)
       '@projectdysnomia/dysnomia':
         specifier: 0.2.4
         version: 0.2.4(patch_hash=65aa6fa43bcebdba85b19cb561b3bd58d186f857f3b5ebf30a91f2fc472c6421)(@emnapi/core@1.11.3)(@emnapi/runtime@1.11.3)(eventemitter3@5.0.1)
@@ -191,8 +191,8 @@ importers:
         specifier: ^2.0.31
         version: 2.0.31
       better-sqlite3:
-        specifier: ^12.11.1
-        version: 12.11.1
+        specifier: ^13.0.0
+        version: 13.0.3
       fix-esm:
         specifier: ^1.0.1
         version: 1.0.1
@@ -204,7 +204,7 @@ importers:
         version: 2.1.1
       prisma:
         specifier: ^7.10.0
-        version: 7.10.1(@types/node@24.19.2)(@types/react@19.2.17)(better-sqlite3@12.11.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(typescript@7.0.2)
+        version: 7.10.1(@types/node@24.19.2)(@types/react@19.2.17)(better-sqlite3@13.0.3)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(typescript@7.0.2)
       slash-create:
         specifier: ^7.0.0
         version: 7.0.0
@@ -1016,6 +1016,10 @@ packages:
     resolution: {integrity: sha512-dq9AtApgg5PGFtBzPFSBl3HZQjHok5gaQCM6zh2Yk0aSmDCs1CbnVI8/HgASQkNKsWFpseIO9beg5xxpYhbIfA==}
     engines: {node: 20.x || 22.x || 23.x || 24.x || 25.x || 26.x}
 
+  better-sqlite3@13.0.3:
+    resolution: {integrity: sha512-RbOBxmLBG8uvFUc15X9+9SFemKcQ0WBuISBVkpuiaUB2qblC8UWlHEjdWVoZ8AdhSwmoEgsiXKfopX0CQxaACQ==}
+    engines: {node: '>=22'}
+
   bindings@1.5.0:
     resolution: {integrity: sha512-p2q/t/mhvuOj/UeLlV6566GD/guowlr0hHxClI0W9m7MWYkL1F0hLo+0Aexs9HSPCtR1SXQ0TD3MMKrXZajbiQ==}
 
@@ -1357,6 +1361,10 @@ packages:
   node-abi@3.92.0:
     resolution: {integrity: sha512-KdHvFWZjEKDf0cakgFjebl371GPsISX2oZHcuyKqM7DtogIsHrqKeLTo8wBHxaXRAQlY2PsPlZmfo+9ZCxEREQ==}
     engines: {node: '>=10'}
+
+  node-addon-api@8.9.2:
+    resolution: {integrity: sha512-VijLXbi3UACN69I0JVXJsX4tjACjNoQDgv2gTF6sx2wWEi8tkSg2eX8p5gSIFi8z2+DL3oHmY6OyKce38SDolg==}
+    engines: {node: ^18 || ^20 || >= 21}
 
   node-releases@2.0.26:
     resolution: {integrity: sha512-S2M9YimhSjBSvYnlr5/+umAnPHE++ODwt5e2Ij6FoX45HA/s4vHdkDx1eax2pAPeAOqu4s9b7ppahsyEFdVqQA==}
@@ -1884,11 +1892,11 @@ snapshots:
 
   '@prisma/client-runtime-utils@7.10.1': {}
 
-  '@prisma/client@7.10.1(prisma@7.10.1(@types/node@24.19.2)(@types/react@19.2.17)(better-sqlite3@12.11.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(typescript@7.0.2))(typescript@7.0.2)':
+  '@prisma/client@7.10.1(prisma@7.10.1(@types/node@24.19.2)(@types/react@19.2.17)(better-sqlite3@13.0.3)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(typescript@7.0.2))(typescript@7.0.2)':
     dependencies:
       '@prisma/client-runtime-utils': 7.10.1
     optionalDependencies:
-      prisma: 7.10.1(@types/node@24.19.2)(@types/react@19.2.17)(better-sqlite3@12.11.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(typescript@7.0.2)
+      prisma: 7.10.1(@types/node@24.19.2)(@types/react@19.2.17)(better-sqlite3@13.0.3)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(typescript@7.0.2)
       typescript: 7.0.2
 
   '@prisma/config@7.10.1':
@@ -2401,6 +2409,10 @@ snapshots:
       bindings: 1.5.0
       prebuild-install: 7.1.3
 
+  better-sqlite3@13.0.3:
+    dependencies:
+      node-addon-api: 8.9.2
+
   bindings@1.5.0:
     dependencies:
       file-uri-to-path: 1.0.0
@@ -2694,6 +2706,8 @@ snapshots:
     dependencies:
       semver: 7.8.5
 
+  node-addon-api@8.9.2: {}
+
   node-releases@2.0.26: {}
 
   node-schedule@2.1.1:
@@ -2744,7 +2758,7 @@ snapshots:
       tar-fs: 2.1.4
       tunnel-agent: 0.6.0
 
-  prisma@7.10.1(@types/node@24.19.2)(@types/react@19.2.17)(better-sqlite3@12.11.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(typescript@7.0.2):
+  prisma@7.10.1(@types/node@24.19.2)(@types/react@19.2.17)(better-sqlite3@13.0.3)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(typescript@7.0.2):
     dependencies:
       '@prisma/config': 7.10.1
       '@prisma/dev': 0.24.17(typescript@7.0.2)
@@ -2753,7 +2767,7 @@ snapshots:
       mysql2: 3.24.4(@types/node@24.19.2)
       postgres: 3.4.7
     optionalDependencies:
-      better-sqlite3: 12.11.1
+      better-sqlite3: 13.0.3
       typescript: 7.0.2
     transitivePeerDependencies:
       - '@types/node'
