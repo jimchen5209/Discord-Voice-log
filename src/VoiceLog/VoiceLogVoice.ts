@@ -9,6 +9,7 @@ import { MEMBER_EVENTS, type TTSRequest } from '../Audio/Audio'
 import type { DbServerConfigManager } from '../Db/ServerConfig'
 import type { Discord } from '../Discord/Discord'
 import { DiscordVoice } from '../Discord/VoiceConnection'
+import { genProgressMessage } from './Embeds'
 import type { VoiceLog } from './VoiceLog'
 
 export class VoiceLogVoice {
@@ -137,7 +138,7 @@ export class VoiceLogVoice {
       name: `${seekDone ? '✅' : '➡️'} Seeking for files ...${seekDone ? ' Done' : ''}`,
       value: `${seekDone || seekCounter === 0 ? '' : `Current ${seekFilename}, `} Seeked ${seekCounter} files. `
     }
-    let progressMessage = this.genProgressMessage(title, [seekField])
+    let progressMessage = genProgressMessage(title, [seekField])
     await context?.send({ embeds: [progressMessage] })
     let progressCount = 0
     let progressTotal = 0
@@ -175,7 +176,7 @@ export class VoiceLogVoice {
         name: '➡️ Processing texts...',
         value: `(${progressCount}/${progressTotal}) ${description}`
       }
-      progressMessage = this.genProgressMessage(title, [seekField, progressField])
+      progressMessage = genProgressMessage(title, [seekField, progressField])
       await context?.editOriginal({ embeds: [progressMessage] })
       const fileName = await instances.audio.synthesize(request)
       this.logger.info(`(${progressCount}/${progressTotal}) ${description} -> ${fileName}`)
@@ -191,7 +192,7 @@ export class VoiceLogVoice {
       name: '➡️ Removing unused cache...',
       value: cacheRemoveCount === 0 ? 'Seeking...' : `Removed ${cacheRemoveCount} unused ${cacheRemoveCount === 1 ? 'cache' : 'caches'}.`
     }
-    progressMessage = this.genProgressMessage(title, [seekField, progressField, cacheField])
+    progressMessage = genProgressMessage(title, [seekField, progressField, cacheField])
     await context?.editOriginal({ embeds: [progressMessage] })
     const cacheFiles = readDir('caches/')
     for (const file of cacheFiles) {
@@ -204,7 +205,7 @@ export class VoiceLogVoice {
         }
         this.logger.info(`Deleted unused file ./caches/${file}`)
         cacheRemoveCount++
-        progressMessage = this.genProgressMessage(title, [seekField, progressField, cacheField])
+        progressMessage = genProgressMessage(title, [seekField, progressField, cacheField])
         await context?.editOriginal({ embeds: [progressMessage] })
       }
     }
@@ -212,16 +213,8 @@ export class VoiceLogVoice {
       name: '✅ Removing unused cache... Done',
       value: cacheRemoveCount === 0 ? 'No unused caches found.' : `Removed ${cacheRemoveCount} unused ${cacheRemoveCount === 1 ? 'cache' : 'caches'}.`
     }
-    progressMessage = this.genProgressMessage('✅ Refresh Caches Done', [seekField, progressField, cacheField], true)
+    progressMessage = genProgressMessage('✅ Refresh Caches Done', [seekField, progressField, cacheField], true)
     await context?.editOriginal({ embeds: [progressMessage] })
-  }
-
-  private genProgressMessage(title: string, fields: Array<{ name: string; value: string }>, isDone = false) {
-    return {
-      color: isDone ? 4289797 : 16312092,
-      title,
-      fields
-    } as MessageEmbedOptions
   }
 
   public async autoLeaveChannel(oldChannel: VoiceChannel | undefined, newChannel: VoiceChannel | undefined, guildId: string): Promise<string | undefined> {

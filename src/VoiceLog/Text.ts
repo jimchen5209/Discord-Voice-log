@@ -1,4 +1,4 @@
-import type { Client, Member, Message, MessageContent, PossiblyUncachedTextableChannel, TextableChannel, TextChannel, VoiceChannel } from '@projectdysnomia/dysnomia'
+import type { Client, Message, PossiblyUncachedTextableChannel, TextableChannel, TextChannel } from '@projectdysnomia/dysnomia'
 import { vsprintf } from 'sprintf-js'
 import type { ILogObj, Logger } from 'tslog'
 import { instances } from '../App/App'
@@ -81,41 +81,6 @@ export class VoiceLogText {
 
   public async unsetVoiceLog(guildId: string) {
     await this.serverConfig.updateChannel(guildId, '')
-  }
-
-  public genVoiceLogEmbed(member: Member, lang: string, type: string, oldChannel: VoiceChannel | undefined, newChannel: VoiceChannel | undefined) {
-    let color: number
-    let content: string
-    switch (type) {
-      case 'join':
-        color = 4289797
-        content = vsprintf(instances.lang.get(lang).display.voice_log.joined, [newChannel?.name])
-        break
-      case 'leave':
-        color = 8454161
-        content = vsprintf(instances.lang.get(lang).display.voice_log.left, [oldChannel?.name])
-        break
-      case 'move':
-        color = 10448150
-        content = vsprintf('%0s ▶ %1s', [oldChannel?.name, newChannel?.name])
-        break
-      default:
-        color = 6776679
-        content = 'Unknown type'
-        break
-    }
-    return {
-      embeds: [
-        {
-          color,
-          title: member.nick ? member.nick : member.username,
-          description: content,
-          timestamp: new Date().toISOString(),
-          // biome-ignore lint/style/useNamingConvention: MessageContent requires this
-          author: { name: `@${member.username}`, icon_url: member.avatarURL }
-        }
-      ]
-    } as MessageContent<'hasNonce'>
   }
 
   public parseMessage(message: Message<PossiblyUncachedTextableChannel>, isContinuous: boolean, lang: string, isForward = false): string {
