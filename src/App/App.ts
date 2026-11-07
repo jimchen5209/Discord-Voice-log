@@ -27,9 +27,9 @@ export function createApp(): App {
   // Composition root: register providers by id here (or inject one) without touching the audio module
   const providers = [new GoogleTranslateTTS(mainLogger), new GoogleCloudTTS(() => config.googleTTS.apiKey, mainLogger), new XaiTTS(() => config.xaiTTS.apiKey, mainLogger)]
   const audio = new Audio(new Map(providers.map((provider) => [provider.id, provider])), pluginManager, mainLogger, {
-    systemProvider: config.systemVoice.provider,
-    systemLang: config.systemVoice.lang,
-    systemVoice: config.systemVoice.voice
+    systemProvider: config.tts.systemVoice.provider,
+    systemLang: config.tts.systemVoice.lang,
+    systemVoice: config.tts.systemVoice.voice
   })
 
   app = { mainLogger, config, lang, pluginManager, audio }
