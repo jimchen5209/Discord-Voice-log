@@ -8,16 +8,17 @@ import type { VoicePlayback, VoiceSession } from '../Platform/VoicePlayback'
 import type { VoiceLog } from './VoiceLog'
 
 export class VoiceLogVoice {
-  // Undefined when the platform cannot play voice: nothing joins, and nothing is ever connected
-  private playback: VoicePlayback | undefined
+  // Read when used: a platform knows whether it can play voice only once it has started.
+  // Undefined when it cannot: nothing joins, and nothing is ever connected
+  private voicePlayback: () => VoicePlayback | undefined
   // Keyed by guildKeyString, so the same guild id on two platforms never shares a connection
   private audios = new Map<string, { guild: GuildKey; voice: VoiceSession }>()
   private logger: Logger<ILogObj>
   private serverConfig: DbServerConfigManager
   private audio: Audio
 
-  constructor(voiceLog: VoiceLog, playback: VoicePlayback | undefined, audio: Audio) {
-    this.playback = playback
+  constructor(voiceLog: VoiceLog, playback: () => VoicePlayback | undefined, audio: Audio) {
+    this.voicePlayback = playback
     this.logger = voiceLog.logger.getSubLogger({ name: 'Voice' })
     this.serverConfig = voiceLog.serverConfig
     this.audio = audio
@@ -25,6 +26,10 @@ export class VoiceLogVoice {
 
   public get available() {
     return this.playback !== undefined
+  }
+
+  private get playback() {
+    return this.voicePlayback()
   }
 
   private session(guild: GuildKey): VoiceSession | undefined {

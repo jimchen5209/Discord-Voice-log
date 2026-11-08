@@ -51,7 +51,9 @@ export function mergeFluxerConfig(raw: RawPlatformConfig): MergedFluxerConfig {
       enabled: instance.enabled === true,
       origin: typeof instance.origin === 'string' ? instance.origin : '',
       botToken: typeof instance.botToken === 'string' ? instance.botToken : '',
-      admins: Array.isArray(instance.admins) ? instance.admins.filter((admin): admin is string => typeof admin === 'string') : []
+      admins: Array.isArray(instance.admins) ? instance.admins.filter((admin): admin is string => typeof admin === 'string') : [],
+      // Added within config version 6; missing is off
+      voice: instance.voice === true
     })
     result.positions.push(index)
   })

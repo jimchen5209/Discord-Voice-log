@@ -6,11 +6,12 @@ import type { PlatformRuntime } from '../Platform/Runtime'
 import type { GuildKey, PlatformScope } from '../Platform/Scope'
 import type { ConnectionView, MemberView, MessageView, VoicePresenceChange } from '../Platform/Views'
 import type { Lang } from '../Shared/Lang'
-import { discoverInstance, isTrustedEndpoint } from './Discovery'
+import { discoverInstance, isTrustedEndpoint, isTrustedVoiceEndpoint } from './Discovery'
 import { fluxerGuild, toChannelView, toFluxerEmbed, toMemberView, toMessageView } from './Mapping'
 import { genHelpEmbed, isCommand, parseCommand } from './MentionCommand'
 import { type PresenceDelta, VoicePresenceTracker, type VoiceStateUpdate } from './Presence'
 import { FluxerTextOutput } from './TextOutput'
+import { FluxerVoicePlayback } from './Voice/Playback'
 
 // Events the bot never uses, so Fluxer does not send them
 const IGNORED_EVENTS = ['TYPING_START', 'MESSAGE_REACTION_ADD', 'MESSAGE_REACTION_REMOVE']
@@ -92,12 +93,13 @@ function guardGateway(client: Client, origin: string) {
   }) as typeof rest.get
 }
 
-// One Fluxer instance, official or self-hosted. Text only: no voice playback yet, so voice is undefined.
+// One Fluxer instance, official or self-hosted. Voice playback is experimental: only with `voice: true` on an instance
+// that has voice, and set from start(), so voice is undefined before that.
 export class Fluxer implements PlatformRuntime {
   public readonly scope: PlatformScope
   public readonly logger: Logger<ILogObj>
   public readonly text: FluxerTextOutput
-  public readonly voice = undefined
+  private _voice: FluxerVoicePlayback | undefined
   private instance: FluxerInstanceConfig
   private lang: Lang
   private ttsProviderIds: string[]
@@ -129,6 +131,10 @@ export class Fluxer implements PlatformRuntime {
     return this.client?.user?.id ?? ''
   }
 
+  public get voice() {
+    return this._voice
+  }
+
   public onReady(handler: () => void) {
     this.readyHandlers.push(handler)
   }
@@ -151,7 +157,8 @@ export class Fluxer implements PlatformRuntime {
     const endpoints = await discoverInstance(origin)
     this.logger.info(`Instance ${origin}: API ${endpoints.apiPublic}, api_code_version ${endpoints.apiCodeVersion}`)
     if (endpoints.apiCodeVersion !== 1) this.logger.warn(`api_code_version ${endpoints.apiCodeVersion} is untested; this version was written for 1`)
-    if (endpoints.voiceEnabled) this.logger.info('The instance has voice, but this version only supports text on Fluxer')
+    if (this.instance.voice && !endpoints.voiceEnabled) this.logger.warn('voice is on, but the instance has no voice: voice stays off')
+    else if (!this.instance.voice && endpoints.voiceEnabled) this.logger.info('The instance has voice; set "voice": true on it to try voice playback (experimental)')
 
     const client = new Client({
       // biome-ignore lint/style/useNamingConvention: Fluxer field name
@@ -167,10 +174,16 @@ export class Fluxer implements PlatformRuntime {
     this.client = client
     this.listen(client)
     guardGateway(client, origin)
+    if (this.instance.voice && endpoints.voiceEnabled) {
+      this.logger.warn('Voice playback is experimental: it uses the current LiveKit voice, which Fluxer is replacing')
+      this._voice = new FluxerVoicePlayback(client, this.tracker, this.logger, (endpoint) => isTrustedVoiceEndpoint(endpoint, origin, endpoints.voiceOrigins))
+    }
     try {
       await client.login(this.instance.botToken)
     } catch (error) {
       this.client = undefined
+      this._voice?.dispose()
+      this._voice = undefined
       await client.destroy().catch(() => undefined)
       throw error
     }
@@ -181,6 +194,8 @@ export class Fluxer implements PlatformRuntime {
     if (!client) return
     this.logger.info('Logging out...')
     this.client = undefined
+    this._voice?.dispose()
+    this._voice = undefined
     for (const pending of this.pendingLeaves.values()) clearTimeout(pending.timer)
     this.pendingLeaves.clear()
     await client.destroy()

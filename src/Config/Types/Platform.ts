@@ -19,4 +19,6 @@ export interface FluxerInstanceConfig {
   origin: string
   botToken: string
   admins: string[]
+  // Experimental voice playback over the instance's current LiveKit voice; off unless set to true
+  voice: boolean
 }

@@ -57,6 +57,22 @@ export class VoicePresenceTracker {
     return [...this.countChannels(guildId, userId).keys()]
   }
 
+  // Users with at least one connection in the channel; undefined when the guild is not known (no snapshot yet, or lost)
+  public usersIn(guildId: string, channelId: string): string[] | undefined {
+    const connections = this.guilds.get(guildId)
+    if (!connections) return undefined
+    const users = new Set<string>()
+    for (const connection of connections.values()) {
+      if (connection.channelId === channelId) users.add(connection.userId)
+    }
+    return [...users]
+  }
+
+  // Connection ids the user has in the guild
+  public connectionsOf(guildId: string, userId: string): string[] {
+    return [...(this.guilds.get(guildId) ?? [])].filter(([, connection]) => connection.userId === userId).map(([id]) => id)
+  }
+
   // Undefined when the connection did not change channel: a duplicate, a stale update, a mute,
   // or the end of a connection that was never seen
   public apply(update: VoiceStateUpdate, now = Date.now()): PresenceDelta | undefined {
