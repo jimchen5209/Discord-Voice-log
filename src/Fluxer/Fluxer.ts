@@ -15,6 +15,10 @@ import { FluxerTextOutput } from './TextOutput'
 // Events the bot never uses, so Fluxer does not send them
 const IGNORED_EVENTS = ['TYPING_START', 'MESSAGE_REACTION_ADD', 'MESSAGE_REACTION_REMOVE']
 
+// The Fluxer app switches channels by ending the connection and opening a new one, usually 1 to 2 seconds later.
+// A leave is held this long, so a join that follows is reported as one move; a slower switch is a leave and a join.
+const SWITCH_GRACE_MS = 2000
+
 // The voice state fields this runtime reads, as sent by the gateway
 interface WireVoiceState {
   // biome-ignore lint/style/useNamingConvention: Fluxer field name
@@ -28,6 +32,13 @@ interface WireVoiceState {
   version?: number
   // The participant's member object, with its user; only the fields resolveMember checks are listed
   member?: { user?: { username?: string } } | null
+}
+
+// A leave waiting to see whether a join follows, see SWITCH_GRACE_MS
+interface PendingLeave {
+  delta: PresenceDelta
+  payload: WireVoiceState['member']
+  timer: NodeJS.Timeout
 }
 
 type GuildMemberData = ConstructorParameters<typeof GuildMember>[1]
@@ -83,6 +94,8 @@ export class Fluxer implements PlatformRuntime {
   private tracker = new VoicePresenceTracker()
   // Voice changes are reported in the order they happened, though members may have to be fetched
   private presenceQueue: Promise<void> = Promise.resolve()
+  // `${guildId}:${userId}` -> a leave held for SWITCH_GRACE_MS, see onVoiceState
+  private pendingLeaves = new Map<string, PendingLeave>()
   // Set while a Guild Create carrying voice states is handled, see listen()
   private syncedGuildId: string | undefined
   private ready = false
@@ -157,6 +170,8 @@ export class Fluxer implements PlatformRuntime {
     if (!client) return
     this.logger.info('Logging out...')
     this.client = undefined
+    for (const pending of this.pendingLeaves.values()) clearTimeout(pending.timer)
+    this.pendingLeaves.clear()
     await client.destroy()
   }
 
@@ -203,8 +218,32 @@ export class Fluxer implements PlatformRuntime {
     if (!update) return
     const delta = this.tracker.apply(update)
     if (!delta) return
+    const key = `${delta.guildId}:${delta.userId}`
+    const pending = this.pendingLeaves.get(key)
+    if (pending) {
+      clearTimeout(pending.timer)
+      this.pendingLeaves.delete(key)
+      // A join into another channel completes a switch; anything else reports the held leave first
+      if (delta.entered && !delta.left && delta.entered !== pending.delta.left) {
+        this.queuePresence(client, { ...delta, left: pending.delta.left }, state.member)
+        return
+      }
+      this.queuePresence(client, pending.delta, pending.payload)
+    }
+    if (delta.left && !delta.entered) {
+      const timer = setTimeout(() => {
+        this.pendingLeaves.delete(key)
+        this.queuePresence(client, delta, state.member)
+      }, SWITCH_GRACE_MS)
+      this.pendingLeaves.set(key, { delta, payload: state.member, timer })
+      return
+    }
+    this.queuePresence(client, delta, state.member)
+  }
+
+  private queuePresence(client: Client, delta: PresenceDelta, payload: WireVoiceState['member']) {
     this.presenceQueue = this.presenceQueue
-      .then(() => this.reportPresence(client, delta, state.member))
+      .then(() => this.reportPresence(client, delta, payload))
       .catch((error) => {
         this.logger.error('Failed to report a voice change:', error)
       })
