@@ -1,6 +1,7 @@
 import { unlinkSync as deleteFile, readdirSync as readDir } from 'node:fs'
-import { extname } from 'node:path'
+import { basename } from 'node:path'
 import type { ILogObj, Logger } from 'tslog'
+import { memberConfigFiles } from '../Audio/AssetPaths'
 import { type Audio, MEMBER_EVENTS, type TTSRequest } from '../Audio/Audio'
 import type { CommandReply } from '../Platform/Command'
 import { genProgressMessage } from './Embeds'
@@ -59,23 +60,23 @@ export class CacheRefresh {
     const ttsList: string[] = []
     const requests: TTSRequest[] = [...this.audio.systemRequests()]
     progressTotal += 2
-    const files = readDir('assets/')
-    files.forEach((file) => {
-      if (extname(file) === '.json') {
-        seekCounter++
-        seekFilename = file
-        seekField = {
-          name: `${seekDone ? '✅' : '➡️'} Seeking for files ...${seekDone ? ' Done' : ''}`,
-          value: `${seekDone || seekCounter === 0 ? '' : `Current ${seekFilename}, `} Seeked ${seekCounter} files. `
-        }
-        const config = this.audio.readMemberConfig(`assets/${file}`)
-        if (!config) return
-        for (const type of MEMBER_EVENTS) {
-          const request = this.audio.memberRequest(config, type)
-          if (!request) continue
-          progressTotal++
-          requests.push(request)
-        }
+    // Every scope's member files: a TTS cache file is shared by every scope that requests it
+    const files = memberConfigFiles()
+    files.forEach((path) => {
+      const file = basename(path)
+      seekCounter++
+      seekFilename = file
+      seekField = {
+        name: `${seekDone ? '✅' : '➡️'} Seeking for files ...${seekDone ? ' Done' : ''}`,
+        value: `${seekDone || seekCounter === 0 ? '' : `Current ${seekFilename}, `} Seeked ${seekCounter} files. `
+      }
+      const config = this.audio.readMemberConfig(path)
+      if (!config) return
+      for (const type of MEMBER_EVENTS) {
+        const request = this.audio.memberRequest(config, type)
+        if (!request) continue
+        progressTotal++
+        requests.push(request)
       }
     })
     seekDone = true

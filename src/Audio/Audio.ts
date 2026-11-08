@@ -1,7 +1,9 @@
 import { existsSync as exists, readFileSync as readFile } from 'node:fs'
+import { join } from 'node:path'
 import type { ILogObj, Logger } from 'tslog'
 import type { MemberView } from '../Platform/Views'
 import type { PluginManager } from '../Plugin/Core'
+import { memberAssetDir } from './AssetPaths'
 import type { AudioAsset } from './AudioAsset'
 import { AudioCache } from './AudioCache'
 import type { PlaybackQueue } from './PlaybackQueue'
@@ -27,7 +29,7 @@ export interface TTSRequest {
   voice: string
 }
 
-// Contents of assets/<id>.json: provider / lang / voice plus one text per member event
+// Contents of <scope dir>/<id>.json (see AssetPaths): provider / lang / voice plus one text per member event
 export type MemberConfig = Record<string, unknown>
 
 // Entry point of the audio module: decide which audio file represents an announcement, then queue it.
@@ -131,19 +133,21 @@ export class Audio {
     return path !== null ? { path, format: this.provider(request.provider).format } : undefined
   }
 
-  // Priority: plugin overwrite, assets/<id>.json TTS, assets/<id>_<type>.wav
+  // Priority: plugin overwrite, <dir>/<id>.json TTS, <dir>/<id>_<type>.wav, where dir is the member's scope directory
   private async resolveMember(member: MemberView, type: string): Promise<AudioAsset | undefined> {
     for (const voice of this.pluginManager.voiceOverwrites) {
       const overwrittenFile = await voice.playVoice(member, type)
       if (overwrittenFile) return { path: overwrittenFile, format: 'pcm' }
     }
 
-    const wav = `assets/${member.userId}_${type}.wav`
+    const dir = memberAssetDir(member.scope)
+    const wav = join(dir, `${member.userId}_${type}.wav`)
     const wavAsset = (): AudioAsset | undefined => (exists(wav) ? { path: wav, format: undefined } : undefined)
 
-    if (!exists(`assets/${member.userId}.json`)) return wavAsset()
+    const json = join(dir, `${member.userId}.json`)
+    if (!exists(json)) return wavAsset()
 
-    const config = this.readMemberConfig(`assets/${member.userId}.json`)
+    const config = this.readMemberConfig(json)
     const request = config && this.memberRequest(config, type)
     if (!request) return wavAsset()
     // Google Cloud-only rule kept from before: its member TTS never falls back to the wav file
