@@ -1,5 +1,5 @@
-// Turns Fluxer voice states, which are per connection, into the join/leave/move of a person.
-// A user can have several connections, in one channel or in several. Pure: no SDK, no I/O.
+// Turns Fluxer voice states into joins, leaves and moves of each connection. A user can have several
+// connections, in one channel or in several, and each one is reported on its own. Pure: no SDK, no I/O.
 
 export interface VoiceStateUpdate {
   guildId: string
@@ -12,10 +12,11 @@ export interface VoiceStateUpdate {
   version?: number
 }
 
-// left: the user's last connection in that channel ended. entered: the user's first connection in that channel.
+// One connection's change: left the channel it was in, entered a channel, or both
 export interface PresenceDelta {
   guildId: string
   userId: string
+  connectionId: string
   left?: string
   entered?: string
 }
@@ -56,8 +57,8 @@ export class VoicePresenceTracker {
     return [...this.countChannels(guildId, userId).keys()]
   }
 
-  // Undefined when nothing changed for the person: a duplicate, a stale update, a mute, a second connection
-  // to a channel they are already in, or the end of a connection that was never seen
+  // Undefined when the connection did not change channel: a duplicate, a stale update, a mute,
+  // or the end of a connection that was never seen
   public apply(update: VoiceStateUpdate, now = Date.now()): PresenceDelta | undefined {
     this.pruneEnded(now)
     const { guildId, userId, connectionId, channelId, version } = update
@@ -74,7 +75,6 @@ export class VoicePresenceTracker {
       if (ended && version <= ended.version) return
     }
 
-    const before = this.countChannels(guildId, userId)
     if (channelId === null) {
       connections.delete(connectionId)
       if (version !== undefined) this.ended.set(endedKey, { version, at: now })
@@ -82,12 +82,9 @@ export class VoicePresenceTracker {
       connections.set(connectionId, { userId, channelId, version })
       this.ended.delete(endedKey)
     }
-    const after = this.countChannels(guildId, userId)
 
-    const left = previous && previous.channelId !== channelId && !after.has(previous.channelId) ? previous.channelId : undefined
-    const entered = channelId !== null && channelId !== previous?.channelId && !before.has(channelId) ? channelId : undefined
-    if (!left && !entered) return
-    return { guildId, userId, left, entered }
+    if (channelId === (previous?.channelId ?? null)) return
+    return { guildId, userId, connectionId, left: previous?.channelId, entered: channelId ?? undefined }
   }
 
   private countChannels(guildId: string, userId: string) {

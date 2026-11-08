@@ -1,7 +1,9 @@
 {
   "voice_log": {
     "joined": "加入了%s",
-    "left": "離開了%s"
+    "left": "離開了%s",
+    "connection_mobile": "手機",
+    "connection_desktop": "電腦"
   },
   "command": {
     "not_in_channel": "您根本沒有在語音頻道內",

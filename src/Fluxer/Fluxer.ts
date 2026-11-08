@@ -4,7 +4,7 @@ import type { FluxerInstanceConfig } from '../Config/Types'
 import type { CommandReply, CommandRequest } from '../Platform/Command'
 import type { PlatformRuntime } from '../Platform/Runtime'
 import type { GuildKey, PlatformScope } from '../Platform/Scope'
-import type { MemberView, MessageView, VoicePresenceChange } from '../Platform/Views'
+import type { ConnectionView, MemberView, MessageView, VoicePresenceChange } from '../Platform/Views'
 import type { Lang } from '../Shared/Lang'
 import { discoverInstance, isTrustedEndpoint } from './Discovery'
 import { fluxerGuild, toChannelView, toFluxerEmbed, toMemberView, toMessageView } from './Mapping'
@@ -15,8 +15,9 @@ import { FluxerTextOutput } from './TextOutput'
 // Events the bot never uses, so Fluxer does not send them
 const IGNORED_EVENTS = ['TYPING_START', 'MESSAGE_REACTION_ADD', 'MESSAGE_REACTION_REMOVE']
 
-// The Fluxer app switches channels by ending the connection and opening a new one, usually 1 to 2 seconds later.
-// A leave is held this long, so a join that follows is reported as one move; a slower switch is a leave and a join.
+// The Fluxer app switches channels by ending the connection and opening a new one in the same gateway session,
+// usually 1 to 2 seconds later. A leave is held this long, so a join from that session that follows is reported
+// as one move of that connection; a slower switch is a leave and a join.
 const SWITCH_GRACE_MS = 2000
 
 // The voice state fields this runtime reads, as sent by the gateway
@@ -29,15 +30,25 @@ interface WireVoiceState {
   user_id: string
   // biome-ignore lint/style/useNamingConvention: Fluxer field name
   connection_id?: string | null
+  // biome-ignore lint/style/useNamingConvention: Fluxer field name
+  session_id?: string | null
+  // biome-ignore lint/style/useNamingConvention: Fluxer field name
+  is_mobile?: boolean
   version?: number
   // The participant's member object, with its user; only the fields resolveMember checks are listed
   member?: { user?: { username?: string } } | null
 }
 
-// A leave waiting to see whether a join follows, see SWITCH_GRACE_MS
-interface PendingLeave {
+// A connection's change with what is needed to report it
+interface ConnectionChange {
   delta: PresenceDelta
+  connection: ConnectionView
   payload: WireVoiceState['member']
+}
+
+// A leave waiting to see whether a join from the same session follows, see SWITCH_GRACE_MS
+interface PendingLeave {
+  change: ConnectionChange
   timer: NodeJS.Timeout
 }
 
@@ -218,32 +229,39 @@ export class Fluxer implements PlatformRuntime {
     if (!update) return
     const delta = this.tracker.apply(update)
     if (!delta) return
-    const key = `${delta.guildId}:${delta.userId}`
+    const change: ConnectionChange = { delta, connection: { id: delta.connectionId, mobile: state.is_mobile === true }, payload: state.member }
+    // Connections of one session follow each other in a switch; without a session id, the connection stands alone
+    const key = `${delta.guildId}:${delta.userId}:${state.session_id ?? `connection:${delta.connectionId}`}`
     const pending = this.pendingLeaves.get(key)
     if (pending) {
       clearTimeout(pending.timer)
       this.pendingLeaves.delete(key)
-      // A join into another channel completes a switch; anything else reports the held leave first
-      if (delta.entered && !delta.left && delta.entered !== pending.delta.left) {
-        this.queuePresence(client, { ...delta, left: pending.delta.left }, state.member)
+      // A join into another channel completes a switch, reported with the connection id before and after;
+      // anything else reports the held leave first
+      if (delta.entered && !delta.left && delta.entered !== pending.change.delta.left) {
+        this.queuePresence(client, {
+          ...change,
+          delta: { ...delta, left: pending.change.delta.left },
+          connection: { ...change.connection, previousId: pending.change.connection.id }
+        })
         return
       }
-      this.queuePresence(client, pending.delta, pending.payload)
+      this.queuePresence(client, pending.change)
     }
     if (delta.left && !delta.entered) {
       const timer = setTimeout(() => {
         this.pendingLeaves.delete(key)
-        this.queuePresence(client, delta, state.member)
+        this.queuePresence(client, change)
       }, SWITCH_GRACE_MS)
-      this.pendingLeaves.set(key, { delta, payload: state.member, timer })
+      this.pendingLeaves.set(key, { change, timer })
       return
     }
-    this.queuePresence(client, delta, state.member)
+    this.queuePresence(client, change)
   }
 
-  private queuePresence(client: Client, delta: PresenceDelta, payload: WireVoiceState['member']) {
+  private queuePresence(client: Client, change: ConnectionChange) {
     this.presenceQueue = this.presenceQueue
-      .then(() => this.reportPresence(client, delta, payload))
+      .then(() => this.reportPresence(client, change))
       .catch((error) => {
         this.logger.error('Failed to report a voice change:', error)
       })
@@ -264,7 +282,7 @@ export class Fluxer implements PlatformRuntime {
     }
   }
 
-  private async reportPresence(client: Client, delta: PresenceDelta, payload: WireVoiceState['member']) {
+  private async reportPresence(client: Client, { delta, connection, payload }: ConnectionChange) {
     if (!this.presenceHandler) return
     const guild = client.guilds.get(delta.guildId)
     if (!guild) return
@@ -274,7 +292,7 @@ export class Fluxer implements PlatformRuntime {
     const entered = delta.entered ? toChannelView(client, key, delta.entered) : undefined
     if (!left && !entered) return
     const member = await this.resolveMember(guild, delta.userId, payload)
-    this.presenceHandler({ member, guildName: guild.name, left, entered })
+    this.presenceHandler({ member, guildName: guild.name, left, entered, connection })
   }
 
   private onMessageCreate(client: Client, message: Message) {
