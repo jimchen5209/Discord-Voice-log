@@ -43,7 +43,7 @@ export class VoiceLog {
     this.textLogger = this._logger.getSubLogger({ name: 'Text' })
     this._serverConfig = serverConfig
 
-    this._voice = new VoiceLogVoice(this, platform.voice, app.audio)
+    this._voice = new VoiceLogVoice(this, () => platform.voice, app.audio)
     this._text = new VoiceLogText(this, platform.text, app.lang)
     this._command = new VoiceLogCommands(this, app.lang, app.audio)
 
