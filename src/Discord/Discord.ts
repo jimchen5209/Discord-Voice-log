@@ -1,18 +1,42 @@
-import { Client } from '@projectdysnomia/dysnomia'
+import { Client, type Member, type VoiceChannel } from '@projectdysnomia/dysnomia'
 import type { ILogObj, Logger } from 'tslog'
+import type { CommandRequest } from '../Platform/Command'
+import type { PlatformRuntime } from '../Platform/Runtime'
+import type { PlatformScope } from '../Platform/Scope'
+import type { MessageView, VoicePresenceChange } from '../Platform/Views'
 import type { Config } from '../Shared/Config'
+import type { Lang } from '../Shared/Lang'
 import { Command } from './Command'
+import { DISCORD_SCOPE, toChannelView, toMemberView, toMessageView } from './Mapping'
+import { LogCommand } from './SlashCommands/Log'
+import { RefreshCacheCommand } from './SlashCommands/RefreshCache'
+import { VoiceCommand } from './SlashCommands/Voice'
+import { DiscordTextOutput } from './TextOutput'
+import { DiscordVoicePlayback } from './VoiceConnection'
 
 export function assertDiscordToken(config: Config) {
   if (!config.discord.botToken) throw Error('Discord token missing')
 }
 
-export class Discord {
+function presence(member: Member, left: VoiceChannel | undefined, entered: VoiceChannel | undefined): VoicePresenceChange {
+  return {
+    member: toMemberView(member),
+    guildName: member.guild.name,
+    left: left && toChannelView(left),
+    entered: entered && toChannelView(entered)
+  }
+}
+
+export class Discord implements PlatformRuntime {
+  public readonly scope: PlatformScope = DISCORD_SCOPE
   private _client: Client
   private _command: Command
   private _logger: Logger<ILogObj>
+  private _text: DiscordTextOutput
+  private _voice: DiscordVoicePlayback
 
-  constructor(config: Config, mainLogger: Logger<ILogObj>) {
+  // lang and ttsProviderIds fill the choices of the slash command options
+  constructor(config: Config, mainLogger: Logger<ILogObj>, lang: Lang, ttsProviderIds: string[]) {
     this._logger = mainLogger.getSubLogger({ name: 'Discord' })
     this._client = new Client(config.discord.botToken, {
       restMode: true,
@@ -21,6 +45,13 @@ export class Discord {
       }
     })
     this._command = new Command(this, config)
+    this._command.register(
+      (creator) => new VoiceCommand(creator, this._command, lang, ttsProviderIds),
+      (creator) => new LogCommand(creator, this._command, lang),
+      (creator) => new RefreshCacheCommand(creator, this._command)
+    )
+    this._text = new DiscordTextOutput(this._client, this._logger)
+    this._voice = new DiscordVoicePlayback(this)
 
     this._client.on('ready', async () => {
       this._logger.info(`Logged in as ${this._client.user.username} (${this._client.user.id})`)
@@ -44,8 +75,37 @@ export class Discord {
     return this._logger
   }
 
-  public get command() {
-    return this._command
+  public get text() {
+    return this._text
+  }
+
+  public get voice() {
+    return this._voice
+  }
+
+  public selfUserId() {
+    return this._client.user.id
+  }
+
+  public onReady(handler: () => void) {
+    this._client.on('ready', handler)
+  }
+
+  public onMessage(handler: (message: MessageView) => void) {
+    this._client.on('messageCreate', (message) => {
+      if (message.guildID === undefined) return
+      handler(toMessageView(this._client, message))
+    })
+  }
+
+  public onVoicePresence(handler: (change: VoicePresenceChange) => void) {
+    this._client.on('voiceChannelJoin', (member: Member, newChannel: VoiceChannel) => handler(presence(member, undefined, newChannel)))
+    this._client.on('voiceChannelLeave', (member: Member, oldChannel: VoiceChannel) => handler(presence(member, oldChannel, undefined)))
+    this._client.on('voiceChannelSwitch', (member: Member, newChannel: VoiceChannel, oldChannel: VoiceChannel) => handler(presence(member, oldChannel, newChannel)))
+  }
+
+  public onCommand(handler: (request: CommandRequest) => Promise<void>) {
+    this._command.setHandler(handler)
   }
 
   public start() {

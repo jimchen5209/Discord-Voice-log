@@ -1,8 +1,8 @@
 import { unlinkSync as deleteFile, readdirSync as readDir } from 'node:fs'
 import { extname } from 'node:path'
-import type { CommandContext, MessageEmbedOptions } from 'slash-create'
 import type { ILogObj, Logger } from 'tslog'
 import { type Audio, MEMBER_EVENTS, type TTSRequest } from '../Audio/Audio'
+import type { CommandReply } from '../Platform/Command'
 import { genProgressMessage } from './Embeds'
 
 export class CacheRefresh {
@@ -14,24 +14,25 @@ export class CacheRefresh {
     this.audio = audio
   }
 
-  public async refreshCache(context: CommandContext | undefined) {
+  // reply is undefined for the scheduled refresh
+  public async refreshCache(reply: CommandReply | undefined) {
     if (this.updateLock) {
-      await context?.send({
-        embeds: [
+      await reply?.send(
+        [
           {
             title: 'Operation skipped',
             color: 13632027,
             description: 'Currently refreshing in progress...'
-          } as MessageEmbedOptions
+          }
         ],
-        ephemeral: true
-      })
+        { private: true }
+      )
 
       return
     }
     this.updateLock = true
     try {
-      await this.runRefreshCache(context)
+      await this.runRefreshCache(reply)
     } catch (error) {
       // Callers (the midnight job, /refresh) do not await this, so never reject
       this.logger.error('Cache refresh failed:', error)
@@ -41,7 +42,7 @@ export class CacheRefresh {
     }
   }
 
-  private async runRefreshCache(context: CommandContext | undefined) {
+  private async runRefreshCache(reply: CommandReply | undefined) {
     this.logger.info('Starting cache refresh...')
     const title = '➡️ Refreshing Caches'
     let seekCounter = 0
@@ -52,7 +53,7 @@ export class CacheRefresh {
       value: `${seekDone || seekCounter === 0 ? '' : `Current ${seekFilename}, `} Seeked ${seekCounter} files. `
     }
     let progressMessage = genProgressMessage(title, [seekField])
-    await context?.send({ embeds: [progressMessage] })
+    const progress = await reply?.send([progressMessage])
     let progressCount = 0
     let progressTotal = 0
     const ttsList: string[] = []
@@ -90,7 +91,7 @@ export class CacheRefresh {
         value: `(${progressCount}/${progressTotal}) ${description}`
       }
       progressMessage = genProgressMessage(title, [seekField, progressField])
-      await context?.editOriginal({ embeds: [progressMessage] })
+      await progress?.edit([progressMessage])
       const fileName = await this.audio.synthesize(request)
       this.logger.info(`(${progressCount}/${progressTotal}) ${description} -> ${fileName}`)
       if (fileName !== null) ttsList.push(fileName)
@@ -106,7 +107,7 @@ export class CacheRefresh {
       value: cacheRemoveCount === 0 ? 'Seeking...' : `Removed ${cacheRemoveCount} unused ${cacheRemoveCount === 1 ? 'cache' : 'caches'}.`
     }
     progressMessage = genProgressMessage(title, [seekField, progressField, cacheField])
-    await context?.editOriginal({ embeds: [progressMessage] })
+    await progress?.edit([progressMessage])
     const cacheFiles = readDir('caches/')
     for (const file of cacheFiles) {
       if (!ttsList.includes(`./caches/${file}`) && this.audio.isCacheFileRemovable(`./caches/${file}`)) {
@@ -119,7 +120,7 @@ export class CacheRefresh {
         this.logger.info(`Deleted unused file ./caches/${file}`)
         cacheRemoveCount++
         progressMessage = genProgressMessage(title, [seekField, progressField, cacheField])
-        await context?.editOriginal({ embeds: [progressMessage] })
+        await progress?.edit([progressMessage])
       }
     }
     cacheField = {
@@ -127,6 +128,6 @@ export class CacheRefresh {
       value: cacheRemoveCount === 0 ? 'No unused caches found.' : `Removed ${cacheRemoveCount} unused ${cacheRemoveCount === 1 ? 'cache' : 'caches'}.`
     }
     progressMessage = genProgressMessage('✅ Refresh Caches Done', [seekField, progressField, cacheField], true)
-    await context?.editOriginal({ embeds: [progressMessage] })
+    await progress?.edit([progressMessage])
   }
 }
