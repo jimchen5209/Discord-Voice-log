@@ -6,4 +6,5 @@ export interface Embed {
   timestamp?: string
   author?: { name: string; iconUrl?: string }
   fields?: { name: string; value: string }[]
+  footer?: { text: string }
 }

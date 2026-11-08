@@ -96,6 +96,7 @@ export interface FluxerEmbed {
   // biome-ignore lint/style/useNamingConvention: Fluxer field name
   author?: { name: string; icon_url?: string }
   fields?: { name: string; value: string }[]
+  footer?: { text: string }
 }
 
 export function toFluxerEmbed(embed: Embed): FluxerEmbed {

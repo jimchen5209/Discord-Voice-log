@@ -56,6 +56,7 @@ export interface DiscordEmbed {
   // biome-ignore lint/style/useNamingConvention: Discord field name
   author?: { name: string; icon_url?: string }
   fields?: { name: string; value: string }[]
+  footer?: { text: string }
 }
 
 export function toDiscordEmbed(embed: Embed): DiscordEmbed {

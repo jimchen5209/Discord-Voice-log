@@ -1,7 +1,7 @@
 import { vsprintf } from 'sprintf-js'
 import type { IVoiceMessageTTS } from '../Db/ServerConfig'
 import type { Embed } from '../Platform/Embed'
-import type { ChannelView, MemberView } from '../Platform/Views'
+import type { ChannelView, ConnectionView, MemberView } from '../Platform/Views'
 import type { Lang } from '../Shared/Lang'
 
 export function genSuccessMessage(msg: string): Embed {
@@ -45,7 +45,23 @@ export function genTTSSuccessMessage(i18n: Lang, title: string, ttsConfig: IVoic
   }
 }
 
-export function genVoiceLogEmbed(i18n: Lang, member: MemberView, lang: string, type: string, oldChannel: ChannelView | undefined, newChannel: ChannelView | undefined): Embed {
+// As the Fluxer app shows the connection: device type and connection id, e.g. "Desktop · nuthatch-harmonic".
+// A move that replaced the connection shows both ids: "Desktop · koala-vega ▶ nuthatch-harmonic".
+function connectionLabel(i18n: Lang, lang: string, connection: ConnectionView) {
+  const l = i18n.get(lang).display.voice_log
+  const id = connection.previousId && connection.previousId !== connection.id ? `${connection.previousId} ▶ ${connection.id}` : connection.id
+  return `${connection.mobile ? l.connection_mobile : l.connection_desktop} · ${id}`
+}
+
+export function genVoiceLogEmbed(
+  i18n: Lang,
+  member: MemberView,
+  lang: string,
+  type: string,
+  oldChannel: ChannelView | undefined,
+  newChannel: ChannelView | undefined,
+  connection?: ConnectionView
+): Embed {
   let color: number
   let content: string
   switch (type) {
@@ -71,7 +87,8 @@ export function genVoiceLogEmbed(i18n: Lang, member: MemberView, lang: string, t
     title: member.displayName,
     description: content,
     timestamp: new Date().toISOString(),
-    author: { name: `@${member.username}`, iconUrl: member.avatarUrl }
+    author: { name: `@${member.username}`, iconUrl: member.avatarUrl },
+    ...(connection ? { footer: { text: connectionLabel(i18n, lang, connection) } } : {})
   }
 }
 
