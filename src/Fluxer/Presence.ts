@@ -7,7 +7,8 @@ export interface VoiceStateUpdate {
   connectionId: string
   // null when the connection left
   channelId: string | null
-  // Only goes up for the participant; also compared per connection, which holds either way
+  // Only goes up for the participant, but a leave keeps the version of the connection's last state.
+  // A live connection ignores older versions; an ended one also ignores its own, so it cannot come back.
   version?: number
 }
 
@@ -67,8 +68,11 @@ export class VoicePresenceTracker {
     }
     const endedKey = `${guildId}:${connectionId}`
     const previous = connections.get(connectionId)
-    const known = previous?.version ?? this.ended.get(endedKey)?.version
-    if (version !== undefined && known !== undefined && version <= known) return
+    if (version !== undefined) {
+      if (previous?.version !== undefined && version < previous.version) return
+      const ended = previous ? undefined : this.ended.get(endedKey)
+      if (ended && version <= ended.version) return
+    }
 
     const before = this.countChannels(guildId, userId)
     if (channelId === null) {
