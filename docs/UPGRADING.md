@@ -4,7 +4,19 @@ The upgrade steps are in the [README](../README.md#upgrading). This page explain
 
 ## What `pnpm migrate` does
 
-`pnpm migrate` first checks the data version record and the assets, and stops before touching the database if the record is malformed or newer than the code or an asset file is invalid (see [Data version](#data-version)). It then waits up to about 10 seconds if another connection holds the database locked, stops there if there is nothing to migrate, [backs up](#backups) the data, applies pending database migrations (`prisma migrate deploy`), imports the MongoDB dump if there is one (see the [MongoDB to SQLite migration guide](migration/MONGODB_TO_SQLITE_MIGRATION.md)), and upgrades `assets/<User ID>.json` to the current [data version](#data-version). Running it again changes nothing and makes no backup.
+`pnpm migrate` first checks the data version record and the assets, and stops before touching the database if the record is malformed or newer than the code or an asset file is invalid (see [Data version](#data-version)). It then waits up to about 10 seconds if another connection holds the database locked, stops there if there is nothing to migrate, [backs up](#backups) the data, applies pending database migrations (`prisma migrate deploy`), imports the MongoDB dump if there is one (see the [MongoDB to SQLite migration guide](migration/MONGODB_TO_SQLITE_MIGRATION.md)), and upgrades the member files in `assets/` to the current [data version](#data-version). Running it again changes nothing and makes no backup.
+
+## Platform scope (config version 6, data version 3)
+
+This release prepares for more than one platform (Fluxer, official and self-hosted) next to Discord. Nothing changes for Discord users once the upgrade is done:
+
+- `config.json` (config version 6): the `discord` block moves to `platform.discord`, with `enabled: true`. `platform.fluxer` is a list of Fluxer instances, `{ "id", "enabled", "origin", "botToken", "admins" }`; it starts with the official instance, disabled. `id` is stored with each instance's data, so never change it once used; it must use only `a-z`, `0-9` and `-`, cannot be `discord` and cannot repeat, `origin` must be an `https://` URL, and an enabled instance needs a `botToken`. This version has no Fluxer runtime yet: an enabled instance only logs a warning.
+- The database: every server config gets the scope it belongs to (`platform`, `instanceId`); existing rows become Discord's (migration `20261108080000_platform_scope`).
+- The member files move from `assets/` to `assets/discord/` ([data version](#data-version) 3).
+
+Stop the bot before running `pnpm migrate` for this upgrade, and start it again right after: the previous version keeps running on the new data otherwise, and until it is reloaded it cannot read the moved member files or save a server it has not seen before (the new columns have no default). `pm2 deploy` runs `pnpm migrate` before reloading the bot, so for this release run `pm2 stop VoiceLog` before deploying (the reload at the end starts it again).
+
+To go back to the previous version, stop the bot, run `pnpm migrate --restore <the backup this upgrade made>`, check out the previous version and restore `config-5.json` as `config.json`. The previous version cannot read the new database or assets: it refuses to start on data version 3 (code 78).
 
 ## Options
 
@@ -42,9 +54,10 @@ The bot never migrates on its own. It exits with code 78 when it needs you befor
 - `config.json` does not exist. The bot generates an empty one; fill it in and start the bot again.
 - `config.json` has a config version newer than the code.
 - `config.json` has a `tts.systemVoice.provider` that is not a registered provider id. It logs the available ids.
+- `config.json` has an invalid `platform` block (see [Platform scope](#platform-scope-config-version-6-data-version-3)), or no platform is enabled. It logs what is wrong (never a token) and does not change `config.json`.
 - `config.json` has an older config version. The bot backs it up to `config-<old version>.json`, writes the migrated config and exits. Check `config.json`, then start the bot again yourself: pm2 does not restart it.
 
-`pnpm migrate` loads `config.json` too, so it also exits with code 78 in these `config.json` cases; run it again once the config is ready.
+`pnpm migrate` loads `config.json` too, so it also exits with code 78 in these `config.json` cases (except "no platform is enabled"); run it again once the config is ready.
 
 pm2 does not restart the bot on code 78 (`stop_exit_codes` in `ecosystem.config.js`). `pm2 deploy` runs `pnpm install`, `pnpm db:generate`, `pnpm build:prod` and `pnpm migrate` (without `--yolo`) in its post-deploy step before reloading the bot, so a deploy makes a backup only when it has something to migrate. If one of these steps fails, the bot is not reloaded.
 
@@ -85,12 +98,17 @@ pnpm migrate
 
 ## Data version
 
-The database is versioned by Prisma's migration history (`prisma/migrations`). The app-side data, `assets/<User ID>.json`, has its own version, `DATA_VERSION` in `src/Migration/record.ts` (currently `2`), recorded in `data-version.json` next to the database file (by default `prisma/data-version.json`), e.g. `{ "version": 2 }`.
+The database is versioned by Prisma's migration history (`prisma/migrations`). The app-side data, the member files `<User ID>.json` and `<User ID>_<event>.wav` and where they live, has its own version, `DATA_VERSION` in `src/Migration/record.ts` (currently `3`), recorded in `data-version.json` next to the database file (by default `prisma/data-version.json`), e.g. `{ "version": 3 }`.
+
+Where the member files live:
+- Versions 1 and 2: directly in `assets/` (all of them Discord's).
+- Version 3: one folder per platform, `assets/discord/` and `assets/fluxer/<instance id>/`, so the same user ID on two platforms never shares settings.
 
 `pnpm migrate` and the data version:
-- No record and no `assets/*.json`: a fresh install; the current version is recorded and nothing is converted.
-- No record but some `assets/*.json`: an install from before data versions (version 1).
-- Older version: the files are [backed up](#backups) (unless `--yolo`), then converted in place, one version at a time. The new version is recorded only after every file was converted; on a failure the old version stays and running `pnpm migrate` again finishes the job.
+- No record and no `assets/*.json` or `assets/*.wav`: a fresh install; the current version is recorded and nothing is converted.
+- No record but some `assets/*.json` or `assets/*.wav`: an install from before data versions (version 1).
+- Older version: the files are [backed up](#backups) (unless `--yolo`), then converted in place, one version at a time. From before version 3, the `.json` and `.wav` files directly in `assets/` are then moved (renamed) into `assets/discord/`; any other file there stays and is listed in a warning. The new version is recorded only after every file was converted and moved; on a failure the old version stays and running `pnpm migrate` again finishes the job (files already moved are not touched again).
+- A file that is both in `assets/` and in `assets/discord/` fails the run before the database is migrated or anything is changed, and the error lists every such file: nothing is overwritten. Keep one of each and run it again.
 - An `assets/*.json` that is not a JSON object (invalid JSON, an array, ...) fails the run before the database is migrated or anything is converted, and the error lists every such file. Fix or remove them, or run `pnpm migrate --skip-invalid` (or `pnpm migrate -- --skip-invalid`; the option applies to every step) to leave them unconverted and record the new version anyway (the bot then skips those files with an error).
 - Newer version (a downgrade) or a malformed record: an error is logged, nothing is changed (the database is not migrated either), `pnpm migrate` exits with code 1 and `pnpm start` with code 78.
 
