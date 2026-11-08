@@ -3,7 +3,7 @@
 import { constants, copyFileSync as copyFile, existsSync as exists } from 'node:fs'
 import { defaultSQLite } from '../Defaults'
 import { validatePlatform } from '../PlatformValidation'
-import type { PlatformConfig, SQLiteConfig, TTSConfig } from '../Types'
+import type { ConfigValue, PlatformConfig, SQLiteConfig } from '../Types'
 import { mergeDiscordConfig, mergeFluxerConfig, type RawPlatformConfig } from './Platform'
 import { mergeTTS, type RawTTSConfig } from './TTS'
 
@@ -19,11 +19,7 @@ export type RawConfig = RawPlatformConfig &
     Debug?: boolean
   }
 
-export interface MigratedConfig {
-  platform: PlatformConfig
-  tts: TTSConfig
-  sqlite: SQLiteConfig
-  debug: boolean
+export type MigratedConfig = Omit<ConfigValue, 'configVersion'> & {
   // Problems that make the file unusable; never includes a token
   problems: string[]
 }
