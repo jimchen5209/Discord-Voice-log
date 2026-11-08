@@ -1,6 +1,7 @@
 import { Status } from 'status-client'
 import { createApp } from './App/App'
 import { checkPlatforms, createBot } from './App/Bot'
+import { unreadAssetFiles } from './Audio/AssetPaths'
 import { checkData, warnRemovedDumpEnv } from './Migration'
 import { EXIT_NO_RESTART } from './Shared/ExitCode'
 
@@ -18,6 +19,10 @@ const status = new Status('VoiceLog')
 async function main() {
   warnRemovedDumpEnv()
   if (!(await checkData())) process.exit(EXIT_NO_RESTART)
+  const unread = unreadAssetFiles()
+  if (unread.length > 0) {
+    logger.warn(`These files are not read since data version 3: ${unread.join(', ')}. Discord member files belong in assets/discord/`)
+  }
 
   // Initialize SQLite
   // Since SQLite/Prisma is synchronous initialization for the client

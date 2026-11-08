@@ -2,6 +2,7 @@ import { existsSync as exists, mkdirSync as mkDir } from 'node:fs'
 import { scheduleJob } from 'node-schedule'
 import type { ILogObj, Logger } from 'tslog'
 import type { App } from '../App/App'
+import { memberAssetDir } from '../Audio/AssetPaths'
 import type { Audio } from '../Audio/Audio'
 import type { DbServerConfigManager, IServerConfig } from '../Db/ServerConfig'
 import type { PlatformRuntime } from '../Platform/Runtime'
@@ -206,7 +207,8 @@ export class VoiceLog {
   }
 
   public async start() {
-    if (!exists('./assets')) mkDir('./assets')
+    const assetDir = memberAssetDir(this.platform.scope)
+    if (!exists(assetDir)) mkDir(assetDir, { recursive: true })
     if (!exists('./caches')) mkDir('./caches')
     this.audio.evictCache()
     const channels = await this._serverConfig.getCurrentChannels(this.platform.scope)

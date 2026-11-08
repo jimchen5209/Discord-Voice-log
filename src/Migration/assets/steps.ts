@@ -1,7 +1,8 @@
 import { existsSync as exists, readdirSync as readDir } from 'node:fs'
-import { extname } from 'node:path'
+import { extname, join } from 'node:path'
+import { ASSETS_DIR, LAYOUT_VERSION, scopeDirs } from './layout'
 
-export const ASSETS_DIR = 'assets'
+export { ASSETS_DIR } from './layout'
 
 // An assets/<id>.json already checked to be a JSON object
 type Asset = Record<string, unknown>
@@ -55,17 +56,26 @@ function v1ToV2(config: AssetV1): AssetV2 | undefined {
   return migrated
 }
 
-// ASSET_STEPS[n] converts one assets/<id>.json from data version n to n + 1. Returns undefined when
+// ASSET_STEPS[n] converts one asset file from data version n to n + 1. Returns undefined when
 // the file needs no change, so running a step again on converted data changes nothing. Steps run in
 // order, so the file a step gets is at its version.
 export const ASSET_STEPS: Record<number, (config: Asset) => Asset | undefined> = {
-  1: (config) => v1ToV2(config as AssetV1)
+  1: (config) => v1ToV2(config as AssetV1),
+  // 2 -> 3 keeps the format and moves the files instead (see layout.ts)
+  2: () => undefined
 }
 
-// Names of the assets/<id>.json files; .wav files are never read or touched
-export function assetConfigFiles(): string[] {
-  if (!exists(ASSETS_DIR)) return []
-  return readDir(ASSETS_DIR)
-    .filter((file) => extname(file) === '.json')
+// The asset files at data version `version`, as paths relative to ASSETS_DIR; .wav files are never read
+// or touched. Before version 3 they are assets/<id>.json; since then each scope has a directory (layout.ts).
+export function assetConfigFiles(version: number): string[] {
+  if (version < LAYOUT_VERSION) return jsonIn(ASSETS_DIR)
+  return scopeDirs().flatMap((dir) => jsonIn(join(ASSETS_DIR, dir)).map((file) => join(dir, file)))
+}
+
+function jsonIn(dir: string) {
+  if (!exists(dir)) return []
+  return readDir(dir, { withFileTypes: true })
+    .filter((entry) => entry.isFile() && extname(entry.name) === '.json')
+    .map((entry) => entry.name)
     .sort()
 }
