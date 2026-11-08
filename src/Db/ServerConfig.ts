@@ -1,7 +1,7 @@
 import type { PrismaClient, ServerConfig as PrismaServerConfig } from '@prisma/client'
 import type { ILogObj, Logger } from 'tslog'
 import { GoogleCloudTTS } from '../Audio/Providers/GoogleCloudTTS'
-import type { GuildKey, PlatformScope } from '../Platform/Scope'
+import { type GuildKey, guildKeyString, type PlatformScope } from '../Platform/Scope'
 
 export const DEFAULT_TTS_PROVIDER = GoogleCloudTTS.id
 
@@ -15,6 +15,7 @@ export interface IVoiceMessageTTS {
 }
 
 export interface IServerConfig {
+  // The guild id within the scope of the row (platform, instanceId)
   serverID: string
   lang: string
   channelID: string
@@ -36,16 +37,15 @@ function toServerConfig(data: PrismaServerConfig): IServerConfig {
   }
 }
 
-// The table has no scope column yet, so every row belongs to Discord and serverID is the Discord guild id
-function assertStoredScope(scope: PlatformScope) {
-  if (scope.platform !== 'discord' || scope.instanceId !== 'discord') {
-    throw new Error(`Server config cannot store the ${scope.platform}:${scope.instanceId} scope yet`)
-  }
+// The row of a guild: serverID is the guild id within the scope
+function whereOf(guild: GuildKey) {
+  // biome-ignore lint/style/useNamingConvention: Prisma's name for the compound primary key
+  return { platform_instanceId_serverID: { platform: guild.platform, instanceId: guild.instanceId, serverID: guild.guildId } }
 }
 
-function serverIdOf(guild: GuildKey) {
-  assertStoredScope(guild)
-  return guild.guildId
+// For logs; Discord guilds keep the bare id they were logged with before
+function labelOf(guild: GuildKey) {
+  return guild.platform === 'discord' ? guild.guildId : guildKeyString(guild)
 }
 
 /**
@@ -75,10 +75,10 @@ export class DbServerConfigManager {
       voiceName: 'en-US-Wavenet-A'
     }
   ) {
-    const serverID = serverIdOf(guild)
-    this.logger.debug(`Creating server config for ${serverID}`)
+    const label = labelOf(guild)
+    this.logger.debug(`Creating server config for ${label}`)
     const data = {
-      serverID,
+      ...whereOf(guild).platform_instanceId_serverID,
       channelID,
       lang,
       lastVoiceChannel,
@@ -94,19 +94,17 @@ export class DbServerConfigManager {
       const result = await this.prisma.serverConfig.create({ data })
       return toServerConfig(result)
     } catch (e) {
-      this.logger.error(`Failed to create server config for ${serverID}:`, e)
+      this.logger.error(`Failed to create server config for ${label}:`, e)
       return null
     }
   }
 
   public async get(guild: GuildKey) {
-    const serverID = serverIdOf(guild)
-    this.logger.debug(`Getting server config for ${serverID}`)
-    const config = await this.prisma.serverConfig.findUnique({
-      where: { serverID }
-    })
+    const label = labelOf(guild)
+    this.logger.debug(`Getting server config for ${label}`)
+    const config = await this.prisma.serverConfig.findUnique({ where: whereOf(guild) })
     if (!config) {
-      this.logger.debug(`No server config found for ${serverID}`)
+      this.logger.debug(`No server config found for ${label}`)
       return null
     }
 
@@ -114,7 +112,7 @@ export class DbServerConfigManager {
   }
 
   public async getOrCreate(guild: GuildKey) {
-    this.logger.debug(`Getting or creating server config for ${guild.guildId}`)
+    this.logger.debug(`Getting or creating server config for ${labelOf(guild)}`)
     let data = await this.get(guild)
     if (!data) {
       data = await this.create(guild)
@@ -125,9 +123,10 @@ export class DbServerConfigManager {
 
   // Guilds of the scope where the bot was in a voice channel; serverID is the guild id within the scope
   public async getCurrentChannels(scope: PlatformScope) {
-    assertStoredScope(scope)
     const configs = await this.prisma.serverConfig.findMany({
       where: {
+        platform: scope.platform,
+        instanceId: scope.instanceId,
         currentVoiceChannel: { not: '' }
       }
     })
@@ -137,50 +136,45 @@ export class DbServerConfigManager {
   }
 
   public async updateChannel(guild: GuildKey, channelID: string) {
-    const serverID = serverIdOf(guild)
-    this.logger.debug(`Updating channelID for ${serverID}: ${channelID}`)
+    this.logger.debug(`Updating channelID for ${labelOf(guild)}: ${channelID}`)
     const result = await this.prisma.serverConfig.update({
-      where: { serverID },
+      where: whereOf(guild),
       data: { channelID }
     })
     return toServerConfig(result)
   }
 
   public async updateLang(guild: GuildKey, lang: string) {
-    const serverID = serverIdOf(guild)
-    this.logger.debug(`Updating lang for ${serverID}: ${lang}`)
+    this.logger.debug(`Updating lang for ${labelOf(guild)}: ${lang}`)
     const result = await this.prisma.serverConfig.update({
-      where: { serverID },
+      where: whereOf(guild),
       data: { lang }
     })
     return toServerConfig(result)
   }
 
   public async updateLastVoiceChannel(guild: GuildKey, lastVoiceChannel: string) {
-    const serverID = serverIdOf(guild)
-    this.logger.debug(`Updating lastVoiceChannel for ${serverID}: ${lastVoiceChannel}`)
+    this.logger.debug(`Updating lastVoiceChannel for ${labelOf(guild)}: ${lastVoiceChannel}`)
     const result = await this.prisma.serverConfig.update({
-      where: { serverID },
+      where: whereOf(guild),
       data: { lastVoiceChannel }
     })
     return toServerConfig(result)
   }
 
   public async updateCurrentVoiceChannel(guild: GuildKey, currentVoiceChannel: string) {
-    const serverID = serverIdOf(guild)
-    this.logger.debug(`Updating currentVoiceChannel for ${serverID}: ${currentVoiceChannel}`)
+    this.logger.debug(`Updating currentVoiceChannel for ${labelOf(guild)}: ${currentVoiceChannel}`)
     const result = await this.prisma.serverConfig.update({
-      where: { serverID },
+      where: whereOf(guild),
       data: { currentVoiceChannel }
     })
     return toServerConfig(result)
   }
 
   public async updateVoiceMessageTTS(guild: GuildKey, voiceMessageTTS: IVoiceMessageTTS) {
-    const serverID = serverIdOf(guild)
-    this.logger.debug(`Updating TTS config for ${serverID}: provider=${voiceMessageTTS.provider}, lang=${voiceMessageTTS.voiceLang}`)
+    this.logger.debug(`Updating TTS config for ${labelOf(guild)}: provider=${voiceMessageTTS.provider}, lang=${voiceMessageTTS.voiceLang}`)
     const result = await this.prisma.serverConfig.update({
-      where: { serverID },
+      where: whereOf(guild),
       data: {
         ttsEnabled: voiceMessageTTS.enabled,
         ttsMessageLang: voiceMessageTTS.messageLang,

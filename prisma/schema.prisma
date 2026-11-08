@@ -7,7 +7,11 @@ datasource db {
 }
 
 model ServerConfig {
-  serverID            String   @id
+  // The scope of the guild (see Platform/Scope.ts); no defaults, so every write names its scope
+  platform            String
+  instanceId          String
+  // The guild id within the scope
+  serverID            String
   lang                String   @default("en_US")
   channelID           String   @default("")
   lastVoiceChannel    String   @default("")
@@ -20,6 +24,7 @@ model ServerConfig {
   ttsVoiceLang        String   @default("en-US")
   ttsVoiceName        String   @default("en-US-Wavenet-A")
 
+  @@id([platform, instanceId, serverID])
   @@map("serverConfig")
 }
 
