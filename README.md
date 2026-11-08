@@ -94,6 +94,24 @@ The login reuses the Grok CLI client id and is not an officially supported third
 
 The login is saved to `xai-oauth.json` next to `config.json`; delete it to sign out.
 
+If you want to use OpenRouter text to speech, set `openrouterTTS.apiKey` (an [OpenRouter API key](https://openrouter.ai/settings/keys)) in the config, and json content is:
+```json
+{
+  "provider": "openrouter",
+  "lang": "<language code, such as en-US>",
+  "voice": "<model_id@voice_name, such as heygen/heygen-voice-1-turbo:free@nadine>",
+  "join": "<Text when connected to the channel>",
+  "left": "<Text when left the channel>",
+  "switched_out": "<Text when switched out from the channel>",
+  "switched_in": "<Text when switched into to the channel>"
+}
+```
+For openrouter, `voice` (and `voice_name` in `/voice tts`) is `model_id@voice_name`: an OpenRouter model that serves `/v1/audio/speech` and one of that model's voices, such as `heygen/heygen-voice-1-turbo:free@nadine`; check the [OpenRouter models API](https://openrouter.ai/docs/api/api-reference/models/list-all-models-and-their-properties) for both. It is split on the last `@`; without an `@` (or with nothing after it) the whole string is the model and no voice is sent, so the model's default voice is used. `lang` is not sent to OpenRouter; the language comes from the voice. Avoid `[...]` in the announcement text: some models read bracketed text as a tone instruction instead of speaking it.
+
+Some OpenRouter speech models are language models, so the text they read (such as user or channel names) can act as instructions to them: they may then say something other than the text.
+
+The first start after upgrading to config version 4.1 saves the old file as `config-<old version>.json` and exits; check `config.json` and start again.
+
 Files in the old format (`use_wave_tts` instead of `provider`) are converted by `pnpm migrate` when upgrading to [data version](docs/UPGRADING.md#data-version) 2; see the [TTS provider migration guide](docs/migration/TTS_PROVIDER_MIGRATION.md). Files added later must use `provider`; files without a usable `provider` are skipped with an error.
 
 Example:
@@ -124,6 +142,17 @@ Example:
   "provider": "xai",
   "lang": "en",
   "voice": "eve",
+  "join": "Jim joined the channel",
+  "left": "Jim left the channel",
+  "switched_out": "Jim switched out from the channel",
+  "switched_in": "Jim switched into  the channel"
+}
+```
+```json
+{
+  "provider": "openrouter",
+  "lang": "en-US",
+  "voice": "heygen/heygen-voice-1-turbo:free@nadine",
   "join": "Jim joined the channel",
   "left": "Jim left the channel",
   "switched_out": "Jim switched out from the channel",
