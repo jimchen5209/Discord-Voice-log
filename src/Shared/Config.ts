@@ -5,17 +5,44 @@ import { EXIT_NO_RESTART } from './ExitCode'
 
 export interface ConfigValue {
   configVersion: string | number
-  discord: DiscordConfig
+  platform: PlatformConfig
   tts: TtsConfig
   sqlite: SQLiteConfig
   debug: boolean
 }
 
+export interface PlatformConfig {
+  discord: DiscordConfig
+  fluxer: FluxerInstanceConfig[]
+}
+
 export interface DiscordConfig {
+  enabled: boolean
   botToken: string
   applicationID: string
   publicKey: string
   admins: string[]
+}
+
+// One Fluxer instance (official or self-hosted). id is the stable instanceId stored with its data:
+// never derive it from the origin, and never change it once the instance has data.
+export interface FluxerInstanceConfig {
+  id: string
+  enabled: boolean
+  origin: string
+  botToken: string
+  admins: string[]
+}
+
+// Lowercase letters, digits and dashes; "discord" is the instanceId of the Discord scope
+const FLUXER_INSTANCE_ID = /^[a-z0-9-]+$/
+
+function isHttpsOrigin(origin: string) {
+  try {
+    return new URL(origin).protocol === 'https:'
+  } catch {
+    return false
+  }
 }
 
 export interface GoogleTTSConfig {
@@ -54,19 +81,22 @@ export const loggerOptions: ISettingsParam<ILogObj> = {
 }
 
 export class Config {
-  private configVersion = 5
-  private _discord: DiscordConfig
+  private configVersion = 6
+  private _platform: PlatformConfig
   private _tts: TtsConfig
   private _sqlite: SQLiteConfig
   private _debug: boolean
   private logger: Logger<ILogObj>
 
-  private readonly discordDefault = {
+  private readonly discordDefault: DiscordConfig = {
+    enabled: true,
     botToken: '',
     applicationID: '',
     publicKey: '',
     admins: []
   }
+  // Used when the file has no platform.fluxer; an empty list stays empty
+  private readonly fluxerDefault = (): FluxerInstanceConfig[] => [{ id: 'official', enabled: false, origin: 'https://fluxer.com', botToken: '', admins: [] }]
   private readonly googleTTSDefault = { apiKey: '' }
   private readonly xaiTTSDefault = { apiKey: '' }
   private readonly systemVoiceDefault: SystemVoiceConfig = {
@@ -95,8 +125,11 @@ export class Config {
       versionChanged = this.checkVersion(config.configVersion)
 
       // read and migrate config
-      if (!config.discord) config.discord = {}
-      this._discord = this.mergeDiscordConfig(config)
+      this._platform = {
+        discord: this.mergeDiscordConfig(config),
+        fluxer: this.mergeFluxerConfig(config.platform?.fluxer)
+      }
+      this.validatePlatform()
 
       this._tts = this.mergeTts(config)
 
@@ -114,7 +147,7 @@ export class Config {
     } else {
       this.logger.fatal("Can't load config.json: File not found.")
       this.logger.info('Generating empty config...')
-      this._discord = this.discordDefault
+      this._platform = { discord: this.discordDefault, fluxer: this.fluxerDefault() }
       this._tts = this.ttsDefault
       this._sqlite = this.sqliteDefault
       this._debug = false
@@ -133,23 +166,61 @@ export class Config {
     return false
   }
 
+  // platform.discord since version 6; discord, or TOKEN and admins, before
   private mergeDiscordConfig(config: {
-    discord: {
-      botToken: string
-      applicationID: string
-      publicKey: string
-      admins: string[]
-    }
+    platform?: { discord?: Partial<DiscordConfig> }
+    discord?: Partial<DiscordConfig>
     // biome-ignore lint/style/useNamingConvention: Legacy config
-    TOKEN: string
-    admins: string[]
-  }) {
+    TOKEN?: string
+    admins?: string[]
+  }): DiscordConfig {
+    const discord = config.platform?.discord ?? config.discord ?? {}
     return {
-      botToken: config.discord.botToken ? config.discord.botToken : config.TOKEN ? config.TOKEN : this.discordDefault.botToken,
-      applicationID: config.discord.applicationID ? config.discord.applicationID : this.discordDefault.applicationID,
-      publicKey: config.discord.publicKey ? config.discord.publicKey : this.discordDefault.publicKey,
-      admins: config.discord.admins ? config.discord.admins : config.admins ? config.admins : this.discordDefault.admins
-    } as DiscordConfig
+      // Discord was the only platform before version 6, so an upgraded config keeps it running
+      enabled: typeof discord.enabled === 'boolean' ? discord.enabled : this.discordDefault.enabled,
+      botToken: discord.botToken ? discord.botToken : config.TOKEN ? config.TOKEN : this.discordDefault.botToken,
+      applicationID: discord.applicationID ? discord.applicationID : this.discordDefault.applicationID,
+      publicKey: discord.publicKey ? discord.publicKey : this.discordDefault.publicKey,
+      admins: discord.admins ? discord.admins : config.admins ? config.admins : this.discordDefault.admins
+    }
+  }
+
+  private mergeFluxerConfig(fluxer: unknown): FluxerInstanceConfig[] {
+    if (fluxer === undefined) return this.fluxerDefault()
+    if (!Array.isArray(fluxer)) this.invalid(['platform.fluxer must be a list of instances'])
+    return (fluxer as unknown[]).map((entry, index) => {
+      if (typeof entry !== 'object' || entry === null || Array.isArray(entry)) this.invalid([`platform.fluxer[${index}] must be an object`])
+      const instance = entry as Partial<FluxerInstanceConfig>
+      return {
+        id: typeof instance.id === 'string' ? instance.id : '',
+        enabled: instance.enabled === true,
+        origin: typeof instance.origin === 'string' ? instance.origin : '',
+        botToken: typeof instance.botToken === 'string' ? instance.botToken : '',
+        admins: Array.isArray(instance.admins) ? instance.admins.filter((admin): admin is string => typeof admin === 'string') : []
+      }
+    })
+  }
+
+  // Fatal on a config that would mix up scopes or send a token to the wrong place; config.json is left as it is.
+  // Never logs a token.
+  private validatePlatform() {
+    const problems: string[] = []
+    const seen = new Set<string>()
+    this._platform.fluxer.forEach((instance, index) => {
+      const name = `platform.fluxer[${index}]`
+      if (!FLUXER_INSTANCE_ID.test(instance.id)) problems.push(`${name}.id ${JSON.stringify(instance.id)} must use only a-z, 0-9 and -`)
+      else if (instance.id === 'discord') problems.push(`${name}.id cannot be "discord"`)
+      else if (seen.has(instance.id)) problems.push(`${name}.id "${instance.id}" is used twice`)
+      seen.add(instance.id)
+      if (!isHttpsOrigin(instance.origin)) problems.push(`${name}.origin ${JSON.stringify(instance.origin)} must be an https:// URL`)
+      if (instance.enabled && !instance.botToken) problems.push(`${name} is enabled but has no botToken`)
+    })
+    if (problems.length > 0) this.invalid(problems)
+  }
+
+  private invalid(problems: string[]): never {
+    this.logger.fatal(`Invalid config.json, nothing was changed: ${problems.join('; ')}`)
+    process.exit(EXIT_NO_RESTART)
   }
 
   private mergeTts(config: {
@@ -212,7 +283,7 @@ export class Config {
       {
         '//configVersion': 'DO NOT MODIFY THIS UNLESS YOU KNOW WHAT YOU ARE DOING!!!!!',
         configVersion: this.configVersion,
-        discord: this._discord,
+        platform: this._platform,
         tts: this._tts,
         sqlite: this._sqlite,
         debug: this._debug
@@ -223,8 +294,8 @@ export class Config {
     writeFile('./config.json', json, 'utf8')
   }
 
-  public get discord() {
-    return this._discord
+  public get platform() {
+    return this._platform
   }
 
   public get tts() {
