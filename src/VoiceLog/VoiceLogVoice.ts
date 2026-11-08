@@ -8,18 +8,23 @@ import type { VoicePlayback, VoiceSession } from '../Platform/VoicePlayback'
 import type { VoiceLog } from './VoiceLog'
 
 export class VoiceLogVoice {
-  private playback: VoicePlayback
+  // Undefined when the platform cannot play voice: nothing joins, and nothing is ever connected
+  private playback: VoicePlayback | undefined
   // Keyed by guildKeyString, so the same guild id on two platforms never shares a connection
   private audios = new Map<string, { guild: GuildKey; voice: VoiceSession }>()
   private logger: Logger<ILogObj>
   private serverConfig: DbServerConfigManager
   private audio: Audio
 
-  constructor(voiceLog: VoiceLog, playback: VoicePlayback, audio: Audio) {
+  constructor(voiceLog: VoiceLog, playback: VoicePlayback | undefined, audio: Audio) {
     this.playback = playback
     this.logger = voiceLog.logger.getSubLogger({ name: 'Voice' })
     this.serverConfig = voiceLog.serverConfig
     this.audio = audio
+  }
+
+  public get available() {
+    return this.playback !== undefined
   }
 
   private session(guild: GuildKey): VoiceSession | undefined {
@@ -27,6 +32,7 @@ export class VoiceLogVoice {
   }
 
   public getCurrentVoice(guild: GuildKey): VoiceSession | undefined {
+    if (!this.playback) return undefined
     const voice = this.session(guild)
     if (!voice) {
       const existing = this.playback.adoptExisting(guild)
@@ -42,6 +48,8 @@ export class VoiceLogVoice {
   }
 
   public async join(guild: GuildKey, channelId: string, updateDatabase = false, playJoin = false): Promise<VoiceSession | undefined> {
+    const playback = this.playback
+    if (!playback) return
     const current = this.session(guild)
     if (current) {
       if (!current.isReady() && !current.init) {
@@ -61,7 +69,7 @@ export class VoiceLogVoice {
       }
     }
 
-    this.audios.set(guildKeyString(guild), { guild, voice: this.playback.connect(guild, channelId) })
+    this.audios.set(guildKeyString(guild), { guild, voice: playback.connect(guild, channelId) })
     try {
       await waitUntil(() => this.session(guild)?.isReady())
     } catch (error) {
@@ -104,6 +112,8 @@ export class VoiceLogVoice {
   }
 
   public async autoLeaveChannel(oldChannel: ChannelView | undefined, newChannel: ChannelView | undefined, guild: GuildKey): Promise<string | undefined> {
+    const playback = this.playback
+    if (!playback) return
     let channelToCheck: ChannelView | undefined
 
     const voice = this.getCurrentVoice(guild)
@@ -117,7 +127,7 @@ export class VoiceLogVoice {
 
     if (!channelToCheck) return
 
-    const humans = this.playback.humanCount(channelToCheck)
+    const humans = playback.humanCount(channelToCheck)
     // Unknown is not empty: never leave, or join, on a member list the bot cannot see
     if (humans === undefined) return
 

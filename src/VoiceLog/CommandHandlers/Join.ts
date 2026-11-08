@@ -1,11 +1,12 @@
 import waitUntil from 'async-wait-until'
 import type { CommandRequest } from '../../Platform/Command'
 import { genErrorMessage, genNotChangedMessage, genSuccessMessage } from '../Embeds'
-import { beginCommand, type CommandDeps } from './Guard'
+import { beginCommand, type CommandDeps, requireVoice } from './Guard'
 
 export async function commandJoin(deps: CommandDeps, request: CommandRequest) {
   const begun = await beginCommand(deps, request, 'manageMessages')
   if (!begun) return
+  if (!(await requireVoice(deps, request))) return
   const { data } = begun
 
   const guild = request.guild
