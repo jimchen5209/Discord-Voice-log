@@ -1,42 +1,32 @@
 import waitUntil from 'async-wait-until'
-import type { CommandContext } from 'slash-create'
+import type { CommandRequest } from '../../Platform/Command'
 import { genErrorMessage, genNotChangedMessage, genSuccessMessage } from '../Embeds'
 import { beginCommand, type CommandDeps } from './Guard'
 
-export async function commandJoin(deps: CommandDeps, context: CommandContext) {
-  const begun = await beginCommand(deps, context, 'manageMessages')
+export async function commandJoin(deps: CommandDeps, request: CommandRequest) {
+  const begun = await beginCommand(deps, request, 'manageMessages')
   if (!begun) return
-  const { member, data } = begun
+  const { data } = begun
 
-  const guildId = member.guild.id
-  const channelID = member.voiceState.channelID
+  const guild = request.guild
+  // Discord has at most one; which one to use when there are more is decided with the platform that allows it
+  const channelID = request.operatorVoiceChannels()[0]
   if (channelID) {
-    const voice = deps.voiceLog.voice.getCurrentVoice(guildId)
+    const voice = deps.voiceLog.voice.getCurrentVoice(guild)
     if (voice && voice.channelId === channelID) {
-      await context.send({
-        embeds: [genNotChangedMessage(deps.lang.get(data.lang).display.command.already_connected)],
-        ephemeral: true
-      })
+      await request.reply.send([genNotChangedMessage(deps.lang.get(data.lang).display.command.already_connected)], { private: true })
     } else {
-      const newVoice = await deps.voiceLog.voice.join(guildId, channelID, true, true)
+      const newVoice = await deps.voiceLog.voice.join(guild, channelID, true, true)
       try {
         await waitUntil(() => newVoice?.isReady())
       } catch (error) {
         deps.logger.error('Voice timed out', error)
-        await context.send({
-          embeds: [genErrorMessage(deps.lang.get(data.lang).display.command.error)],
-          ephemeral: true
-        })
+        await request.reply.send([genErrorMessage(deps.lang.get(data.lang).display.command.error)], { private: true })
         return
       }
-      await context.send({
-        embeds: [genSuccessMessage(deps.lang.get(data.lang).display.command.join_success)]
-      })
+      await request.reply.send([genSuccessMessage(deps.lang.get(data.lang).display.command.join_success)])
     }
   } else {
-    await context.send({
-      embeds: [genErrorMessage(deps.lang.get(data.lang).display.command.not_in_channel)],
-      ephemeral: true
-    })
+    await request.reply.send([genErrorMessage(deps.lang.get(data.lang).display.command.not_in_channel)], { private: true })
   }
 }
