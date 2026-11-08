@@ -11,7 +11,7 @@
   ```
 5. Build with `pnpm build:prod`
 6. Run `node dist` the first time to generate `config.json`
-7. Fill `config.json` with your bot tokens and settings. The Discord bot goes in `platform.discord` (`enabled: true` runs it). `platform.fluxer` lists Fluxer instances (official and self-hosted), each with a stable `id` that must never change once used; they are disabled by default. An enabled Fluxer instance is text only (join/leave log and prefix commands, `!vl help` by default); see [Fluxer](docs/UPGRADING.md#fluxer).
+7. Fill `config.json` with your bot tokens and settings. The Discord bot goes in `platform.discord` (`enabled: true` runs it). `platform.fluxer` lists Fluxer instances (official and self-hosted), each with a stable `id` that must never change once used; they are disabled by default. An enabled Fluxer instance is text only (join/leave log, and commands by mentioning the bot, e.g. `@VoiceLog help`); see [Fluxer](docs/UPGRADING.md#fluxer).
 8. Initialize the database and data with:
   ```bash
   pnpm migrate
