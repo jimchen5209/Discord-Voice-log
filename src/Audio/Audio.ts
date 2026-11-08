@@ -1,6 +1,6 @@
 import { existsSync as exists, readFileSync as readFile } from 'node:fs'
-import type { Member } from '@projectdysnomia/dysnomia'
 import type { ILogObj, Logger } from 'tslog'
+import type { MemberView } from '../Platform/Views'
 import type { PluginManager } from '../Plugin/Core'
 import type { AudioAsset } from './AudioAsset'
 import { AudioCache } from './AudioCache'
@@ -108,7 +108,7 @@ export class Audio {
     return this.enqueue(queue, this.tts(this.systemRequest(MOVED_TEXT)))
   }
 
-  public announceMember(queue: PlaybackQueue, member: Member, type: string) {
+  public announceMember(queue: PlaybackQueue, member: MemberView, type: string) {
     return this.enqueue(queue, this.resolveMember(member, type))
   }
 
@@ -132,18 +132,18 @@ export class Audio {
   }
 
   // Priority: plugin overwrite, assets/<id>.json TTS, assets/<id>_<type>.wav
-  private async resolveMember(member: Member, type: string): Promise<AudioAsset | undefined> {
+  private async resolveMember(member: MemberView, type: string): Promise<AudioAsset | undefined> {
     for (const voice of this.pluginManager.voiceOverwrites) {
       const overwrittenFile = await voice.playVoice(member, type)
       if (overwrittenFile) return { path: overwrittenFile, format: 'pcm' }
     }
 
-    const wav = `assets/${member.id}_${type}.wav`
+    const wav = `assets/${member.userId}_${type}.wav`
     const wavAsset = (): AudioAsset | undefined => (exists(wav) ? { path: wav, format: undefined } : undefined)
 
-    if (!exists(`assets/${member.id}.json`)) return wavAsset()
+    if (!exists(`assets/${member.userId}.json`)) return wavAsset()
 
-    const config = this.readMemberConfig(`assets/${member.id}.json`)
+    const config = this.readMemberConfig(`assets/${member.userId}.json`)
     const request = config && this.memberRequest(config, type)
     if (!request) return wavAsset()
     // Google Cloud-only rule kept from before: its member TTS never falls back to the wav file

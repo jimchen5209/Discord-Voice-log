@@ -6,6 +6,7 @@ import type { App } from '../App/App'
 import type { Audio } from '../Audio/Audio'
 import type { DbServerConfigManager, IServerConfig } from '../Db/ServerConfig'
 import type { Discord } from '../Discord/Discord'
+import { toMemberView } from '../Discord/Mapping'
 import type { Lang } from '../Shared/Lang'
 import { CacheRefresh } from './CacheRefresh'
 import { VoiceLogCommands } from './CommandHandlers/VoiceLogCommands'
@@ -164,7 +165,7 @@ export class VoiceLog {
     for (const announcement of announcements) {
       if (announcement.channel.id === channelID) {
         if (voice) {
-          this.audio.announceMember(voice.playback, member, announcement.type)
+          this.audio.announceMember(voice.playback, toMemberView(member), announcement.type)
           this.resetContinuousSpeaker(guildId)
         }
       }

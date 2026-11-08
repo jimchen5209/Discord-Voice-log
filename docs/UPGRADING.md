@@ -20,6 +20,18 @@ The upgrade steps are in the [README](../README.md#upgrading). This page explain
 
 Refused combinations (exit code 1, nothing is changed): `--restore` with `--preflight`, `--skip-invalid`, `--yolo` or `--mongo-dump`, and `--yolo` with `--backup-dir`. An unknown option or a missing `<path>` is refused the same way.
 
+## Plugins
+
+**Breaking change:** `IVoiceOverwrite.playVoice(member, type)` no longer receives the Dysnomia `Member`. `member` now has only these fields:
+
+- `userId`: the user ID (was `member.id`)
+- `username`: the username (was `member.username`)
+- `displayName`: the nickname, or the username when there is none (was `member.nick || member.username`)
+- `avatarUrl`: the avatar URL, if any (was `member.avatarURL`)
+- `scope`: `{ platform, instanceId, guildId }` of the guild (was `member.guild.id`; `platform` is `discord`)
+
+A plugin that uses any other `Member` field must be changed before upgrading. `type` and the return value are unchanged.
+
 ## Exit code 78
 
 The bot never migrates on its own. It exits with code 78 when it needs you before it can run:
