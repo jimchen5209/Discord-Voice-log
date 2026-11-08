@@ -39,9 +39,9 @@ export class Command {
       client: {
         discord: this.client
       },
-      applicationID: config.discord.applicationID,
-      publicKey: config.discord.publicKey,
-      token: config.discord.botToken
+      applicationID: config.platform.discord.applicationID,
+      publicKey: config.platform.discord.publicKey,
+      token: config.platform.discord.botToken
     })
 
     this.creator.withServer(
@@ -72,7 +72,7 @@ export class Command {
     const member = await this.client.getRESTGuildMember(context.guildID, context.member.id)
     if (!member) return
 
-    const botAdmin = this.config.discord.admins.includes(member.id)
+    const botAdmin = this.config.platform.discord.admins.includes(member.id)
     const request: CommandRequest = {
       name,
       options,

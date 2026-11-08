@@ -1,7 +1,6 @@
 import { Status } from 'status-client'
 import { createApp } from './App/App'
-import { createBot } from './App/Bot'
-import { assertDiscordToken } from './Discord/Discord'
+import { checkPlatforms, createBot } from './App/Bot'
 import { checkData, warnRemovedDumpEnv } from './Migration'
 import { EXIT_NO_RESTART } from './Shared/ExitCode'
 
@@ -12,7 +11,7 @@ const app = createApp()
 const logger = app.mainLogger
 logger.info('Starting...')
 if (app.config.debug) app.mainLogger.settings.minLevel = 0 // Silly
-assertDiscordToken(app.config)
+if (!checkPlatforms(app)) process.exit(EXIT_NO_RESTART)
 
 const status = new Status('VoiceLog')
 
@@ -25,7 +24,7 @@ async function main() {
   // (connection is lazy), we can start the bot immediately.
   bot = createBot(app)
 
-  bot.discord.start()
+  for (const { runtime } of bot.services) runtime.start()
   status.set_status()
 }
 
@@ -54,10 +53,12 @@ const stop = () => {
     process.exit(1)
   }, 60 * 1000)
 
-  const discordShutdown = (async () => {
-    await bot?.voiceLog.end()
-    await bot?.discord.stop()
-  })()
+  const platformShutdown = Promise.all(
+    (bot?.services ?? []).map(async ({ runtime, voiceLog }) => {
+      await voiceLog.end()
+      await runtime.stop()
+    })
+  )
 
   const dbShutdown = new Promise<void>((resolve) => {
     if (bot?.db) {
@@ -67,7 +68,7 @@ const stop = () => {
     }
   })
 
-  Promise.all([discordShutdown, dbShutdown]).then(() => {
+  Promise.all([platformShutdown, dbShutdown]).then(() => {
     clearTimeout(timeout)
     logger.info('All services shut down gracefully. Exiting.')
     process.exit(0)

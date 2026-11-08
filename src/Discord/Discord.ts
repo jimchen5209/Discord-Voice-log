@@ -15,7 +15,7 @@ import { DiscordTextOutput } from './TextOutput'
 import { DiscordVoicePlayback } from './VoiceConnection'
 
 export function assertDiscordToken(config: Config) {
-  if (!config.discord.botToken) throw Error('Discord token missing')
+  if (!config.platform.discord.botToken) throw Error('Discord token missing')
 }
 
 function presence(member: Member, left: VoiceChannel | undefined, entered: VoiceChannel | undefined): VoicePresenceChange {
@@ -38,7 +38,7 @@ export class Discord implements PlatformRuntime {
   // lang and ttsProviderIds fill the choices of the slash command options
   constructor(config: Config, mainLogger: Logger<ILogObj>, lang: Lang, ttsProviderIds: string[]) {
     this._logger = mainLogger.getSubLogger({ name: 'Discord' })
-    this._client = new Client(config.discord.botToken, {
+    this._client = new Client(config.platform.discord.botToken, {
       restMode: true,
       gateway: {
         intents: ['guilds', 'guildMessages', 'guildVoiceStates', 'messageContent']
