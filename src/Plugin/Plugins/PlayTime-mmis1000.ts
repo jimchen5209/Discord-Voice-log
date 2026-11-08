@@ -1,21 +1,18 @@
-import type { Member } from '@projectdysnomia/dysnomia'
-import { instances } from '../../Utils/Instances'
-import type { TTSHelper } from '../../Utils/TTSHelper'
+import { getApp } from '../../App/App'
+import type { MemberView } from '../../Platform/Views'
 import type { IVoiceOverwrite } from '../Base/VoiceOverwrite'
+
+// The Discord user this plugin announces
+const TARGET_USER_ID = '275570140794322946'
 
 // biome-ignore lint/style/useNamingConvention: username
 export class PlayTime_mmis1000 implements IVoiceOverwrite {
   public pluginName = '殘風報時器'
   public description = '11 點到了'
   typeVoiceOverwrite = true
-  private ttsHelper: TTSHelper
 
-  constructor() {
-    this.ttsHelper = instances.ttsHelper
-  }
-
-  public async playVoice(member: Member, type: string): Promise<string | undefined> {
-    if (member.id === '275570140794322946' && (type === 'switched_in' || type === 'join')) {
+  public async playVoice(member: MemberView, type: string): Promise<string | undefined> {
+    if (member.scope.platform === 'discord' && member.userId === TARGET_USER_ID && (type === 'switched_in' || type === 'join')) {
       const nowTime = new Date()
       if (nowTime.getHours() >= 2 && nowTime.getHours() < 18) return
       let day = nowTime.getDate()
@@ -25,10 +22,10 @@ export class PlayTime_mmis1000 implements IVoiceOverwrite {
       const timeInt = Math.floor(time)
 
       const text = this.timeString(11, timeInt)
-      const lang = 'zh_tw'
 
-      const file = await this.ttsHelper.getTTSFile(text, lang)
-      if (file && file.length !== 0) return file
+      // Google Translate makes PCM, the format Audio expects from a voice overwrite
+      const file = await getApp().audio.synthesize({ provider: 'google-translate', text, lang: 'zh_tw', voice: '' })
+      if (file) return file
     }
   }
 
