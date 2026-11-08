@@ -1,5 +1,5 @@
-// Prefix commands for platforms without slash commands: "<prefix> <group> <command> [arguments]".
-// Same commands and options as the Discord slash commands. Pure: parsing only.
+// Fluxer bots have no slash commands, so a command is a message that starts with a mention of the bot:
+// "@Bot <group> <command> [arguments]". Same commands and options as the Discord slash commands. Pure: parsing only.
 import { type CommandName, TTS_OPTION, TTS_OPTION_NAMES } from '../Platform/Command'
 import type { Embed } from '../Platform/Embed'
 
@@ -8,10 +8,21 @@ export type ParsedCommand = { kind: 'command'; name: CommandName; options?: Reco
 const TRUE_WORDS = ['true', 'on', 'yes']
 const FALSE_WORDS = ['false', 'off', 'no']
 
-// The message is a command when it is the prefix, or the prefix and whitespace; such a message is never read aloud
-export function isCommand(content: string, prefix: string) {
+// The text after the mention when the message starts with <@selfId> or <@!selfId>, then whitespace or the end;
+// undefined otherwise, or before the bot knows its id. Such a message is never logged or read aloud.
+export function commandText(content: string, selfId: string): string | undefined {
+  if (!selfId) return undefined
   const text = content.trimStart()
-  return text.startsWith(prefix) && (text.length === prefix.length || /\s/.test(text[prefix.length]))
+  for (const mention of [`<@${selfId}>`, `<@!${selfId}>`]) {
+    if (!text.startsWith(mention)) continue
+    const rest = text.slice(mention.length)
+    if (rest === '' || /^\s/.test(rest)) return rest.trim()
+  }
+  return undefined
+}
+
+export function isCommand(content: string, selfId: string) {
+  return commandText(content, selfId) !== undefined
 }
 
 function noArguments(name: CommandName, args: string[]): ParsedCommand {
@@ -40,9 +51,10 @@ function parseTts(args: string[]): ParsedCommand {
 }
 
 // Undefined when the message is not a command
-export function parseCommand(content: string, prefix: string): ParsedCommand | undefined {
-  if (!isCommand(content, prefix)) return undefined
-  const [group, command, ...args] = content.trimStart().slice(prefix.length).trim().split(/\s+/).filter(Boolean)
+export function parseCommand(content: string, selfId: string): ParsedCommand | undefined {
+  const text = commandText(content, selfId)
+  if (text === undefined) return undefined
+  const [group, command, ...args] = text.split(/\s+/).filter(Boolean)
   switch (group?.toLowerCase()) {
     case undefined:
     case 'help':
@@ -75,16 +87,16 @@ export function parseCommand(content: string, prefix: string): ParsedCommand | u
   return { kind: 'invalid', error: `Unknown command "${group}"` }
 }
 
-// languages: [key, display name]
-export function genHelpEmbed(prefix: string, languages: [string, string][], providerIds: string[], error?: string): Embed {
+// trigger: the label shown before each command, e.g. "@VoiceLog"; languages: [key, display name]
+export function genHelpEmbed(trigger: string, languages: [string, string][], providerIds: string[], error?: string): Embed {
   const lines = [
-    `\`${prefix} log set [language]\`: Set and enable voiceLog in this channel (admin)`,
-    `\`${prefix} log unset\`: Disable voiceLog (admin)`,
-    `\`${prefix} log language <language>\`: Set voiceLog language (admin)`,
-    `\`${prefix} voice join\`: Make bot join your channel (admin)`,
-    `\`${prefix} voice leave\`: Make bot leave channel (admin)`,
-    `\`${prefix} voice tts ${TTS_OPTION_NAMES.map((name) => (name === TTS_OPTION.enabled ? `[${name}=true|false]` : `[${name}=...]`)).join(' ')}\`: Voice Message TTS setting (admin)`,
-    `\`${prefix} refresh_cache\`: Refresh TTS caches (bot admin)`
+    `\`${trigger} log set [language]\`: Set and enable voiceLog in this channel (admin)`,
+    `\`${trigger} log unset\`: Disable voiceLog (admin)`,
+    `\`${trigger} log language <language>\`: Set voiceLog language (admin)`,
+    `\`${trigger} voice join\`: Make bot join your channel (admin)`,
+    `\`${trigger} voice leave\`: Make bot leave channel (admin)`,
+    `\`${trigger} voice tts ${TTS_OPTION_NAMES.map((name) => (name === TTS_OPTION.enabled ? `[${name}=true|false]` : `[${name}=...]`)).join(' ')}\`: Voice Message TTS setting (admin)`,
+    `\`${trigger} refresh_cache\`: Refresh TTS caches (bot admin)`
   ]
   return {
     title: error ? 'Invalid command' : 'VoiceLog commands',

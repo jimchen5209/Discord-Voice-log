@@ -3,9 +3,6 @@ import type { PlatformConfig } from './Types'
 // Lowercase letters, digits and dashes; "discord" is the instanceId of the Discord scope
 export const FLUXER_INSTANCE_ID = /^[a-z0-9-]+$/
 
-// A command is the prefix, then whitespace or the end of the message
-export const FLUXER_PREFIX = /^\S{1,16}$/
-
 export function isHttpsOrigin(origin: string) {
   try {
     return new URL(origin).protocol === 'https:'
@@ -27,7 +24,6 @@ export function validatePlatform(platform: PlatformConfig, positions?: number[])
     seen.add(instance.id)
     if (!isHttpsOrigin(instance.origin)) problems.push(`${name}.origin ${JSON.stringify(instance.origin)} must be an https:// URL`)
     if (instance.enabled && !instance.botToken) problems.push(`${name} is enabled but has no botToken`)
-    if (!FLUXER_PREFIX.test(instance.prefix)) problems.push(`${name}.prefix ${JSON.stringify(instance.prefix)} must be 1 to 16 characters without spaces`)
   })
   return problems
 }
