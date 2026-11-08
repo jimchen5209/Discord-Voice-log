@@ -1,34 +1,34 @@
-import type { Member, MessageContent, VoiceChannel } from '@projectdysnomia/dysnomia'
-import type { MessageEmbedOptions } from 'slash-create'
 import { vsprintf } from 'sprintf-js'
 import type { IVoiceMessageTTS } from '../Db/ServerConfig'
+import type { Embed } from '../Platform/Embed'
+import type { ChannelView, MemberView } from '../Platform/Views'
 import type { Lang } from '../Shared/Lang'
 
-export function genSuccessMessage(msg: string) {
+export function genSuccessMessage(msg: string): Embed {
   return {
     title: 'Success',
     color: 4289797,
     description: msg
-  } as MessageEmbedOptions
+  }
 }
 
-export function genNotChangedMessage(msg: string) {
+export function genNotChangedMessage(msg: string): Embed {
   return {
     title: 'Nothing Changed',
     color: 9274675,
     description: msg
-  } as MessageEmbedOptions
+  }
 }
 
-export function genErrorMessage(msg: string) {
+export function genErrorMessage(msg: string): Embed {
   return {
     title: 'Error',
     color: 13632027,
     description: msg
-  } as MessageEmbedOptions
+  }
 }
 
-export function genTTSSuccessMessage(i18n: Lang, title: string, ttsConfig: IVoiceMessageTTS, lang: string) {
+export function genTTSSuccessMessage(i18n: Lang, title: string, ttsConfig: IVoiceMessageTTS, lang: string): Embed {
   const l = i18n.get(lang).display.config
   const translatedFields = [
     { label: l.tts_enabled, value: ttsConfig.enabled ? l.tts_yes : l.tts_no },
@@ -42,10 +42,10 @@ export function genTTSSuccessMessage(i18n: Lang, title: string, ttsConfig: IVoic
     title,
     color: 4289797,
     description
-  } as MessageEmbedOptions
+  }
 }
 
-export function genVoiceLogEmbed(i18n: Lang, member: Member, lang: string, type: string, oldChannel: VoiceChannel | undefined, newChannel: VoiceChannel | undefined) {
+export function genVoiceLogEmbed(i18n: Lang, member: MemberView, lang: string, type: string, oldChannel: ChannelView | undefined, newChannel: ChannelView | undefined): Embed {
   let color: number
   let content: string
   switch (type) {
@@ -67,23 +67,18 @@ export function genVoiceLogEmbed(i18n: Lang, member: Member, lang: string, type:
       break
   }
   return {
-    embeds: [
-      {
-        color,
-        title: member.nick ? member.nick : member.username,
-        description: content,
-        timestamp: new Date().toISOString(),
-        // biome-ignore lint/style/useNamingConvention: MessageContent requires this
-        author: { name: `@${member.username}`, icon_url: member.avatarURL }
-      }
-    ]
-  } as MessageContent<'hasNonce'>
+    color,
+    title: member.displayName,
+    description: content,
+    timestamp: new Date().toISOString(),
+    author: { name: `@${member.username}`, iconUrl: member.avatarUrl }
+  }
 }
 
-export function genProgressMessage(title: string, fields: Array<{ name: string; value: string }>, isDone = false) {
+export function genProgressMessage(title: string, fields: Array<{ name: string; value: string }>, isDone = false): Embed {
   return {
     color: isDone ? 4289797 : 16312092,
     title,
     fields
-  } as MessageEmbedOptions
+  }
 }

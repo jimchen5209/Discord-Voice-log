@@ -6,7 +6,7 @@ import type { App } from '../App/App'
 import type { Audio } from '../Audio/Audio'
 import type { DbServerConfigManager, IServerConfig } from '../Db/ServerConfig'
 import type { Discord } from '../Discord/Discord'
-import { toMemberView } from '../Discord/Mapping'
+import { toChannelView, toDiscordEmbed, toMemberView } from '../Discord/Mapping'
 import type { Lang } from '../Shared/Lang'
 import { CacheRefresh } from './CacheRefresh'
 import { VoiceLogCommands } from './CommandHandlers/VoiceLogCommands'
@@ -159,7 +159,8 @@ export class VoiceLog {
 
     if (data) {
       if (data.channelID !== '') {
-        this.client.createMessage(data.channelID, genVoiceLogEmbed(this.lang, member, data.lang, embedType, oldChannel, newChannel))
+        const embed = genVoiceLogEmbed(this.lang, toMemberView(member), data.lang, embedType, oldChannel && toChannelView(oldChannel), newChannel && toChannelView(newChannel))
+        this.client.createMessage(data.channelID, { embeds: [toDiscordEmbed(embed)] })
       }
     }
     for (const announcement of announcements) {
