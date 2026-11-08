@@ -1,8 +1,8 @@
 import type { Client } from '@projectdysnomia/dysnomia'
 import { type AnyRequestData, type CommandContext, GatewayServer, type SlashCommand, SlashCreator } from 'slash-create'
 import type { ILogObj, Logger } from 'tslog'
+import type { Config } from '../Config'
 import type { CommandName, CommandReply, CommandRequest } from '../Platform/Command'
-import type { Config } from '../Shared/Config'
 import type { Discord } from './Discord'
 import { discordGuild, toDiscordEmbed, toMemberView } from './Mapping'
 
