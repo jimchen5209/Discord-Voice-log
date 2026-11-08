@@ -2,8 +2,11 @@ import { existsSync as exists, readFileSync as readFile, writeFileSync as writeF
 import type { ILogObj, Logger } from 'tslog'
 import { EXIT_NO_RESTART } from '../Shared/ExitCode'
 import { defaultPlatform, defaultSQLite, defaultTTS } from './Defaults'
-import type { PlatformConfig, SQLiteConfig, TTSConfig } from './Types'
+import type { ConfigValue, PlatformConfig, SQLiteConfig, TTSConfig } from './Types'
 import { backupConfigFile, CONFIG_VERSION, compareVersion, migrateConfig, type RawConfig } from './Upgrade'
+
+// config.json as written: ConfigValue plus the warning above configVersion
+type ConfigFile = { '//configVersion': string } & ConfigValue
 
 export class Config {
   private _platform: PlatformConfig
@@ -57,18 +60,15 @@ export class Config {
   }
 
   private save() {
-    const json = JSON.stringify(
-      {
-        '//configVersion': 'DO NOT MODIFY THIS UNLESS YOU KNOW WHAT YOU ARE DOING!!!!!',
-        configVersion: CONFIG_VERSION,
-        platform: this._platform,
-        tts: this._tts,
-        sqlite: this._sqlite,
-        debug: this._debug
-      },
-      null,
-      4
-    )
+    const value: ConfigFile = {
+      '//configVersion': 'DO NOT MODIFY THIS UNLESS YOU KNOW WHAT YOU ARE DOING!!!!!',
+      configVersion: CONFIG_VERSION,
+      platform: this._platform,
+      tts: this._tts,
+      sqlite: this._sqlite,
+      debug: this._debug
+    }
+    const json = JSON.stringify(value, null, 4)
     writeFile('./config.json', json, 'utf8')
   }
 

@@ -7,7 +7,7 @@ export type { SQLiteConfig } from './SQLite'
 export type { GoogleTTSConfig, SystemVoiceConfig, TTSConfig, TTSProvidersConfig, XaiTTSConfig } from './TTS'
 
 export interface ConfigValue {
-  configVersion: string | number
+  configVersion: number
   platform: PlatformConfig
   tts: TTSConfig
   sqlite: SQLiteConfig
