@@ -1,4 +1,4 @@
-import { DEFAULT_FLUXER_PREFIX, defaultDiscord, defaultFluxer } from '../Defaults'
+import { defaultDiscord, defaultFluxer } from '../Defaults'
 import type { DiscordConfig, FluxerInstanceConfig } from '../Types'
 
 export interface RawPlatformConfig {
@@ -51,9 +51,7 @@ export function mergeFluxerConfig(raw: RawPlatformConfig): MergedFluxerConfig {
       enabled: instance.enabled === true,
       origin: typeof instance.origin === 'string' ? instance.origin : '',
       botToken: typeof instance.botToken === 'string' ? instance.botToken : '',
-      admins: Array.isArray(instance.admins) ? instance.admins.filter((admin): admin is string => typeof admin === 'string') : [],
-      // Added within config version 6; a missing prefix gets the default
-      prefix: typeof instance.prefix === 'string' ? instance.prefix : DEFAULT_FLUXER_PREFIX
+      admins: Array.isArray(instance.admins) ? instance.admins.filter((admin): admin is string => typeof admin === 'string') : []
     })
     result.positions.push(index)
   })

@@ -8,7 +8,7 @@ import type { MemberView, MessageView, VoicePresenceChange } from '../Platform/V
 import type { Lang } from '../Shared/Lang'
 import { discoverInstance, isTrustedEndpoint } from './Discovery'
 import { fluxerGuild, toChannelView, toFluxerEmbed, toMemberView, toMessageView } from './Mapping'
-import { genHelpEmbed, isCommand, parseCommand } from './PrefixCommand'
+import { genHelpEmbed, isCommand, parseCommand } from './MentionCommand'
 import { type PresenceDelta, VoicePresenceTracker, type VoiceStateUpdate } from './Presence'
 import { FluxerTextOutput } from './TextOutput'
 
@@ -241,7 +241,7 @@ export class Fluxer implements PlatformRuntime {
   private onMessageCreate(client: Client, message: Message) {
     if (!message.guildId) return
     const guild = fluxerGuild(this.scope, message.guildId)
-    if (isCommand(message.content, this.instance.prefix)) {
+    if (isCommand(message.content, client.user?.id ?? '')) {
       this.onCommandMessage(client, guild, message).catch((error) => this.logger.error('Command failed:', error))
       return
     }
@@ -250,12 +250,12 @@ export class Fluxer implements PlatformRuntime {
 
   private async onCommandMessage(client: Client, key: GuildKey, message: Message) {
     if (message.author.bot || message.webhookId) return
-    const parsed = parseCommand(message.content, this.instance.prefix)
+    const parsed = parseCommand(message.content, client.user?.id ?? '')
     if (!parsed) return
     const reply = toReply(message)
     if (parsed.kind !== 'command') {
       const languages = this.lang.entries().map(([id, value]): [string, string] => [id, value.displayName])
-      await reply.send([genHelpEmbed(this.instance.prefix, languages, this.ttsProviderIds, parsed.kind === 'invalid' ? parsed.error : undefined)])
+      await reply.send([genHelpEmbed(`@${client.user?.username ?? 'bot'}`, languages, this.ttsProviderIds, parsed.kind === 'invalid' ? parsed.error : undefined)])
       return
     }
     if (!this.commandHandler) {
