@@ -1,6 +1,6 @@
 import { Status } from 'status-client'
 import { createApp } from './App/App'
-import { checkPlatforms, createBot } from './App/Bot'
+import { checkPlatforms, createBot, startCacheJobs, startServices } from './App/Bot'
 import { unreadAssetFiles } from './Audio/AssetPaths'
 import { checkData, warnRemovedDumpEnv } from './Migration'
 import { EXIT_NO_RESTART } from './Shared/ExitCode'
@@ -29,7 +29,12 @@ async function main() {
   // (connection is lazy), we can start the bot immediately.
   bot = createBot(app)
 
-  for (const { runtime } of bot.services) runtime.start()
+  startCacheJobs(app, bot.cacheRefresh)
+  const running = await startServices(app, bot.services)
+  if (running.length === 0) {
+    logger.fatal('No platform could start')
+    process.exit(1)
+  }
   status.set_status()
 }
 

@@ -1,4 +1,5 @@
 import { type CommandContext, CommandOptionType, SlashCommand, type SlashCreator } from 'slash-create'
+import { TTS_OPTION } from '../../Platform/Command'
 import type { Lang } from '../../Shared/Lang'
 import type { Command } from '../Command'
 import { genChoice } from './options'
@@ -28,29 +29,29 @@ export class VoiceCommand extends SlashCommand {
           type: CommandOptionType.SUB_COMMAND,
           options: [
             {
-              name: 'enabled',
+              name: TTS_OPTION.enabled,
               description: 'Enable/Disable TTS',
               type: CommandOptionType.BOOLEAN
             },
             {
-              name: 'provider',
+              name: TTS_OPTION.provider,
               description: 'TTS provider',
               type: CommandOptionType.STRING,
               choices: ttsProviderIds.map((id) => ({ name: id, value: id }))
             },
             {
-              name: 'message_lang',
+              name: TTS_OPTION.messageLang,
               description: 'Message language for TTS parsing',
               type: CommandOptionType.STRING,
               choices: genChoice(lang)
             },
             {
-              name: 'voice_lang',
+              name: TTS_OPTION.voiceLang,
               description: 'Voice language code (e.g. en-US, zh-TW)',
               type: CommandOptionType.STRING
             },
             {
-              name: 'voice_name',
+              name: TTS_OPTION.voiceName,
               description: 'Voice name (e.g. en-US-Wavenet-A)',
               type: CommandOptionType.STRING
             }

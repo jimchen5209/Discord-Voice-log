@@ -19,4 +19,6 @@ export interface FluxerInstanceConfig {
   origin: string
   botToken: string
   admins: string[]
+  // Commands are messages starting with this, e.g. "!vl log set", as Fluxer bots have no slash commands
+  prefix: string
 }

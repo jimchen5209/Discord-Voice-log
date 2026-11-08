@@ -1,5 +1,4 @@
 import { existsSync as exists, mkdirSync as mkDir } from 'node:fs'
-import { scheduleJob } from 'node-schedule'
 import type { ILogObj, Logger } from 'tslog'
 import type { App } from '../App/App'
 import { memberAssetDir } from '../Audio/AssetPaths'
@@ -9,7 +8,7 @@ import type { PlatformRuntime } from '../Platform/Runtime'
 import { type GuildKey, guildKeyString } from '../Platform/Scope'
 import type { ChannelView, MemberView, MessageView, VoicePresenceChange } from '../Platform/Views'
 import type { Lang } from '../Shared/Lang'
-import { CacheRefresh } from './CacheRefresh'
+import type { CacheRefresh } from './CacheRefresh'
 import { VoiceLogCommands } from './CommandHandlers/VoiceLogCommands'
 import { genVoiceLogEmbed } from './Embeds'
 import { parseMessage } from './MessageText'
@@ -34,12 +33,13 @@ export class VoiceLog {
   // Keyed by guildKeyString
   private continuousUser: { [key: string]: { user: string; timestamp: number } } = {}
 
-  constructor(platform: PlatformRuntime, serverConfig: DbServerConfigManager, app: App) {
+  constructor(platform: PlatformRuntime, serverConfig: DbServerConfigManager, cacheRefresh: CacheRefresh, app: App) {
     this.platform = platform
     this._logger = platform.logger.getSubLogger({ name: 'VoiceLog' })
     this.lang = app.lang
     this.audio = app.audio
-    this._cacheRefresh = new CacheRefresh(this._logger.getSubLogger({ name: 'Voice' }), app.audio)
+    // Shared by every platform: one refresh at a time over the files of every scope
+    this._cacheRefresh = cacheRefresh
     this.textLogger = this._logger.getSubLogger({ name: 'Text' })
     this._serverConfig = serverConfig
 
@@ -206,22 +206,15 @@ export class VoiceLog {
     return this._serverConfig
   }
 
+  // On every ready of the platform. The cache jobs are scheduled once for all platforms, see App/Bot.ts.
   public async start() {
     const assetDir = memberAssetDir(this.platform.scope)
     if (!exists(assetDir)) mkDir(assetDir, { recursive: true })
-    if (!exists('./caches')) mkDir('./caches')
-    this.audio.evictCache()
+    if (!this._voice.available) return
     const channels = await this._serverConfig.getCurrentChannels(this.platform.scope)
     channels.forEach((element: IServerConfig) => {
       this._logger.info(`Reconnecting to ${element.currentVoiceChannel}...`)
       this._voice.join({ ...this.platform.scope, guildId: element.serverID }, element.currentVoiceChannel)
-    })
-    scheduleJob('0 0 * * *', () => {
-      this._cacheRefresh.refreshCache(undefined)
-    })
-    // Away from the midnight refresh, so expired files are not removed just before it re-reads them
-    scheduleJob('0 12 * * *', () => {
-      this.audio.evictCache()
     })
   }
 

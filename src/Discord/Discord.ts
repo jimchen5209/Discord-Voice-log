@@ -108,8 +108,8 @@ export class Discord implements PlatformRuntime {
     this._command.setHandler(handler)
   }
 
-  public start() {
-    this._client.connect()
+  public async start() {
+    await this._client.connect()
   }
 
   public async stop() {

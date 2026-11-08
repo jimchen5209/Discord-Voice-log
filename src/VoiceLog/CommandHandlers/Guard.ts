@@ -26,3 +26,10 @@ export async function beginCommand(deps: CommandDeps, request: CommandRequest, a
   }
   return { data }
 }
+
+// For voice commands, after beginCommand: on a platform that cannot play voice, says so instead of changing settings that do nothing
+export async function requireVoice(deps: CommandDeps, request: CommandRequest) {
+  if (deps.voiceLog.voice.available) return true
+  await request.reply.send([genErrorMessage('Voice is not available on this platform yet.')], { private: true })
+  return false
+}
