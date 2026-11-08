@@ -21,18 +21,18 @@ export async function commandSetTTS(deps: CommandDeps, context: CommandContext) 
 
   const ttsConfig: Partial<IVoiceMessageTTS> = {}
   if (typeof options.enabled === 'boolean') ttsConfig.enabled = options.enabled
-  if (typeof options.type === 'string') {
-    const reason = deps.audio.unavailableReason(options.type)
+  if (typeof options.provider === 'string') {
+    const reason = deps.audio.unavailableReason(options.provider)
     if (reason) {
       // The reason can name config keys, so it only goes to the log
-      deps.logger.warn(`Guild ${context.guildID} cannot use TTS provider "${options.type}": ${reason}`)
+      deps.logger.warn(`Guild ${context.guildID} cannot use TTS provider "${options.provider}": ${reason}`)
       await context.send({
         embeds: [genErrorMessage('This voice is currently unavailable.')],
         ephemeral: true
       })
       return
     }
-    ttsConfig.provider = options.type
+    ttsConfig.provider = options.provider
   }
   if (typeof options.message_lang === 'string') {
     if (!deps.lang.isExist(options.message_lang)) {

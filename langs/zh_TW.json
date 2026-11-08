@@ -23,7 +23,7 @@
     "tts_success": "語音訊息 TTS 設定已更新",
     "tts_enabled": "TTS 已啟用",
     "tts_message_lang": "TTS訊息語言",
-    "tts_type": "TTS 引擎",
+    "tts_provider": "TTS 提供者",
     "tts_voice_lang": "TTS 語音語言",
     "tts_voice_name": "TTS 語音名稱",
     "tts_yes": "是",

@@ -34,7 +34,7 @@ export class VoiceCommand extends SlashCommand {
               type: CommandOptionType.BOOLEAN
             },
             {
-              name: 'type',
+              name: 'provider',
               description: 'TTS provider',
               type: CommandOptionType.STRING,
               choices: audio.providerIds().map((id) => ({ name: id, value: id }))
