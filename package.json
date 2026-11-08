@@ -24,6 +24,7 @@
   },
   "keywords": [],
   "dependencies": {
+    "@fluxerjs/core": "3.3.0",
     "@prisma/adapter-better-sqlite3": "^7.10.0",
     "@prisma/client": "^7.10.0",
     "@projectdysnomia/dysnomia": "0.2.4",

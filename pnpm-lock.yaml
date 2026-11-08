@@ -178,6 +178,9 @@ importers:
 
   .:
     dependencies:
+      '@fluxerjs/core':
+        specifier: 3.3.0
+        version: 3.3.0
       '@prisma/adapter-better-sqlite3':
         specifier: ^7.10.0
         version: 7.10.1
@@ -462,6 +465,46 @@ packages:
 
   '@eshaz/web-worker@1.2.2':
     resolution: {integrity: sha512-WxXiHFmD9u/owrzempiDlBB1ZYqiLnm9s6aPc8AlFQalq2tKmqdmMr9GXOupDgzXtqnBipj8Un0gkIm7Sjf8mw==}
+
+  '@fluxerjs/builders@3.0.0':
+    resolution: {integrity: sha512-UIRI3J9ydf7JXsbMMmREiZu3M2NTLVYnyP3g0MpLbOyftwBtr7B03tMKK+FetzwPQOFwvZgmG72hgOg08AQ83g==}
+    engines: {node: '>=22.13.0'}
+
+  '@fluxerjs/collection@3.0.0':
+    resolution: {integrity: sha512-IUdngO5ymv89iDnXTz+E+U8lmNH5DMOOmZ9StBCjFAQ8wAvXLo9fceN2xjlLlACeNgw+sueFSoJV6x3h1Zs2Ug==}
+    engines: {node: '>=22.13.0'}
+
+  '@fluxerjs/core@3.3.0':
+    resolution: {integrity: sha512-A+MGadnTz6mQp5fV3RvwA8ndgWmIR4vc7j+pyeTJKN1eDEKYcA9/VTHTXKnHzo6r1MrVCdkE24dIaK3O8hoxRA==}
+    engines: {node: '>=22.13.0'}
+
+  '@fluxerjs/rest@3.1.0':
+    resolution: {integrity: sha512-JHnrHLwuhoEze/F3ZwYf7quS8tJAyRi8GwHc3xB4jnc1GZdK/9ZPbNkQVpXdl4CbiaO2bmlvfboiyHviZIWc0w==}
+    engines: {node: '>=22.13.0'}
+
+  '@fluxerjs/types@3.0.0':
+    resolution: {integrity: sha512-VfCtBExMq5bZ+WC8E2oc96tfj6XRKePhRKjPJtcIc1AW+V6/+d3w/C9fx9HEnQs9xm33xvyah7cu9zp0jOx8qA==}
+    engines: {node: '>=22.13.0'}
+
+  '@fluxerjs/types@3.1.0':
+    resolution: {integrity: sha512-Irtg8g7NhxvO5IAdJ3KdLq91K6thcTc2A8YeSgM0I61ESsYfvNuNdxMS/Y/y+xGjyfXIVpEEPkhfkEHaIojgIA==}
+    engines: {node: '>=22.13.0'}
+
+  '@fluxerjs/types@3.3.0':
+    resolution: {integrity: sha512-vzMVoxvhJr+sf04L2aFcM3C+lmjFWD9yITKqpZP9PIthwKOFSaK5eHsiUhzbt0pKCk2lkRmAQ4MBcwTeU+7TMw==}
+    engines: {node: '>=22.13.0'}
+
+  '@fluxerjs/util@3.0.0':
+    resolution: {integrity: sha512-CMFRYdjQC26ZoXckgWcDVshZuxrU9wu42H/prv9cciZfmR9RQTSelVKq5TM1XQeYchrpxoL9EPxQMv3moSsbvA==}
+    engines: {node: '>=22.13.0'}
+
+  '@fluxerjs/util@3.1.0':
+    resolution: {integrity: sha512-NCFf4igTpDeRAgW7/8yxEDFfqmy16xlfvBQfysSAE2jEkUcM0s1G9nP8rsIhTYb4bQ+dTvHh9Rv/eWKgOYyI/w==}
+    engines: {node: '>=22.13.0'}
+
+  '@fluxerjs/ws@3.1.0':
+    resolution: {integrity: sha512-CQWs6zKo6a+SkOOk/KtMHWRKa38cVNrjLfihzBwb3eR7zUIv4wXnKWxw03X8e1kp/C4DMAAElQX+OQFU/K+xNg==}
+    engines: {node: '>=22.13.0'}
 
   '@jridgewell/gen-mapping@0.3.13':
     resolution: {integrity: sha512-2kkt/7niJ6MgEPxF0bYdQ6etZaA+fQvDcLKckhy1yIQOzaoKjBBjSj63/aLVjYE3qhRt5dvM+uUyfCg6UKCBbA==}
@@ -1579,6 +1622,10 @@ packages:
     resolution: {integrity: sha512-R+RODBqp6i2pPflGdq+xIOUkl+RNfGgHwoinecKu/JCuf2uO06cOKoDbI2P7Dn6KcswdKwrczbU6IYJ6K8X+wg==}
     engines: {node: '>=18.17'}
 
+  undici@7.30.1:
+    resolution: {integrity: sha512-03KrMbjIFDWQR5RNPrSw3bd1r12JpyFQl9/yxjUbJtqkjmllqC5lFjZh6ujeuJCKr8EOQvRW872Oy/az+nLYxg==}
+    engines: {node: '>=20.18.1'}
+
   update-browserslist-db@1.1.4:
     resolution: {integrity: sha512-q0SPT4xyU84saUX+tomz1WLkxUbuaJnR1xWt17M7fJtEJigJeWUNGUqrauFXsHnqev9y9JTRGwk13tFBuKby4A==}
     hasBin: true
@@ -1856,6 +1903,53 @@ snapshots:
     optional: true
 
   '@eshaz/web-worker@1.2.2': {}
+
+  '@fluxerjs/builders@3.0.0':
+    dependencies:
+      '@fluxerjs/types': 3.0.0
+      '@fluxerjs/util': 3.0.0
+
+  '@fluxerjs/collection@3.0.0': {}
+
+  '@fluxerjs/core@3.3.0':
+    dependencies:
+      '@fluxerjs/builders': 3.0.0
+      '@fluxerjs/collection': 3.0.0
+      '@fluxerjs/rest': 3.1.0
+      '@fluxerjs/types': 3.3.0
+      '@fluxerjs/util': 3.1.0
+      '@fluxerjs/ws': 3.1.0
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
+
+  '@fluxerjs/rest@3.1.0':
+    dependencies:
+      '@fluxerjs/types': 3.1.0
+      undici: 7.30.1
+
+  '@fluxerjs/types@3.0.0': {}
+
+  '@fluxerjs/types@3.1.0': {}
+
+  '@fluxerjs/types@3.3.0': {}
+
+  '@fluxerjs/util@3.0.0':
+    dependencies:
+      '@fluxerjs/types': 3.0.0
+
+  '@fluxerjs/util@3.1.0':
+    dependencies:
+      '@fluxerjs/types': 3.1.0
+
+  '@fluxerjs/ws@3.1.0':
+    dependencies:
+      '@fluxerjs/types': 3.1.0
+      '@fluxerjs/util': 3.1.0
+      ws: 8.21.0
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
 
   '@jridgewell/gen-mapping@0.3.13':
     dependencies:
@@ -2921,6 +3015,8 @@ snapshots:
   undici-types@7.24.6: {}
 
   undici@6.29.0: {}
+
+  undici@7.30.1: {}
 
   update-browserslist-db@1.1.4(browserslist@4.27.0):
     dependencies:
