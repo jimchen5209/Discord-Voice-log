@@ -1,12 +1,13 @@
 import { existsSync as exists, mkdirSync as mkDir } from 'node:fs'
-import type { Client, Member, Message, PossiblyUncachedTextableChannel, VoiceChannel } from '@projectdysnomia/dysnomia'
+import type { Client, Member, VoiceChannel } from '@projectdysnomia/dysnomia'
 import { scheduleJob } from 'node-schedule'
 import type { ILogObj, Logger } from 'tslog'
 import type { App } from '../App/App'
 import type { Audio } from '../Audio/Audio'
 import type { DbServerConfigManager, IServerConfig } from '../Db/ServerConfig'
 import type { Discord } from '../Discord/Discord'
-import { toChannelView, toDiscordEmbed, toMemberView } from '../Discord/Mapping'
+import { toChannelView, toDiscordEmbed, toMemberView, toMessageView } from '../Discord/Mapping'
+import type { MessageView } from '../Platform/Views'
 import type { Lang } from '../Shared/Lang'
 import { CacheRefresh } from './CacheRefresh'
 import { VoiceLogCommands } from './CommandHandlers/VoiceLogCommands'
@@ -48,7 +49,10 @@ export class VoiceLog {
     this._text = new VoiceLogText(this, discord, app.lang)
     this._command = new VoiceLogCommands(this, discord, app.config, app.lang, app.audio)
 
-    this.client.on('messageCreate', (message) => this.onMessage(message))
+    this.client.on('messageCreate', (message) => {
+      if (message.guildID === undefined) return
+      this.onMessage(toMessageView(this.client, message))
+    })
     this.client.on('voiceChannelJoin', (member: Member, newChannel: VoiceChannel) => this.onJoin(member, newChannel))
     this.client.on('voiceChannelLeave', (member: Member, oldChannel: VoiceChannel) => this.onLeave(member, oldChannel))
     this.client.on('voiceChannelSwitch', (member: Member, newChannel: VoiceChannel, oldChannel: VoiceChannel) => this.onSwitch(member, newChannel, oldChannel))
@@ -61,25 +65,24 @@ export class VoiceLog {
     this.client.on('ready', () => this.start())
   }
 
-  private async onMessage(message: Message<PossiblyUncachedTextableChannel>) {
-    if (message.guildID === undefined) return
-    const guildId = message.guildID
+  private async onMessage(message: MessageView) {
+    const guildId = message.scope.guildId
     const data = await this._serverConfig.get(guildId)
 
     if (!data?.voiceMessageTTS.enabled) return
 
     this.enqueue(async () => {
       const voice = this._voice.getCurrentVoice(guildId)
-      if (voice?.channelId === message.channel.id) {
-        const isContinuous = this.continuousUser[guildId]?.user === message.author.id && message.timestamp - this.continuousUser[guildId]?.timestamp < 5 * 1000
-        const text = parseMessage(this.client, this.textLogger, message, isContinuous, data.voiceMessageTTS.messageLang, this.lang)
+      if (voice?.channelId === message.channelId) {
+        const isContinuous = this.continuousUser[guildId]?.user === message.authorId && message.timestamp - this.continuousUser[guildId]?.timestamp < 5 * 1000
+        const text = parseMessage(this.textLogger, message, isContinuous, data.voiceMessageTTS.messageLang, this.lang)
 
         if (text === '') {
           this._logger.debug('Skipped empty message')
           return
         }
 
-        this._logger.debug(`${message.author} to ${message.channel} ${isContinuous ? '(Continuous)' : ''}: ${text}`)
+        this._logger.debug(`[User ${message.authorId}] to [Channel ${message.channelId}] ${isContinuous ? '(Continuous)' : ''}: ${text}`)
 
         const tts = data.voiceMessageTTS
         if (!this.audio.providerIds().includes(tts.provider)) {
@@ -88,7 +91,7 @@ export class VoiceLog {
         }
         this.audio.speak(voice.playback, { provider: tts.provider, text, lang: tts.voiceLang, voice: tts.voiceName })
         this.continuousUser[guildId] = {
-          user: message.author.id,
+          user: message.authorId,
           timestamp: message.timestamp
         }
       }
