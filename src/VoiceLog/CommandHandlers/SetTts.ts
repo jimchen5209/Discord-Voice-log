@@ -4,6 +4,7 @@ import { genErrorMessage, genTTSSuccessMessage } from '../Embeds'
 import { beginCommand, type CommandDeps } from './Guard'
 
 const ERR_MISSING_LANG = 'Language not exist.'
+const KNOWN_OPTIONS = new Set(['enabled', 'provider', 'message_lang', 'voice_lang', 'voice_name'])
 
 export async function commandSetTTS(deps: CommandDeps, context: CommandContext) {
   const begun = await beginCommand(deps, context, 'manageMessages')
@@ -14,6 +15,14 @@ export async function commandSetTTS(deps: CommandDeps, context: CommandContext) 
   if (!options) {
     await context.send({
       embeds: [genErrorMessage('Please provide at least one option to change.')],
+      ephemeral: true
+    })
+    return
+  }
+  // A client with the old command definition still sends `type` (now `provider`); refuse instead of a false success
+  if (Object.keys(options).some((key) => !KNOWN_OPTIONS.has(key))) {
+    await context.send({
+      embeds: [genErrorMessage('Unknown option. Restart Discord to load the latest /voice tts command.')],
       ephemeral: true
     })
     return

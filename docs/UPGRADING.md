@@ -1,6 +1,6 @@
 # Upgrading
 
-The upgrade steps are in the [README](../README.md#upgrading). This page explains what `pnpm migrate` does, when the bot exits with code 78, the backups `pnpm migrate` makes, how to restore one and what to do when a migration fails.
+The upgrade steps are in the [README](../README.md#upgrading). This page explains what `pnpm migrate` does, when the bot exits with code 78, the backups `pnpm migrate` makes, how to restore one, what to do when a migration fails, and the `/voice tts` option rename.
 
 ## What `pnpm migrate` does
 
@@ -35,6 +35,10 @@ The bot never migrates on its own. It exits with code 78 when it needs you befor
 `pnpm migrate` loads `config.json` too, so it also exits with code 78 in these `config.json` cases; run it again once the config is ready.
 
 pm2 does not restart the bot on code 78 (`stop_exit_codes` in `ecosystem.config.js`). `pm2 deploy` runs `pnpm install`, `pnpm db:generate`, `pnpm build:prod` and `pnpm migrate` (without `--yolo`) in its post-deploy step before reloading the bot, so a deploy makes a backup only when it has something to migrate. If one of these steps fails, the bot is not reloaded.
+
+## `/voice tts` option `type` renamed to `provider`
+
+The `type` option of `/voice tts` is now `provider`. After upgrading, restart or reload (Ctrl+R) the Discord client so it loads the new command definition. A client still on the old definition gets an error instead of a success message, and nothing is changed.
 
 ## Backups
 
