@@ -5,6 +5,7 @@ import type { PluginManager } from '../Plugin/Core'
 import type { AudioAsset } from './AudioAsset'
 import { AudioCache } from './AudioCache'
 import type { PlaybackQueue } from './PlaybackQueue'
+import { GoogleCloudTTS } from './Providers/GoogleCloudTTS'
 import type { TTSProvider } from './TTSProvider'
 
 const READY_TEXT = 'VoiceLog is ready.'
@@ -145,8 +146,8 @@ export class Audio {
     const config = this.readMemberConfig(`assets/${member.id}.json`)
     const request = config && this.memberRequest(config, type)
     if (!request) return wavAsset()
-    // Files on the system provider (Google Cloud) never fell back to the wav file
-    if (request.provider === this.options.systemProvider) return await this.tts(request)
+    // Google Cloud-only rule kept from before: its member TTS never falls back to the wav file
+    if (request.provider === GoogleCloudTTS.id) return await this.tts(request)
     return (await this.tts(request)) ?? wavAsset()
   }
 

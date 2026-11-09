@@ -20,19 +20,19 @@ Send every HTTP request through `fetchWithRetry` from `src/Audio/FetchWithRetry.
 
 ## Registering it
 
-Add an instance to `providers` in `src/Utils/Instances.ts`. Nothing else lists providers: the `/voice tts` choices, TTS files with `"provider"` and voice messages all take the ids from there. The `/voice tts` choices are registered with Discord when the bot starts, so restart it. The bot's own announcements stay on `systemProvider` (`google-cloud`).
+Add an instance to `providers` in `createApp()` in `src/App/App.ts`. Nothing else lists providers: the `/voice tts` choices, TTS files with `"provider"` and voice messages all take the ids from there. The `/voice tts` choices are registered with Discord when the bot starts, so restart it. The bot's own announcements use `tts.systemVoice.provider` in `config.json` (default `google-cloud`); any registered id works there, and an unknown id stops the bot at startup with exit code 78.
 
 ## Credentials
 
 An API key goes in `config.json` as `tts.providers.<name>TTS.apiKey`, like `tts.providers.googleTTS.apiKey` and `tts.providers.xaiTTS.apiKey`. Pass it to the provider as a getter, `() => config.tts.providers.<name>TTS.apiKey`. Tokens from a login (OAuth) go in a fixed file in the project root with mode 0600, added to `.gitignore`, like `xai-oauth.json`. Never use `.env`, the home directory or any path outside the project.
 
-A new config section in `src/Utils/Config.ts` needs its interface, a field in `ConfigValue`, a default, the merge in the constructor (`if (!config.tts.providers.<name>TTS) config.tts.providers.<name>TTS = {}` and then one value per field, like `xaiTTS`), the default in the branch that creates a new config, a line in `save()` and a getter. Any config addition bumps `configVersion`: on the first start with the new code, the bot backs up the old file to `config-<old version>.json`, writes the new one and exits with code 78 (see [Exit code 78](UPGRADING.md#exit-code-78)). Update the README note about the first start after upgrading to name the new version.
+A new provider config in `src/Shared/Config.ts` needs its interface, a field in `TtsProvidersConfig`, a default in `ttsDefault`, and the merge in `mergeTts` (add it to the parameter type, then one value per field, like `xaiTTS`). `save()` and the `tts` getter already cover the whole `tts` section. Any config addition bumps `configVersion`: on the first start with the new code, the bot backs up the old file to `config-<old version>.json`, writes the new one and exits with code 78 (see [Exit code 78](UPGRADING.md#exit-code-78)). Update the README note about the first start after upgrading to name the new version.
 
 ## Checklist
 
 1. `src/Audio/Providers/<Name>TTS.ts` implements `TTSProvider`, and `synthesize` logs and returns `null` on failure.
 2. Every request goes through `fetchWithRetry` with `signal`.
-3. The provider is in `providers` in `src/Utils/Instances.ts`.
+3. The provider is in `providers` in `createApp()` in `src/App/App.ts`.
 4. Credentials are in `config.json` or a git-ignored 0600 file in the project root, never `.env` or outside the project.
 5. A config addition bumps `configVersion` and updates the README upgrade note.
 6. The README has a setup section like the Google and xAI ones: what to set or run, the TTS file, and where `lang` and `voice` come from.
@@ -59,7 +59,7 @@ export class ExampleTTS implements TTSProvider {
   }
 
   public unavailableReason() {
-    return this.apiKey() ? undefined : 'exampleTTS.apiKey is not set in config.json'
+    return this.apiKey() ? undefined : 'tts.providers.exampleTTS.apiKey is not set in config.json'
   }
 
   public async synthesize(text: string, lang: string, voice: string, signal: AbortSignal): Promise<Uint8Array | null> {
@@ -83,8 +83,8 @@ export class ExampleTTS implements TTSProvider {
 }
 ```
 
-Then in `src/Utils/Instances.ts`:
+Then in `createApp()` in `src/App/App.ts`:
 
 ```ts
-const providers = [/* ... */, new ExampleTTS(() => config.exampleTTS.apiKey, mainLogger)]
+const providers = [/* ... */, new ExampleTTS(() => config.tts.providers.exampleTTS.apiKey, mainLogger)]
 ```
