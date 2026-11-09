@@ -4,6 +4,7 @@ import { genErrorMessage, genTTSSuccessMessage } from '../Embeds'
 import { beginCommand, type CommandDeps } from './Guard'
 
 const ERR_MISSING_LANG = 'Language not exist.'
+// Keep in sync with the tts options in SlashCommands/Voice.ts, or a new option gets refused
 const KNOWN_OPTIONS = new Set(['enabled', 'provider', 'message_lang', 'voice_lang', 'voice_name'])
 
 export async function commandSetTTS(deps: CommandDeps, context: CommandContext) {
