@@ -5,6 +5,7 @@ import { GoogleTranslateTTS } from '../Audio/Providers/GoogleTranslateTTS'
 import { XaiTTS } from '../Audio/Providers/XaiTTS'
 import { PluginManager } from '../Plugin/Core'
 import { Config, loggerOptions } from '../Shared/Config'
+import { EXIT_NO_RESTART } from '../Shared/ExitCode'
 import { Lang } from '../Shared/Lang'
 
 export interface App {
@@ -30,8 +31,13 @@ export function createApp(): App {
     new GoogleCloudTTS(() => config.tts.providers.googleTTS.apiKey, mainLogger),
     new XaiTTS(() => config.tts.providers.xaiTTS.apiKey, mainLogger)
   ]
+  const systemProvider = config.tts.systemVoice.provider
+  if (!providers.some((provider) => provider.id === systemProvider)) {
+    mainLogger.fatal(`Unknown tts.systemVoice.provider "${systemProvider}". Available: ${providers.map((provider) => provider.id).join(', ')}`)
+    process.exit(EXIT_NO_RESTART)
+  }
   const audio = new Audio(new Map(providers.map((provider) => [provider.id, provider])), pluginManager, mainLogger, {
-    systemProvider: config.tts.systemVoice.provider,
+    systemProvider,
     systemLang: config.tts.systemVoice.lang,
     systemVoice: config.tts.systemVoice.voice
   })
