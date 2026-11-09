@@ -32,8 +32,21 @@ type SignalValue<K extends SignalCase> = Extract<SignalResponse['message'], { ca
 export const ERR_SESSION_LOST = new Error('Voice session lost')
 
 // LiveKit's websocket URL for an endpoint from Voice Server Update; the path is kept (self-hosted: e.g. /livekit)
+function parseEndpoint(endpoint: string) {
+  return new URL(/^[a-z]+:\/\//i.test(endpoint) ? endpoint : `wss://${endpoint}`)
+}
+
+// A scheme-less endpoint is wss://
+export function isTlsEndpoint(endpoint: string) {
+  try {
+    return ['wss:', 'https:'].includes(parseEndpoint(endpoint).protocol)
+  } catch {
+    return false
+  }
+}
+
 export function signalUrl(endpoint: string, token: string) {
-  const url = new URL(/^[a-z]+:\/\//i.test(endpoint) ? endpoint : `wss://${endpoint}`)
+  const url = parseEndpoint(endpoint)
   url.protocol = url.protocol === 'http:' || url.protocol === 'ws:' ? 'ws:' : 'wss:'
   url.pathname = `${url.pathname.replace(/\/+$/, '')}/rtc`
   url.search = new URLSearchParams({

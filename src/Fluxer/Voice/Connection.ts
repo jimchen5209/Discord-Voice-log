@@ -15,7 +15,7 @@ import type { AudioAsset } from '../../Audio/AudioAsset'
 import { PlaybackQueue } from '../../Audio/PlaybackQueue'
 import type { GuildKey } from '../../Platform/Scope'
 import type { VoiceSession } from '../../Platform/VoicePlayback'
-import { LiveKitSession } from './LiveKitSession'
+import { isTlsEndpoint, LiveKitSession } from './LiveKitSession'
 import { OggOpusDemuxer, opusSamples } from './OggOpus'
 
 const JOIN_TIMEOUT_MS = 20 * 1000
@@ -51,8 +51,6 @@ interface VoiceServerData {
 
 export interface VoiceManagerOptions {
   logger: Logger<ILogObj>
-  // Whether a LiveKit endpoint from the gateway may get the voice token
-  trustEndpoint(endpoint: string): boolean
   // Connection ids the bot has in the guild, as the gateway last said
   ownConnections(guildId: string): string[]
 }
@@ -149,7 +147,6 @@ export class FluxerVoice implements VoiceSession {
   public mutationId: string | undefined
   public connectionId: string | undefined
   private manager: FluxerVoiceManager
-  private options: VoiceManagerOptions
   private logger: Logger<ILogObj>
   private _channelId: string
   private _init = true
@@ -171,7 +168,6 @@ export class FluxerVoice implements VoiceSession {
   constructor(manager: FluxerVoiceManager, guild: GuildKey, channelId: string, options: VoiceManagerOptions) {
     this.manager = manager
     this.guild = guild
-    this.options = options
     this._channelId = channelId
     this.logger = options.logger.getSubLogger({ name: 'Voice', prefix: [`[${channelId}]`] })
     this.playback = new PlaybackQueue((asset, signal) => this.play(asset, signal))
@@ -226,8 +222,9 @@ export class FluxerVoice implements VoiceSession {
       this.close('the grant has no voice server')
       return
     }
-    if (!this.options.trustEndpoint(data.endpoint)) {
-      this.close(`voice server ${JSON.stringify(data.endpoint)} is not under the instance's voice origins`)
+    // Any host: a self-hosted instance may use a voice server elsewhere. It only gets this connection's grant.
+    if (!isTlsEndpoint(data.endpoint)) {
+      this.close(`voice server ${JSON.stringify(data.endpoint)} must be a wss:// or https:// URL`)
       return
     }
     // Not supported yet: in a channel with encrypted media, the bot may not be heard
