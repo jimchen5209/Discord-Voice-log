@@ -13,10 +13,10 @@ export class FluxerVoicePlayback implements VoicePlayback {
   private options: Omit<VoiceManagerOptions, 'ownConnections'>
   private manager: FluxerVoiceManager | undefined
 
-  constructor(client: Client, tracker: VoicePresenceTracker, logger: Logger<ILogObj>, trustEndpoint: (endpoint: string) => boolean) {
+  constructor(client: Client, tracker: VoicePresenceTracker, logger: Logger<ILogObj>) {
     this.client = client
     this.tracker = tracker
-    this.options = { logger, trustEndpoint }
+    this.options = { logger }
   }
 
   public connect(guild: GuildKey, channelId: string): VoiceSession {

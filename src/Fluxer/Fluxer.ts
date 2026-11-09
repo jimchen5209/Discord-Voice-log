@@ -6,7 +6,7 @@ import type { PlatformRuntime } from '../Platform/Runtime'
 import type { GuildKey, PlatformScope } from '../Platform/Scope'
 import type { ConnectionView, MemberView, MessageView, VoicePresenceChange } from '../Platform/Views'
 import type { Lang } from '../Shared/Lang'
-import { discoverInstance, isTrustedEndpoint, isTrustedVoiceEndpoint } from './Discovery'
+import { discoverInstance, isTrustedEndpoint } from './Discovery'
 import { fluxerGuild, toChannelView, toFluxerEmbed, toMemberView, toMessageView } from './Mapping'
 import { genHelpEmbed, isCommand, parseCommand } from './MentionCommand'
 import { type PresenceDelta, VoicePresenceTracker, type VoiceStateUpdate } from './Presence'
@@ -176,7 +176,7 @@ export class Fluxer implements PlatformRuntime {
     guardGateway(client, origin)
     if (this.instance.voice && endpoints.voiceEnabled) {
       this.logger.warn('Voice playback is experimental: it uses the current LiveKit voice, which Fluxer is replacing')
-      this._voice = new FluxerVoicePlayback(client, this.tracker, this.logger, (endpoint) => isTrustedVoiceEndpoint(endpoint, origin, endpoints.voiceOrigins))
+      this._voice = new FluxerVoicePlayback(client, this.tracker, this.logger)
     }
     try {
       await client.login(this.instance.botToken)
