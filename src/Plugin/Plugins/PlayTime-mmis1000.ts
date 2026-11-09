@@ -2,8 +2,11 @@ import { getApp } from '../../App/App'
 import type { MemberView } from '../../Platform/Views'
 import type { IVoiceOverwrite } from '../Base/VoiceOverwrite'
 
-// The Discord user this plugin announces
-const TARGET_USER_ID = '275570140794322946'
+// The user this plugin announces, per platform
+const TARGET_USER_IDS: Record<string, string> = {
+  discord: '275570140794322946',
+  fluxer: '1568981359668494336'
+}
 
 // biome-ignore lint/style/useNamingConvention: username
 export class PlayTime_mmis1000 implements IVoiceOverwrite {
@@ -12,7 +15,7 @@ export class PlayTime_mmis1000 implements IVoiceOverwrite {
   typeVoiceOverwrite = true
 
   public async playVoice(member: MemberView, type: string): Promise<string | undefined> {
-    if (member.scope.platform === 'discord' && member.userId === TARGET_USER_ID && (type === 'switched_in' || type === 'join')) {
+    if (member.userId === TARGET_USER_IDS[member.scope.platform] && (type === 'switched_in' || type === 'join')) {
       const nowTime = new Date()
       if (nowTime.getHours() >= 2 && nowTime.getHours() < 18) return
       let day = nowTime.getDate()
