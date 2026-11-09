@@ -31,7 +31,7 @@ export interface TTSRequest {
 export type MemberConfig = Record<string, unknown>
 
 // Entry point of the audio module: decide which audio file represents an announcement, then queue it.
-// Providers are injected by id; this module never imports a concrete provider.
+// Providers are injected by id; GoogleCloudTTS is imported only for its no-wav-fallback rule.
 export class Audio {
   private providers: Map<string, TTSProvider>
   private pluginManager: PluginManager
