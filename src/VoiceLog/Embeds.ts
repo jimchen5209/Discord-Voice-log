@@ -33,7 +33,7 @@ export function genTTSSuccessMessage(i18n: Lang, title: string, ttsConfig: IVoic
   const translatedFields = [
     { label: l.tts_enabled, value: ttsConfig.enabled ? l.tts_yes : l.tts_no },
     { label: l.tts_message_lang, value: ttsConfig.messageLang },
-    { label: l.tts_type, value: ttsConfig.provider },
+    { label: l.tts_provider, value: ttsConfig.provider },
     { label: l.tts_voice_lang, value: ttsConfig.voiceLang },
     { label: l.tts_voice_name, value: ttsConfig.voiceName }
   ]
