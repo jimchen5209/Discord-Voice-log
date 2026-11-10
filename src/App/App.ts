@@ -3,11 +3,11 @@ import { Audio } from '../Audio/Audio'
 import { GoogleCloudTTS } from '../Audio/Providers/GoogleCloudTTS'
 import { GoogleTranslateTTS } from '../Audio/Providers/GoogleTranslateTTS'
 import { XaiTTS } from '../Audio/Providers/XaiTTS'
-import type { Discord } from '../Core/Discord/Core'
-import type { SQLiteCore } from '../Core/SQLite/Core'
+import type { SQLiteCore } from '../Db/SQLiteCore'
+import type { Discord } from '../Discord/Discord'
 import { PluginManager } from '../Plugin/Core'
-import { Config, loggerOptions } from './Config'
-import { Lang } from './Lang'
+import { Config, loggerOptions } from '../Shared/Config'
+import { Lang } from '../Shared/Lang'
 
 interface INstances {
   mainLogger: Logger<ILogObj>

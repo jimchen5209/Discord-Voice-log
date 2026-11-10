@@ -1,9 +1,9 @@
 import type { Client, VoiceConnection } from '@projectdysnomia/dysnomia'
 import { waitUntil } from 'async-wait-until'
 import type { ILogObj, Logger } from 'tslog'
-import type { AudioAsset } from '../../../Audio/AudioAsset'
-import { DEFAULT_PLAYBACK_TIMEOUT_MS, PlaybackQueue } from '../../../Audio/PlaybackQueue'
-import type { Discord } from '../Core'
+import type { AudioAsset } from '../Audio/AudioAsset'
+import { DEFAULT_PLAYBACK_TIMEOUT_MS, PlaybackQueue } from '../Audio/PlaybackQueue'
+import type { Discord } from './Discord'
 
 export class DiscordVoice {
   private _init = true

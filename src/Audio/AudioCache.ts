@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto'
 import { existsSync } from 'node:fs'
 import { readdir, stat, unlink, utimes } from 'node:fs/promises'
 import type { ILogObj, Logger } from 'tslog'
-import { TEMP_SUFFIX, writeAtomic } from '../Utils/WriteAtomic'
+import { TEMP_SUFFIX, writeAtomic } from '../Shared/WriteAtomic'
 import type { AudioFormat } from './AudioAsset'
 import type { TTSProvider } from './TTSProvider'
 
