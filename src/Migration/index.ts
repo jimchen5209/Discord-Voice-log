@@ -1,25 +1,21 @@
-import { spawnSync } from 'node:child_process'
-import { existsSync as exists, readdirSync as readDir, readFileSync as readFile } from 'node:fs'
+import { existsSync as exists } from 'node:fs'
 import { resolve } from 'node:path'
 import { instances } from '../App/App'
-import { EXIT_NO_RESTART } from '../Shared/ExitCode'
 import { writeAtomic } from '../Shared/WriteAtomic'
-import { ASSET_STEPS, ASSETS_DIR, assetConfigFiles } from './assets/steps'
+import { logInvalidAssets, planAssets, preflightData } from './assets/plan'
+import { ASSETS_DIR, assetConfigFiles } from './assets/steps'
 import { BACKUP_DIR, backup, RestoreError, restore } from './backup'
+import { databaseUnlocked, deployDatabaseMigrations, pendingMigrations } from './database'
 import { importMongoDump, MONGO_TTS_PROVIDERS, preflightMongoDump } from './import-mongo'
-import { databasePath, readRecord, recordFilePath, type VersionRecord, writeRecord } from './record'
-import { databaseLocked, migrationNames, unmappedTTSTypes } from './sqlite'
+import { DATA_VERSION, databasePath, readRecord, readUsableRecord, recordFilePath, type UsableRecord, writeRecord } from './record'
+import { unmappedTTSTypes } from './sqlite'
 
-// Version of the app-side data format (assets/<id>.json). The database is versioned by Prisma's
-// migration history instead. Bump it only for a breaking change, at most once per PR, and add exactly
-// one step for the bump to ASSET_STEPS.
-export const DATA_VERSION = 2
+export { DATA_VERSION } from './record'
 
 // MongoDB export that `pnpm migrate` imports into SQLite whenever it exists (`--mongo-dump <path>` for
 // another path), deleting it afterwards; the bot refuses to start while it exists
 export const DEFAULT_MONGODB_DUMP = './mongo_dump.json'
 
-const MIGRATIONS_DIR = 'prisma/migrations'
 // Rewrites existing rows (ttsType -> ttsProvider); unmapped values are logged before it runs
 const TTS_PROVIDER_MIGRATION = '20261030120000_tts_provider'
 // The ttsType values it maps, and the provider it writes for any other value (its CASE ... ELSE)
@@ -123,21 +119,6 @@ function currentDataVersion() {
   return record.kind === 'ok' ? record.version : null
 }
 
-// Waits a few seconds for another connection to release the database; if it does not, logs that it is
-// in use (with outcome) and returns false. True when there is no database yet.
-async function databaseUnlocked(outcome: string) {
-  const path = databasePath()
-  if (!exists(path)) return true
-  const locked = await databaseLocked(path, (attempt, tries, waitMs) => {
-    logger.warn(`The database ${path} is locked; trying again in ${waitMs / 1000} s (${attempt}/${tries})`)
-  })
-  if (!locked) return true
-  logger.error(
-    `The database ${path} is in use by another connection (the bot, another \`pnpm migrate\`, an sqlite3 shell or a database browser); ${outcome}. Close it and run it again`
-  )
-  return false
-}
-
 // Why the data is not up to date: pending, the unapplied Prisma migrations, a data version record that
 // is missing (noRecord) or older than DATA_VERSION, and dump, a MongoDB dump still to import. Empty when
 // it is, the only case in which `pnpm migrate` makes no backup.
@@ -182,39 +163,6 @@ function logUnmappedTTSTypes() {
   for (const row of unmappedTTSTypes(databasePath(), MAPPED_TTS_TYPES)) {
     logger.warn(`Guild ${row.serverID} has unknown TTS type "${row.ttsType}"; migrating to the default provider ${UNMAPPED_TTS_PROVIDER}`)
   }
-}
-
-// The Prisma CLI of this install, run with this node so it needs no shell or PATH entry. On a failure,
-// logs what state it left the database in.
-function deployDatabaseMigrations() {
-  const result = spawnSync(process.execPath, [require.resolve('prisma/build/index.js'), 'migrate', 'deploy'], { stdio: 'inherit' })
-  if (result.status === 0) return true
-  logger.error(
-    `prisma migrate deploy failed (${result.error ?? `exit ${result.status ?? result.signal}`}); ${databaseStateAfterFailure()}; assets/*.json and data-version.json were not changed`
-  )
-  return false
-}
-
-// What a failed `prisma migrate deploy` left: the migration Prisma recorded as failed, and whether its
-// SQL runs in a transaction (BEGIN ... COMMIT), so that its changes were rolled back
-function databaseStateAfterFailure() {
-  let failedNames: string[]
-  try {
-    failedNames = migrationNames(databasePath(), 'failed')
-  } catch (error) {
-    return `the state of the database is unknown (${error instanceof Error ? error.message : error})`
-  }
-  if (failedNames.length === 0) return 'no migration was recorded as failed, so Prisma stopped before changing the database'
-  const states = failedNames.map((name) => {
-    const file = `${MIGRATIONS_DIR}/${name}/migration.sql`
-    const sql = exists(file) ? readFile(file, { encoding: 'utf-8' }) : ''
-    const transactional = /^BEGIN( TRANSACTION)?;/m.test(sql) && /^COMMIT;/m.test(sql)
-    return transactional
-      ? `migration ${name} failed and its changes were rolled back (it runs in a transaction)`
-      : `migration ${name} failed and does not run in a transaction, so the database may be partly changed`
-  })
-  const resolveHint = failedNames.map((name) => `\`pnpm prisma migrate resolve --rolled-back ${name}\``).join(', ')
-  return `${states.join('; ')}; migrations before it stay applied. Prisma refuses to deploy again until you restore the backup, or fix the problem and run ${resolveHint}`
 }
 
 // Run by `pnpm migrate` after `prisma migrate deploy`. Converts assets/<id>.json up to DATA_VERSION and
@@ -278,95 +226,4 @@ export async function checkData(): Promise<boolean> {
 
   logger.error(`Data is not up to date (${problems.join('; ')}). Run \`pnpm migrate\` first`)
   return false
-}
-
-// Run by `pnpm migrate` before `prisma migrate deploy` (after readUsableRecord rejected a malformed
-// record or one newer than DATA_VERSION), so (unless skipInvalid) an invalid asset file that migrateData
-// would reject stops it before the database is touched. Only reads.
-function preflightData(record: UsableRecord, { skipInvalid = false } = {}): boolean {
-  if (skipInvalid || (record.kind === 'ok' && record.version === DATA_VERSION)) return true
-  const { invalid } = planAssets(assetConfigFiles(), record.kind === 'ok' ? record.version : 1, false)
-  if (invalid.length === 0) return true
-  logInvalidAssets(invalid, 'nothing was changed (the database was not migrated)')
-  return false
-}
-
-function logInvalidAssets(invalid: string[], outcome: string) {
-  logger.error(
-    `${invalid.length} asset files are not valid: ${invalid.join(', ')}; ${outcome}. Fix or remove them and run \`pnpm migrate\` again, or run \`pnpm migrate --skip-invalid\` to leave them unconverted`
-  )
-}
-
-// A data version record that is missing or at most DATA_VERSION
-type UsableRecord = Exclude<VersionRecord, { kind: 'invalid' }>
-
-// The record, or undefined (after logging an error ending in `outcome`) when it is malformed or newer
-// than DATA_VERSION, which nothing in this build may act on
-function readUsableRecord(path: string, outcome: string): UsableRecord | undefined {
-  const record = readRecord(path)
-  if (record.kind === 'invalid') {
-    logger.error(`${record.reason}; ${outcome}`)
-    return undefined
-  }
-  if (record.kind === 'ok' && record.version > DATA_VERSION) {
-    logger.error(`${path} says data version ${record.version}, newer than this build (${DATA_VERSION}); ${outcome}. Downgrades are not supported`)
-    return undefined
-  }
-  return record
-}
-
-// Runs the steps from `from` to DATA_VERSION on every file and returns the ones that changed, and the
-// paths of files that are not a JSON object (each logged, never converted).
-function planAssets(files: string[], from: number, skipInvalid: boolean) {
-  const pending: { file: string; config: Record<string, unknown> }[] = []
-  const invalid: string[] = []
-  const label = skipInvalid ? 'Skipping' : 'Invalid'
-  for (const file of files) {
-    const path = `${ASSETS_DIR}/${file}`
-    let config: unknown
-    try {
-      config = JSON.parse(readFile(path, { encoding: 'utf-8' }))
-    } catch (error) {
-      logger.error(`${label} ${path}: invalid JSON`, error)
-      invalid.push(path)
-      continue
-    }
-    if (typeof config !== 'object' || config === null || Array.isArray(config)) {
-      logger.error(`${label} ${path}: unsupported format (expected a JSON object)`)
-      invalid.push(path)
-      continue
-    }
-    let current = config as Record<string, unknown>
-    let changed = false
-    for (let version = from; version < DATA_VERSION; version++) {
-      const step = ASSET_STEPS[version]
-      if (!step) throw new Error(`No assets migration step from data version ${version}`)
-      const next = step(current)
-      if (next) {
-        current = next
-        changed = true
-      }
-    }
-    if (changed) pending.push({ file, config: current })
-  }
-  return { pending, invalid }
-}
-
-// Migrations in prisma/migrations that the database has not finished applying. Never creates the
-// database file. Exits with EXIT_NO_RESTART when prisma/migrations is missing.
-async function pendingMigrations() {
-  if (!exists(MIGRATIONS_DIR)) {
-    logger.error(
-      `${resolve(MIGRATIONS_DIR)} not found, so the database migrations cannot be checked; nothing was changed. Run it from the project directory, or restore ${MIGRATIONS_DIR} (\`git checkout -- ${MIGRATIONS_DIR}\`)`
-    )
-    process.exit(EXIT_NO_RESTART)
-  }
-  const all = readDir(MIGRATIONS_DIR, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory())
-    .map((entry) => entry.name)
-  if (!exists(databasePath())) return all
-  // better-sqlite3 (see sqlite.ts): _prisma_migrations is not a Prisma model, and the Prisma client
-  // creates the database directory, which --preflight must not do
-  const appliedNames = new Set(migrationNames(databasePath(), 'applied'))
-  return all.filter((name) => !appliedNames.has(name))
 }
