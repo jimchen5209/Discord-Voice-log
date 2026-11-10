@@ -74,7 +74,7 @@ If you want to use the new google cloud text to speech, be sure to have apiKey i
 ```
 `lang` and `voice` available from https://cloud.google.com/text-to-speech/docs/voices
 
-If you want to use xAI text to speech, set `xaiTTS.apiKey` in the config, or run `pnpm build` and then `pnpm xai:login` in the project root to sign in once in the browser, and json content is:
+If you want to use xAI text to speech, set `tts.providers.xaiTTS.apiKey` in the config, or run `pnpm build` and then `pnpm xai:login` in the project root to sign in once in the browser, and json content is:
 ```json
 {
   "provider": "xai",
@@ -88,9 +88,9 @@ If you want to use xAI text to speech, set `xaiTTS.apiKey` in the config, or run
 ```
 `lang` is an [xAI language code](https://docs.x.ai/developers/model-capabilities/audio/text-to-speech#supported-languages) or `auto`, and `voice` is an [xAI voice](https://docs.x.ai/developers/model-capabilities/audio/text-to-speech#voices) such as `eve` or a custom voice ID. Both are sent as given; an empty `voice` uses xAI's default. When a server's `/voice tts` switches to xai, set `voice_lang` and `voice_name` to xAI values too.
 
-If the login stops working, the bot logs an error and skips that text: run `pnpm xai:login` again, or set `xaiTTS.apiKey` if xAI answers 403.
+If the login stops working, the bot logs an error and skips that text: run `pnpm xai:login` again, or set `tts.providers.xaiTTS.apiKey` if xAI answers 403.
 
-The login reuses the Grok CLI client id and is not an officially supported third-party use, so it may stop working; `xaiTTS.apiKey` is the fallback.
+The login reuses the Grok CLI client id and is not an officially supported third-party use, so it may stop working; `tts.providers.xaiTTS.apiKey` is the fallback.
 
 The login is saved to `xai-oauth.json` next to `config.json`; delete it to sign out.
 
