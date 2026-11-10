@@ -1,6 +1,6 @@
 import { readFileSync as readFile } from 'node:fs'
 import { unlink } from 'node:fs/promises'
-import { instances } from '../Utils/Instances'
+import { instances } from '../App/App'
 
 // MongoDB dumps store the TTS engine name, SQLite stores the provider id
 export const MONGO_TTS_PROVIDERS = new Map([
@@ -100,8 +100,8 @@ export async function importMongoDump(dumpPath: string): Promise<boolean> {
     return false
   }
   // Loaded here: importing the client creates the database directory, which --preflight must not do
-  const { prisma } = await import('../Core/SQLite/Client')
-  const { DEFAULT_TTS_PROVIDER } = await import('../Core/SQLite/db/ServerConfig')
+  const { prisma } = await import('../Db/Client')
+  const { DEFAULT_TTS_PROVIDER } = await import('../Db/ServerConfig')
 
   logger.info(`Found ${rows.length} documents in ${dumpPath}. Migrating to SQLite...`)
   const upserts = rows.map(({ serverID, ttsType, ...fields }) => {

@@ -1,6 +1,6 @@
-import { instances } from '../../Utils/Instances'
-import { prisma } from '../SQLite/Client'
-import { DbServerConfigManager } from './db/ServerConfig'
+import { instances } from '../App/App'
+import { prisma } from './Client'
+import { DbServerConfigManager } from './ServerConfig'
 
 export const ERR_DB_NOT_INIT = Error('Database is not initialized')
 
