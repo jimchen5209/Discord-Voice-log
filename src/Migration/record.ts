@@ -3,6 +3,13 @@ import { dirname, resolve } from 'node:path'
 import { instances } from '../App/App'
 import { writeAtomic } from '../Shared/WriteAtomic'
 
+const logger = instances.mainLogger.getSubLogger({ name: 'DataMigration' })
+
+// Version of the app-side data format (assets/<id>.json). The database is versioned by Prisma's
+// migration history instead. Bump it only for a breaking change, at most once per PR, and add exactly
+// one step for the bump to ASSET_STEPS.
+export const DATA_VERSION = 2
+
 // data-version.json: the data version the app-side data was last migrated to
 const RECORD_FILE = 'data-version.json'
 
@@ -35,4 +42,22 @@ export function readRecord(path: string): VersionRecord {
 
 export async function writeRecord(path: string, version: number) {
   await writeAtomic(path, `${JSON.stringify({ version }, null, 2)}\n`)
+}
+
+// A data version record that is missing or at most DATA_VERSION
+export type UsableRecord = Exclude<VersionRecord, { kind: 'invalid' }>
+
+// The record, or undefined (after logging an error ending in `outcome`) when it is malformed or newer
+// than DATA_VERSION, which nothing in this build may act on
+export function readUsableRecord(path: string, outcome: string): UsableRecord | undefined {
+  const record = readRecord(path)
+  if (record.kind === 'invalid') {
+    logger.error(`${record.reason}; ${outcome}`)
+    return undefined
+  }
+  if (record.kind === 'ok' && record.version > DATA_VERSION) {
+    logger.error(`${path} says data version ${record.version}, newer than this build (${DATA_VERSION}); ${outcome}. Downgrades are not supported`)
+    return undefined
+  }
+  return record
 }
