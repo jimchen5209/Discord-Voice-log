@@ -1,5 +1,5 @@
 // Entry point of `pnpm xai:login`: signs in to xAI with the device code flow (RFC 8628) and saves
-// ./xai-oauth.json, which XaiTTS uses when xaiTTS.apiKey is empty
+// ./xai-oauth.json, which XaiTTS uses when tts.providers.xaiTTS.apiKey is empty
 
 import { setTimeout as sleep } from 'node:timers/promises'
 import { Logger } from 'tslog'

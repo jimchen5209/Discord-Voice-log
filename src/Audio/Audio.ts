@@ -5,18 +5,19 @@ import type { PluginManager } from '../Plugin/Core'
 import type { AudioAsset } from './AudioAsset'
 import { AudioCache } from './AudioCache'
 import type { PlaybackQueue } from './PlaybackQueue'
+import { GoogleCloudTTS } from './Providers/GoogleCloudTTS'
 import type { TTSProvider } from './TTSProvider'
 
-const SYSTEM_LANG = 'en-US'
-const SYSTEM_VOICE = 'en-US-Wavenet-D'
 const READY_TEXT = 'VoiceLog is ready.'
 const MOVED_TEXT = 'VoiceLog is moved to your channel.'
 
 export const MEMBER_EVENTS = ['join', 'left', 'switched_out', 'switched_in']
 
 export interface AudioOptions {
-  // Provider id for the bot's own announcements
+  // Provider, language and voice for the bot's own announcements
   systemProvider: string
+  systemLang: string
+  systemVoice: string
 }
 
 export interface TTSRequest {
@@ -30,7 +31,7 @@ export interface TTSRequest {
 export type MemberConfig = Record<string, unknown>
 
 // Entry point of the audio module: decide which audio file represents an announcement, then queue it.
-// Providers are injected by id; this module never imports a concrete provider.
+// Providers are injected by id; GoogleCloudTTS is imported only for its no-wav-fallback rule.
 export class Audio {
   private providers: Map<string, TTSProvider>
   private pluginManager: PluginManager
@@ -122,7 +123,7 @@ export class Audio {
   }
 
   private systemRequest(text: string): TTSRequest {
-    return { provider: this.options.systemProvider, text, lang: SYSTEM_LANG, voice: SYSTEM_VOICE }
+    return { provider: this.options.systemProvider, text, lang: this.options.systemLang, voice: this.options.systemVoice }
   }
 
   private async tts(request: TTSRequest): Promise<AudioAsset | undefined> {
@@ -145,8 +146,8 @@ export class Audio {
     const config = this.readMemberConfig(`assets/${member.id}.json`)
     const request = config && this.memberRequest(config, type)
     if (!request) return wavAsset()
-    // Files on the system provider (Google Cloud) never fell back to the wav file
-    if (request.provider === this.options.systemProvider) return await this.tts(request)
+    // Google Cloud-only rule kept from before: its member TTS never falls back to the wav file
+    if (request.provider === GoogleCloudTTS.id) return await this.tts(request)
     return (await this.tts(request)) ?? wavAsset()
   }
 

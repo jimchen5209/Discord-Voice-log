@@ -29,9 +29,10 @@ The bot never migrates on its own. It exits with code 78 when it needs you befor
 - `prisma/migrations` is missing, for example because the bot was started from another directory. It logs the missing path.
 - `config.json` does not exist. The bot generates an empty one; fill it in and start the bot again.
 - `config.json` has a config version newer than the code.
+- `config.json` has a `tts.systemVoice.provider` that is not a registered provider id. It logs the available ids.
 - `config.json` has an older config version. The bot backs it up to `config-<old version>.json`, writes the migrated config and exits. Check `config.json`, then start the bot again yourself: pm2 does not restart it.
 
-`pnpm migrate` loads `config.json` too, so it also exits with code 78 in the three `config.json` cases; run it again once the config is ready.
+`pnpm migrate` loads `config.json` too, so it also exits with code 78 in these `config.json` cases; run it again once the config is ready.
 
 pm2 does not restart the bot on code 78 (`stop_exit_codes` in `ecosystem.config.js`). `pm2 deploy` runs `pnpm install`, `pnpm db:generate`, `pnpm build:prod` and `pnpm migrate` (without `--yolo`) in its post-deploy step before reloading the bot, so a deploy makes a backup only when it has something to migrate. If one of these steps fails, the bot is not reloaded.
 

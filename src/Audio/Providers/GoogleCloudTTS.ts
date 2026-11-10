@@ -4,7 +4,8 @@ import type { TTSProvider } from '../TTSProvider'
 
 // Google Cloud Text-to-Speech (WaveNet voices), OGG Opus
 export class GoogleCloudTTS implements TTSProvider {
-  public readonly id = 'google-cloud'
+  public static readonly id = 'google-cloud'
+  public readonly id = GoogleCloudTTS.id
   public readonly format = 'ogg'
   public readonly usesVoice = true
   private logger: Logger<ILogObj>
@@ -16,7 +17,7 @@ export class GoogleCloudTTS implements TTSProvider {
   }
 
   public unavailableReason() {
-    return this.apiKey() ? undefined : 'googleTTS.apiKey is not set in config.json'
+    return this.apiKey() ? undefined : 'tts.providers.googleTTS.apiKey is not set in config.json'
   }
 
   public async synthesize(text: string, lang: string, voice: string, signal: AbortSignal): Promise<Uint8Array | null> {
