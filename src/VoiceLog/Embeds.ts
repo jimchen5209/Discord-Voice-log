@@ -1,8 +1,8 @@
 import type { Member, MessageContent, VoiceChannel } from '@projectdysnomia/dysnomia'
 import type { MessageEmbedOptions } from 'slash-create'
 import { vsprintf } from 'sprintf-js'
-import { instances } from '../App/App'
 import type { IVoiceMessageTTS } from '../Db/ServerConfig'
+import type { Lang } from '../Shared/Lang'
 
 export function genSuccessMessage(msg: string) {
   return {
@@ -28,8 +28,8 @@ export function genErrorMessage(msg: string) {
   } as MessageEmbedOptions
 }
 
-export function genTTSSuccessMessage(title: string, ttsConfig: IVoiceMessageTTS, lang: string) {
-  const l = instances.lang.get(lang).display.config
+export function genTTSSuccessMessage(i18n: Lang, title: string, ttsConfig: IVoiceMessageTTS, lang: string) {
+  const l = i18n.get(lang).display.config
   const translatedFields = [
     { label: l.tts_enabled, value: ttsConfig.enabled ? l.tts_yes : l.tts_no },
     { label: l.tts_message_lang, value: ttsConfig.messageLang },
@@ -45,17 +45,17 @@ export function genTTSSuccessMessage(title: string, ttsConfig: IVoiceMessageTTS,
   } as MessageEmbedOptions
 }
 
-export function genVoiceLogEmbed(member: Member, lang: string, type: string, oldChannel: VoiceChannel | undefined, newChannel: VoiceChannel | undefined) {
+export function genVoiceLogEmbed(i18n: Lang, member: Member, lang: string, type: string, oldChannel: VoiceChannel | undefined, newChannel: VoiceChannel | undefined) {
   let color: number
   let content: string
   switch (type) {
     case 'join':
       color = 4289797
-      content = vsprintf(instances.lang.get(lang).display.voice_log.joined, [newChannel?.name])
+      content = vsprintf(i18n.get(lang).display.voice_log.joined, [newChannel?.name])
       break
     case 'leave':
       color = 8454161
-      content = vsprintf(instances.lang.get(lang).display.voice_log.left, [oldChannel?.name])
+      content = vsprintf(i18n.get(lang).display.voice_log.left, [oldChannel?.name])
       break
     case 'move':
       color = 10448150

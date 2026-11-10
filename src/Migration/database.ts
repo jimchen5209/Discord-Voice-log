@@ -1,12 +1,14 @@
 import { spawnSync } from 'node:child_process'
 import { existsSync as exists, readdirSync as readDir, readFileSync as readFile } from 'node:fs'
 import { resolve } from 'node:path'
-import { instances } from '../App/App'
+import type { ILogObj, Logger } from 'tslog'
+import { getApp } from '../App/App'
 import { EXIT_NO_RESTART } from '../Shared/ExitCode'
 import { databasePath } from './record'
 import { databaseLocked, migrationNames } from './sqlite'
 
-const logger = instances.mainLogger.getSubLogger({ name: 'DataMigration' })
+let _logger: Logger<ILogObj> | undefined
+const logger = () => (_logger ??= getApp().mainLogger.getSubLogger({ name: 'DataMigration' }))
 
 const MIGRATIONS_DIR = 'prisma/migrations'
 
@@ -16,10 +18,10 @@ export async function databaseUnlocked(outcome: string) {
   const path = databasePath()
   if (!exists(path)) return true
   const locked = await databaseLocked(path, (attempt, tries, waitMs) => {
-    logger.warn(`The database ${path} is locked; trying again in ${waitMs / 1000} s (${attempt}/${tries})`)
+    logger().warn(`The database ${path} is locked; trying again in ${waitMs / 1000} s (${attempt}/${tries})`)
   })
   if (!locked) return true
-  logger.error(
+  logger().error(
     `The database ${path} is in use by another connection (the bot, another \`pnpm migrate\`, an sqlite3 shell or a database browser); ${outcome}. Close it and run it again`
   )
   return false
@@ -30,7 +32,7 @@ export async function databaseUnlocked(outcome: string) {
 export function deployDatabaseMigrations() {
   const result = spawnSync(process.execPath, [require.resolve('prisma/build/index.js'), 'migrate', 'deploy'], { stdio: 'inherit' })
   if (result.status === 0) return true
-  logger.error(
+  logger().error(
     `prisma migrate deploy failed (${result.error ?? `exit ${result.status ?? result.signal}`}); ${databaseStateAfterFailure()}; assets/*.json and data-version.json were not changed`
   )
   return false
@@ -62,7 +64,7 @@ function databaseStateAfterFailure() {
 // database file. Exits with EXIT_NO_RESTART when prisma/migrations is missing.
 export async function pendingMigrations() {
   if (!exists(MIGRATIONS_DIR)) {
-    logger.error(
+    logger().error(
       `${resolve(MIGRATIONS_DIR)} not found, so the database migrations cannot be checked; nothing was changed. Run it from the project directory, or restore ${MIGRATIONS_DIR} (\`git checkout -- ${MIGRATIONS_DIR}\`)`
     )
     process.exit(EXIT_NO_RESTART)
