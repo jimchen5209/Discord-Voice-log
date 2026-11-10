@@ -1,20 +1,25 @@
 import { existsSync as exists, mkdirSync as mkDir } from 'node:fs'
-import type { Client, Member, VoiceChannel } from '@projectdysnomia/dysnomia'
+import type { Client, Member, Message, PossiblyUncachedTextableChannel, VoiceChannel } from '@projectdysnomia/dysnomia'
 import { scheduleJob } from 'node-schedule'
 import type { ILogObj, Logger } from 'tslog'
 import { instances } from '../App/App'
 import type { DbServerConfigManager, IServerConfig } from '../Db/ServerConfig'
 import { ERR_DB_NOT_INIT } from '../Db/SQLiteCore'
 import type { Discord } from '../Discord/Discord'
+import { CacheRefresh } from './CacheRefresh'
 import { VoiceLogCommands } from './Commands'
+import { genVoiceLogEmbed } from './Embeds'
+import { parseMessage } from './MessageText'
 import { VoiceLogText } from './Text'
 import { VoiceLogVoice } from './VoiceLogVoice'
 
 export class VoiceLog {
   private _voice: VoiceLogVoice
+  private _cacheRefresh: CacheRefresh
   private _text: VoiceLogText
   private _command: VoiceLogCommands
   private _logger: Logger<ILogObj>
+  private textLogger: Logger<ILogObj>
   private _serverConfig: DbServerConfigManager
   private client: Client
   // Message and join/leave tasks run one at a time in order; a rejected task does not stop the ones after it
@@ -26,6 +31,8 @@ export class VoiceLog {
   constructor(discord: Discord) {
     this.client = discord.client
     this._logger = discord.logger.getSubLogger({ name: 'VoiceLog' })
+    this._cacheRefresh = new CacheRefresh(this._logger.getSubLogger({ name: 'Voice' }))
+    this.textLogger = this._logger.getSubLogger({ name: 'Text' })
 
     const serverConfig = instances.db?.serverConfig
     if (!serverConfig) throw ERR_DB_NOT_INIT
@@ -35,143 +42,148 @@ export class VoiceLog {
     this._text = new VoiceLogText(this, discord)
     this._command = new VoiceLogCommands(this, discord)
 
-    this.client.on('messageCreate', async (message) => {
-      if (message.guildID === undefined) return
-      const guildId = message.guildID
+    this.client.on('messageCreate', (message) => this.onMessage(message))
+    this.client.on('voiceChannelJoin', (member: Member, newChannel: VoiceChannel) => this.onJoin(member, newChannel))
+    this.client.on('voiceChannelLeave', (member: Member, oldChannel: VoiceChannel) => this.onLeave(member, oldChannel))
+    this.client.on('voiceChannelSwitch', (member: Member, newChannel: VoiceChannel, oldChannel: VoiceChannel) => this.onSwitch(member, newChannel, oldChannel))
+  }
+
+  private async onMessage(message: Message<PossiblyUncachedTextableChannel>) {
+    if (message.guildID === undefined) return
+    const guildId = message.guildID
+    const data = await this._serverConfig.get(guildId)
+
+    if (!data?.voiceMessageTTS.enabled) return
+
+    this.enqueue(async () => {
+      const voice = this._voice.getCurrentVoice(guildId)
+      if (voice?.channelId === message.channel.id) {
+        const isContinuous = this.continuousUser[guildId]?.user === message.author.id && message.timestamp - this.continuousUser[guildId]?.timestamp < 5 * 1000
+        const text = parseMessage(this.client, this.textLogger, message, isContinuous, data.voiceMessageTTS.messageLang)
+
+        if (text === '') {
+          this._logger.debug('Skipped empty message')
+          return
+        }
+
+        this._logger.debug(`${message.author} to ${message.channel} ${isContinuous ? '(Continuous)' : ''}: ${text}`)
+
+        const tts = data.voiceMessageTTS
+        if (!instances.audio.providerIds().includes(tts.provider)) {
+          this._logger.error(`Guild ${guildId} uses unknown TTS provider "${tts.provider}", set it again with /voice tts`)
+          return
+        }
+        instances.audio.speak(voice.playback, { provider: tts.provider, text, lang: tts.voiceLang, voice: tts.voiceName })
+        this.continuousUser[guildId] = {
+          user: message.author.id,
+          timestamp: message.timestamp
+        }
+      }
+    })
+  }
+
+  private async onJoin(member: Member, newChannel: VoiceChannel) {
+    if (member.id === this.client.user.id) return
+    this.logger.debug(
+      `Queue (${this.queueLength + 1}): User ${member.username} (${member.id}) joined voice channel ${newChannel.name} (${newChannel.id}) in guild ${member.guild.name} (${member.guild.id})`
+    )
+    this.enqueue(async () => {
+      this.logger.info(`User ${member.username} (${member.id}) joined voice channel ${newChannel.name} (${newChannel.id}) in guild ${member.guild.name} (${member.guild.id})`)
+
+      const guildId = member.guild.id
+      const channelID = await this._voice.autoLeaveChannel(undefined, newChannel, guildId)
+      const voice = this._voice.getCurrentVoice(guildId)
       const data = await this._serverConfig.get(guildId)
 
-      if (!data?.voiceMessageTTS.enabled) return
-
-      this.enqueue(async () => {
-        const voice = this._voice.getCurrentVoice(guildId)
-        if (voice?.channelId === message.channel.id) {
-          const isContinuous = this.continuousUser[guildId]?.user === message.author.id && message.timestamp - this.continuousUser[guildId]?.timestamp < 5 * 1000
-          const text = this._text.parseMessage(message, isContinuous, data.voiceMessageTTS.messageLang)
-
-          if (text === '') {
-            this._logger.debug('Skipped empty message')
-            return
-          }
-
-          this._logger.debug(`${message.author} to ${message.channel} ${isContinuous ? '(Continuous)' : ''}: ${text}`)
-
-          const tts = data.voiceMessageTTS
-          if (!instances.audio.providerIds().includes(tts.provider)) {
-            this._logger.error(`Guild ${guildId} uses unknown TTS provider "${tts.provider}", set it again with /voice tts`)
-            return
-          }
-          instances.audio.speak(voice.playback, { provider: tts.provider, text, lang: tts.voiceLang, voice: tts.voiceName })
-          this.continuousUser[guildId] = {
-            user: message.author.id,
-            timestamp: message.timestamp
-          }
+      if (data) {
+        if (data.channelID !== '') {
+          this.client.createMessage(data.channelID, genVoiceLogEmbed(member, data.lang, 'join', undefined, newChannel))
         }
-      })
-    })
-
-    this.client.on('voiceChannelJoin', async (member: Member, newChannel: VoiceChannel) => {
-      if (member.id === this.client.user.id) return
-      this.logger.debug(
-        `Queue (${this.queueLength + 1}): User ${member.username} (${member.id}) joined voice channel ${newChannel.name} (${newChannel.id}) in guild ${member.guild.name} (${member.guild.id})`
-      )
-      this.enqueue(async () => {
-        this.logger.info(`User ${member.username} (${member.id}) joined voice channel ${newChannel.name} (${newChannel.id}) in guild ${member.guild.name} (${member.guild.id})`)
-
-        const guildId = member.guild.id
-        const channelID = await this._voice.autoLeaveChannel(undefined, newChannel, guildId)
-        const voice = this._voice.getCurrentVoice(guildId)
-        const data = await this._serverConfig.get(guildId)
-
-        if (data) {
-          if (data.channelID !== '') {
-            this.client.createMessage(data.channelID, this._text.genVoiceLogEmbed(member, data.lang, 'join', undefined, newChannel))
-          }
-        }
-
-        if (newChannel.id === channelID) {
-          if (voice) {
-            instances.audio.announceMember(voice.playback, member, 'join')
-            this.continuousUser[guildId] = {
-              user: this.client.user.id,
-              timestamp: 0
-            }
-          }
-        }
-      })
-    })
-
-    this.client.on('voiceChannelLeave', async (member: Member, oldChannel: VoiceChannel) => {
-      if (member.id === this.client.user.id) return
-      this.logger.debug(
-        `Queue (${this.queueLength + 1}): User ${member.username} (${member.id}) left voice channel ${oldChannel.name} (${oldChannel.id}) in guild ${member.guild.name} (${member.guild.id})`
-      )
-      this.enqueue(async () => {
-        this.logger.info(`User ${member.username} (${member.id}) left voice channel ${oldChannel.name} (${oldChannel.id}) in guild ${member.guild.name} (${member.guild.id})`)
-
-        const guildId = member.guild.id
-        const channelID = await this._voice.autoLeaveChannel(oldChannel, undefined, guildId)
-        const voice = this._voice.getCurrentVoice(guildId)
-        const data = await this._serverConfig.get(guildId)
-        if (data) {
-          if (data.channelID !== '') {
-            this.client.createMessage(data.channelID, this._text.genVoiceLogEmbed(member, data.lang, 'leave', oldChannel, undefined))
-          }
-        }
-        if (oldChannel.id === channelID) {
-          if (voice) {
-            instances.audio.announceMember(voice.playback, member, 'left')
-            this.continuousUser[guildId] = {
-              user: this.client.user.id,
-              timestamp: 0
-            }
-          }
-        }
-      })
-    })
-
-    this.client.on('voiceChannelSwitch', async (member: Member, newChannel: VoiceChannel, oldChannel: VoiceChannel) => {
-      if (member.id === this.client.user.id) {
-        this._serverConfig.updateLastVoiceChannel(member.guild.id, newChannel.id)
-        this._serverConfig.updateCurrentVoiceChannel(member.guild.id, '')
-        return
       }
-      this.logger.debug(
-        `Queue (${this.queueLength + 1}): User ${member.username} (${member.id}) switched voice channel from ${oldChannel.name} (${oldChannel.id}) to ${newChannel.name} (${newChannel.id}) in guild ${member.guild.name} (${member.guild.id})`
+
+      if (newChannel.id === channelID) {
+        if (voice) {
+          instances.audio.announceMember(voice.playback, member, 'join')
+          this.continuousUser[guildId] = {
+            user: this.client.user.id,
+            timestamp: 0
+          }
+        }
+      }
+    })
+  }
+
+  private async onLeave(member: Member, oldChannel: VoiceChannel) {
+    if (member.id === this.client.user.id) return
+    this.logger.debug(
+      `Queue (${this.queueLength + 1}): User ${member.username} (${member.id}) left voice channel ${oldChannel.name} (${oldChannel.id}) in guild ${member.guild.name} (${member.guild.id})`
+    )
+    this.enqueue(async () => {
+      this.logger.info(`User ${member.username} (${member.id}) left voice channel ${oldChannel.name} (${oldChannel.id}) in guild ${member.guild.name} (${member.guild.id})`)
+
+      const guildId = member.guild.id
+      const channelID = await this._voice.autoLeaveChannel(oldChannel, undefined, guildId)
+      const voice = this._voice.getCurrentVoice(guildId)
+      const data = await this._serverConfig.get(guildId)
+      if (data) {
+        if (data.channelID !== '') {
+          this.client.createMessage(data.channelID, genVoiceLogEmbed(member, data.lang, 'leave', oldChannel, undefined))
+        }
+      }
+      if (oldChannel.id === channelID) {
+        if (voice) {
+          instances.audio.announceMember(voice.playback, member, 'left')
+          this.continuousUser[guildId] = {
+            user: this.client.user.id,
+            timestamp: 0
+          }
+        }
+      }
+    })
+  }
+
+  private async onSwitch(member: Member, newChannel: VoiceChannel, oldChannel: VoiceChannel) {
+    if (member.id === this.client.user.id) {
+      this._serverConfig.updateLastVoiceChannel(member.guild.id, newChannel.id)
+      this._serverConfig.updateCurrentVoiceChannel(member.guild.id, '')
+      return
+    }
+    this.logger.debug(
+      `Queue (${this.queueLength + 1}): User ${member.username} (${member.id}) switched voice channel from ${oldChannel.name} (${oldChannel.id}) to ${newChannel.name} (${newChannel.id}) in guild ${member.guild.name} (${member.guild.id})`
+    )
+    this.enqueue(async () => {
+      this.logger.info(
+        `User ${member.username} (${member.id}) switched voice channel from ${oldChannel.name} (${oldChannel.id}) to ${newChannel.name} (${newChannel.id}) in guild ${member.guild.name} (${member.guild.id})`
       )
-      this.enqueue(async () => {
-        this.logger.info(
-          `User ${member.username} (${member.id}) switched voice channel from ${oldChannel.name} (${oldChannel.id}) to ${newChannel.name} (${newChannel.id}) in guild ${member.guild.name} (${member.guild.id})`
-        )
 
-        const guildId = member.guild.id
-        const channelID = await this._voice.autoLeaveChannel(oldChannel, newChannel, guildId)
-        const voice = this._voice.getCurrentVoice(guildId)
-        const data = await this._serverConfig.get(guildId)
+      const guildId = member.guild.id
+      const channelID = await this._voice.autoLeaveChannel(oldChannel, newChannel, guildId)
+      const voice = this._voice.getCurrentVoice(guildId)
+      const data = await this._serverConfig.get(guildId)
 
-        if (data) {
-          if (data.channelID !== '') {
-            this.client.createMessage(data.channelID, this._text.genVoiceLogEmbed(member, data.lang, 'move', oldChannel, newChannel))
+      if (data) {
+        if (data.channelID !== '') {
+          this.client.createMessage(data.channelID, genVoiceLogEmbed(member, data.lang, 'move', oldChannel, newChannel))
+        }
+      }
+      if (oldChannel.id === channelID) {
+        if (voice) {
+          instances.audio.announceMember(voice.playback, member, 'switched_out')
+          this.continuousUser[guildId] = {
+            user: this.client.user.id,
+            timestamp: 0
           }
         }
-        if (oldChannel.id === channelID) {
-          if (voice) {
-            instances.audio.announceMember(voice.playback, member, 'switched_out')
-            this.continuousUser[guildId] = {
-              user: this.client.user.id,
-              timestamp: 0
-            }
+      }
+      if (newChannel.id === channelID) {
+        if (voice) {
+          instances.audio.announceMember(voice.playback, member, 'switched_in')
+          this.continuousUser[guildId] = {
+            user: this.client.user.id,
+            timestamp: 0
           }
         }
-        if (newChannel.id === channelID) {
-          if (voice) {
-            instances.audio.announceMember(voice.playback, member, 'switched_in')
-            this.continuousUser[guildId] = {
-              user: this.client.user.id,
-              timestamp: 0
-            }
-          }
-        }
-      })
+      }
     })
   }
 
@@ -187,6 +199,10 @@ export class VoiceLog {
 
   public get voice() {
     return this._voice
+  }
+
+  public get cacheRefresh() {
+    return this._cacheRefresh
   }
 
   public get text() {
@@ -215,7 +231,7 @@ export class VoiceLog {
       this._voice.join(element.serverID, element.currentVoiceChannel)
     })
     scheduleJob('0 0 * * *', () => {
-      this._voice.refreshCache(undefined)
+      this._cacheRefresh.refreshCache(undefined)
     })
     // Away from the midnight refresh, so expired files are not removed just before it re-reads them
     scheduleJob('0 12 * * *', () => {
