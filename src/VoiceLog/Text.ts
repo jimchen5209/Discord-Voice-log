@@ -1,8 +1,8 @@
 import type { Client, TextChannel } from '@projectdysnomia/dysnomia'
 import type { ILogObj, Logger } from 'tslog'
-import { instances } from '../App/App'
 import type { DbServerConfigManager, IVoiceMessageTTS } from '../Db/ServerConfig'
 import type { Discord } from '../Discord/Discord'
+import type { Lang } from '../Shared/Lang'
 import type { VoiceLog } from './VoiceLog'
 
 const ERR_UNEXPECTED_LANG_STATUS = new Error('Unexpected lang set status')
@@ -21,11 +21,13 @@ export class VoiceLogText {
   private client: Client
   private logger: Logger<ILogObj>
   private serverConfig: DbServerConfigManager
+  private lang: Lang
 
-  constructor(voiceLog: VoiceLog, discord: Discord) {
+  constructor(voiceLog: VoiceLog, discord: Discord, lang: Lang) {
     this.client = discord.client
     this.logger = voiceLog.logger.getSubLogger({ name: 'Text' })
     this.serverConfig = voiceLog.serverConfig
+    this.lang = lang
   }
 
   public async setVoiceLog(guildId: string, channelId: string, lang: string | undefined = undefined): Promise<VoiceLogSetStatus> {
@@ -68,7 +70,7 @@ export class VoiceLogText {
   }
 
   public async setLang(guildId: string, lang: string): Promise<VoiceLogSetStatus> {
-    if (!instances.lang.isExist(lang)) return VoiceLogSetStatus.MissingLang
+    if (!this.lang.isExist(lang)) return VoiceLogSetStatus.MissingLang
 
     const data = await this.serverConfig.getOrCreate(guildId)
 

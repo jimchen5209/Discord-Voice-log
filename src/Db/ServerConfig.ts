@@ -1,8 +1,5 @@
-import type { ServerConfig as PrismaServerConfig } from '@prisma/client'
-import { instances } from '../App/App'
-import { prisma } from './Client'
-
-const logger = instances.mainLogger.getSubLogger({ name: 'SQLite:ServerConfig' })
+import type { PrismaClient, ServerConfig as PrismaServerConfig } from '@prisma/client'
+import type { ILogObj, Logger } from 'tslog'
 
 export const DEFAULT_TTS_PROVIDER = 'google-cloud'
 
@@ -42,6 +39,14 @@ function toServerConfig(data: PrismaServerConfig): IServerConfig {
  * but internally it uses Prisma.
  */
 export class DbServerConfigManager {
+  private prisma: PrismaClient
+  private logger: Logger<ILogObj>
+
+  constructor(prisma: PrismaClient, logger: Logger<ILogObj>) {
+    this.prisma = prisma
+    this.logger = logger
+  }
+
   public async create(
     serverID: string,
     channelID = '',
@@ -56,7 +61,7 @@ export class DbServerConfigManager {
       voiceName: 'en-US-Wavenet-A'
     }
   ) {
-    logger.debug(`Creating server config for ${serverID}`)
+    this.logger.debug(`Creating server config for ${serverID}`)
     const data = {
       serverID,
       channelID,
@@ -71,21 +76,21 @@ export class DbServerConfigManager {
     }
 
     try {
-      const result = await prisma.serverConfig.create({ data })
+      const result = await this.prisma.serverConfig.create({ data })
       return toServerConfig(result)
     } catch (e) {
-      logger.error(`Failed to create server config for ${serverID}:`, e)
+      this.logger.error(`Failed to create server config for ${serverID}:`, e)
       return null
     }
   }
 
   public async get(serverID: string) {
-    logger.debug(`Getting server config for ${serverID}`)
-    const config = await prisma.serverConfig.findUnique({
+    this.logger.debug(`Getting server config for ${serverID}`)
+    const config = await this.prisma.serverConfig.findUnique({
       where: { serverID }
     })
     if (!config) {
-      logger.debug(`No server config found for ${serverID}`)
+      this.logger.debug(`No server config found for ${serverID}`)
       return null
     }
 
@@ -93,7 +98,7 @@ export class DbServerConfigManager {
   }
 
   public async getOrCreate(guildId: string) {
-    logger.debug(`Getting or creating server config for ${guildId}`)
+    this.logger.debug(`Getting or creating server config for ${guildId}`)
     let data = await this.get(guildId)
     if (!data) {
       data = await this.create(guildId)
@@ -103,19 +108,19 @@ export class DbServerConfigManager {
   }
 
   public async getCurrentChannels() {
-    const configs = await prisma.serverConfig.findMany({
+    const configs = await this.prisma.serverConfig.findMany({
       where: {
         currentVoiceChannel: { not: '' }
       }
     })
-    logger.debug(`Found ${configs.length} active voice channel(s)`)
+    this.logger.debug(`Found ${configs.length} active voice channel(s)`)
 
     return configs.map(toServerConfig)
   }
 
   public async updateChannel(serverID: string, channelID: string) {
-    logger.debug(`Updating channelID for ${serverID}: ${channelID}`)
-    const result = await prisma.serverConfig.update({
+    this.logger.debug(`Updating channelID for ${serverID}: ${channelID}`)
+    const result = await this.prisma.serverConfig.update({
       where: { serverID },
       data: { channelID }
     })
@@ -123,8 +128,8 @@ export class DbServerConfigManager {
   }
 
   public async updateLang(serverID: string, lang: string) {
-    logger.debug(`Updating lang for ${serverID}: ${lang}`)
-    const result = await prisma.serverConfig.update({
+    this.logger.debug(`Updating lang for ${serverID}: ${lang}`)
+    const result = await this.prisma.serverConfig.update({
       where: { serverID },
       data: { lang }
     })
@@ -132,8 +137,8 @@ export class DbServerConfigManager {
   }
 
   public async updateLastVoiceChannel(serverID: string, lastVoiceChannel: string) {
-    logger.debug(`Updating lastVoiceChannel for ${serverID}: ${lastVoiceChannel}`)
-    const result = await prisma.serverConfig.update({
+    this.logger.debug(`Updating lastVoiceChannel for ${serverID}: ${lastVoiceChannel}`)
+    const result = await this.prisma.serverConfig.update({
       where: { serverID },
       data: { lastVoiceChannel }
     })
@@ -141,8 +146,8 @@ export class DbServerConfigManager {
   }
 
   public async updateCurrentVoiceChannel(serverID: string, currentVoiceChannel: string) {
-    logger.debug(`Updating currentVoiceChannel for ${serverID}: ${currentVoiceChannel}`)
-    const result = await prisma.serverConfig.update({
+    this.logger.debug(`Updating currentVoiceChannel for ${serverID}: ${currentVoiceChannel}`)
+    const result = await this.prisma.serverConfig.update({
       where: { serverID },
       data: { currentVoiceChannel }
     })
@@ -150,8 +155,8 @@ export class DbServerConfigManager {
   }
 
   public async updateVoiceMessageTTS(serverID: string, voiceMessageTTS: IVoiceMessageTTS) {
-    logger.debug(`Updating TTS config for ${serverID}: provider=${voiceMessageTTS.provider}, lang=${voiceMessageTTS.voiceLang}`)
-    const result = await prisma.serverConfig.update({
+    this.logger.debug(`Updating TTS config for ${serverID}: provider=${voiceMessageTTS.provider}, lang=${voiceMessageTTS.voiceLang}`)
+    const result = await this.prisma.serverConfig.update({
       where: { serverID },
       data: {
         ttsEnabled: voiceMessageTTS.enabled,
