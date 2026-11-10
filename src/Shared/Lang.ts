@@ -1,5 +1,4 @@
 import { existsSync as exists, readFileSync as readFile } from 'node:fs'
-import { type ApplicationCommandOption, type ApplicationCommandOptionChoice, CommandOptionType } from 'slash-create'
 import type { ILogObj, Logger } from 'tslog'
 
 export class Lang {
@@ -48,32 +47,7 @@ export class Lang {
     return lang in this.lang
   }
 
-  public genChoice() {
-    const choice: ApplicationCommandOptionChoice[] = []
-
-    for (const key of Object.keys(this.lang)) {
-      if (!this.lang[key]) continue
-
-      choice.push({
-        name: this.lang[key].displayName,
-        value: key
-      })
-    }
-
-    return choice
-  }
-
-  public genOptions(required: boolean) {
-    const options: ApplicationCommandOption[] = [
-      {
-        name: 'language',
-        description: 'VoiceLog Language',
-        required: required,
-        choices: this.genChoice(),
-        type: CommandOptionType.STRING
-      }
-    ]
-
-    return options
+  public entries() {
+    return Object.entries(this.lang)
   }
 }
