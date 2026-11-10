@@ -1,7 +1,7 @@
 import type { VoiceChannel } from '@projectdysnomia/dysnomia'
 import waitUntil from 'async-wait-until'
 import type { ILogObj, Logger } from 'tslog'
-import { instances } from '../App/App'
+import type { Audio } from '../Audio/Audio'
 import type { DbServerConfigManager } from '../Db/ServerConfig'
 import type { Discord } from '../Discord/Discord'
 import { DiscordVoice } from '../Discord/VoiceConnection'
@@ -12,11 +12,13 @@ export class VoiceLogVoice {
   private audios: { [key: string]: DiscordVoice } = {}
   private logger: Logger<ILogObj>
   private serverConfig: DbServerConfigManager
+  private audio: Audio
 
-  constructor(voiceLog: VoiceLog, discord: Discord) {
+  constructor(voiceLog: VoiceLog, discord: Discord, audio: Audio) {
     this.discord = discord
     this.logger = voiceLog.logger.getSubLogger({ name: 'Voice' })
     this.serverConfig = voiceLog.serverConfig
+    this.audio = audio
   }
 
   public getCurrentVoice(guildId: string): DiscordVoice | undefined {
@@ -49,7 +51,7 @@ export class VoiceLogVoice {
           this.serverConfig.updateCurrentVoiceChannel(guildId, channelId)
         }
 
-        if (playJoin) instances.audio.announceMoved(this.audios[guildId].playback)
+        if (playJoin) this.audio.announceMoved(this.audios[guildId].playback)
         return this.audios[guildId]
       } else {
         return this.audios[guildId]
@@ -68,7 +70,7 @@ export class VoiceLogVoice {
       this.serverConfig.updateCurrentVoiceChannel(guildId, channelId)
     }
 
-    if (playJoin) instances.audio.announceReady(this.audios[guildId].playback)
+    if (playJoin) this.audio.announceReady(this.audios[guildId].playback)
 
     return this.audios[guildId]
   }

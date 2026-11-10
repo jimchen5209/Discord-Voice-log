@@ -4,13 +4,13 @@ import type { VoiceLog } from '../VoiceLog'
 export class RefreshCacheCommand extends SlashCommand {
   private voiceLog: VoiceLog
 
-  constructor(creator: SlashCreator) {
+  constructor(creator: SlashCreator, voiceLog: VoiceLog) {
     super(creator, {
       name: 'refresh_cache',
       description: 'Download and cache all tts file (bot operator)',
       guildIDs: creator.client.guildIDs
     })
-    this.voiceLog = creator.client.voiceLog
+    this.voiceLog = voiceLog
   }
 
   async run(ctx: CommandContext) {
