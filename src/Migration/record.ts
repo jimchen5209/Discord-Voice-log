@@ -1,9 +1,11 @@
 import { existsSync as exists, readFileSync as readFile } from 'node:fs'
 import { dirname, resolve } from 'node:path'
-import { instances } from '../App/App'
+import type { ILogObj, Logger } from 'tslog'
+import { getApp } from '../App/App'
 import { writeAtomic } from '../Shared/WriteAtomic'
 
-const logger = instances.mainLogger.getSubLogger({ name: 'DataMigration' })
+let _logger: Logger<ILogObj> | undefined
+const logger = () => (_logger ??= getApp().mainLogger.getSubLogger({ name: 'DataMigration' }))
 
 // Version of the app-side data format (assets/<id>.json). The database is versioned by Prisma's
 // migration history instead. Bump it only for a breaking change, at most once per PR, and add exactly
@@ -21,7 +23,7 @@ export function recordFilePath() {
 }
 
 export function databasePath() {
-  const url = instances.config.sqlite.databaseUrl
+  const url = getApp().config.sqlite.databaseUrl
   if (!url.startsWith('file:')) throw new Error(`Unsupported database URL ${url}`)
   return resolve(url.slice('file:'.length).split('?')[0])
 }
@@ -52,11 +54,11 @@ export type UsableRecord = Exclude<VersionRecord, { kind: 'invalid' }>
 export function readUsableRecord(path: string, outcome: string): UsableRecord | undefined {
   const record = readRecord(path)
   if (record.kind === 'invalid') {
-    logger.error(`${record.reason}; ${outcome}`)
+    logger().error(`${record.reason}; ${outcome}`)
     return undefined
   }
   if (record.kind === 'ok' && record.version > DATA_VERSION) {
-    logger.error(`${path} says data version ${record.version}, newer than this build (${DATA_VERSION}); ${outcome}. Downgrades are not supported`)
+    logger().error(`${path} says data version ${record.version}, newer than this build (${DATA_VERSION}); ${outcome}. Downgrades are not supported`)
     return undefined
   }
   return record

@@ -1,12 +1,12 @@
 import { type CommandContext, CommandOptionType, SlashCommand, type SlashCreator } from 'slash-create'
-import { instances } from '../../App/App'
+import type { Lang } from '../../Shared/Lang'
 import type { VoiceLog } from '../VoiceLog'
 import { genOptions } from './options'
 
 export class LogCommand extends SlashCommand {
   private voiceLog: VoiceLog
 
-  constructor(creator: SlashCreator) {
+  constructor(creator: SlashCreator, voiceLog: VoiceLog, lang: Lang) {
     super(creator, {
       name: 'log',
       description: 'VoiceLog log option',
@@ -16,7 +16,7 @@ export class LogCommand extends SlashCommand {
           name: 'set',
           description: 'Set and enable voiceLog (admin)',
           type: CommandOptionType.SUB_COMMAND,
-          options: genOptions(instances.lang, true)
+          options: genOptions(lang, true)
         },
         {
           name: 'unset',
@@ -27,11 +27,11 @@ export class LogCommand extends SlashCommand {
           name: 'language',
           description: 'Set voiceLog language (admin)',
           type: CommandOptionType.SUB_COMMAND,
-          options: genOptions(instances.lang, true)
+          options: genOptions(lang, true)
         }
       ]
     })
-    this.voiceLog = creator.client.voiceLog
+    this.voiceLog = voiceLog
   }
 
   async run(ctx: CommandContext) {
