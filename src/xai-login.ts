@@ -3,8 +3,8 @@
 
 import { setTimeout as sleep } from 'node:timers/promises'
 import { Logger } from 'tslog'
-import { loggerOptions } from './Utils/Config'
-import { saveXaiTokens, XAI_CLIENT_ID, XAI_SCOPE, XAI_TOKEN_FILE, xaiEndpoints } from './Utils/XaiOAuth'
+import { saveXaiTokens, XAI_CLIENT_ID, XAI_SCOPE, XAI_TOKEN_FILE, xaiEndpoints } from './Audio/Providers/XaiOAuth'
+import { loggerOptions } from './Shared/Config'
 
 const logger = new Logger(loggerOptions).getSubLogger({ name: 'XaiLogin' })
 

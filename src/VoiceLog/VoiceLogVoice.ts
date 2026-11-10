@@ -4,12 +4,12 @@ import type { VoiceChannel } from '@projectdysnomia/dysnomia'
 import waitUntil from 'async-wait-until'
 import type { CommandContext, MessageEmbedOptions } from 'slash-create'
 import type { ILogObj, Logger } from 'tslog'
-import { MEMBER_EVENTS, type TTSRequest } from '../../../../Audio/Audio'
-import { instances } from '../../../../Utils/Instances'
-import type { DbServerConfigManager } from '../../../SQLite/db/ServerConfig'
-import type { Discord } from '../../Core'
-import { DiscordVoice } from '../../Core/Voice'
-import type { VoiceLog } from '../VoiceLog'
+import { instances } from '../App/App'
+import { MEMBER_EVENTS, type TTSRequest } from '../Audio/Audio'
+import type { DbServerConfigManager } from '../Db/ServerConfig'
+import type { Discord } from '../Discord/Discord'
+import { DiscordVoice } from '../Discord/VoiceConnection'
+import type { VoiceLog } from './VoiceLog'
 
 export class VoiceLogVoice {
   private updateLock = false

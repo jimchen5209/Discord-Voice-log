@@ -1,11 +1,11 @@
 import type { Client } from '@projectdysnomia/dysnomia'
 import { type AnyRequestData, GatewayServer, type SlashCommand, SlashCreator } from 'slash-create'
 import type { ILogObj, Logger } from 'tslog'
-import { instances } from '../../../Utils/Instances'
-import type { Discord } from '../Core'
-import { LogCommand } from './Commands/Log'
-import { RefreshCacheCommand } from './Commands/RefreshCache'
-import { VoiceCommand } from './Commands/Voice'
+import { instances } from '../App/App'
+import { LogCommand } from '../VoiceLog/SlashCommands/Log'
+import { RefreshCacheCommand } from '../VoiceLog/SlashCommands/RefreshCache'
+import { VoiceCommand } from '../VoiceLog/SlashCommands/Voice'
+import type { Discord } from './Discord'
 
 export class Command {
   private client: Client

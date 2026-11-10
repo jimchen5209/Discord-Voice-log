@@ -1,8 +1,8 @@
 import { existsSync as exists } from 'node:fs'
 import type { ILogObj, Logger } from 'tslog'
-import { XAI_TOKEN_FILE, xaiAccessToken } from '../../Utils/XaiOAuth'
 import { fetchWithRetry } from '../FetchWithRetry'
 import type { TTSProvider } from '../TTSProvider'
+import { XAI_TOKEN_FILE, xaiAccessToken } from './XaiOAuth'
 
 // xAI text to speech as 48kHz pcm. xAI's pcm is mono s16le (there is no channel option), so each
 // sample is played on both channels
