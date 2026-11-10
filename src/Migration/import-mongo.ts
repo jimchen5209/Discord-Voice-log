@@ -1,6 +1,7 @@
 import { readFileSync as readFile } from 'node:fs'
 import { unlink } from 'node:fs/promises'
-import { instances } from '../App/App'
+import type { ILogObj, Logger } from 'tslog'
+import { getApp } from '../App/App'
 
 // MongoDB dumps store the TTS engine name, SQLite stores the provider id
 export const MONGO_TTS_PROVIDERS = new Map([
@@ -8,7 +9,8 @@ export const MONGO_TTS_PROVIDERS = new Map([
   ['Legacy', 'google-translate']
 ])
 
-const logger = instances.mainLogger.getSubLogger({ name: 'DBMigrate' })
+let _logger: Logger<ILogObj> | undefined
+const logger = () => (_logger ??= getApp().mainLogger.getSubLogger({ name: 'DBMigrate' }))
 
 // A serverConfig row read from the dump; ttsType is the MongoDB engine name, mapped to a provider on import
 interface DumpRow {
@@ -84,7 +86,7 @@ export function preflightMongoDump(dumpPath: string): boolean {
     readMongoDump(dumpPath)
     return true
   } catch (error) {
-    logger.error(`MongoDB dump ${dumpPath} is not valid; nothing was changed:`, error)
+    logger().error(`MongoDB dump ${dumpPath} is not valid; nothing was changed:`, error)
     return false
   }
 }
@@ -96,17 +98,18 @@ export async function importMongoDump(dumpPath: string): Promise<boolean> {
   try {
     rows = readMongoDump(dumpPath)
   } catch (error) {
-    logger.error(`MongoDB dump ${dumpPath} is not valid; nothing was imported:`, error)
+    logger().error(`MongoDB dump ${dumpPath} is not valid; nothing was imported:`, error)
     return false
   }
-  // Loaded here: importing the client creates the database directory, which --preflight must not do
-  const { prisma } = await import('../Db/Client')
+  // Loaded here: creating the client creates the database directory, which --preflight must not do
+  const { createPrisma } = await import('../Db/Client')
   const { DEFAULT_TTS_PROVIDER } = await import('../Db/ServerConfig')
+  const prisma = createPrisma(getApp().config.sqlite.databaseUrl)
 
-  logger.info(`Found ${rows.length} documents in ${dumpPath}. Migrating to SQLite...`)
+  logger().info(`Found ${rows.length} documents in ${dumpPath}. Migrating to SQLite...`)
   const upserts = rows.map(({ serverID, ttsType, ...fields }) => {
     const mapped = ttsType === undefined ? DEFAULT_TTS_PROVIDER : MONGO_TTS_PROVIDERS.get(ttsType)
-    if (mapped === undefined) logger.warn(`Guild ${serverID} has unknown TTS type "${ttsType}"; migrating to the default provider ${DEFAULT_TTS_PROVIDER}`)
+    if (mapped === undefined) logger().warn(`Guild ${serverID} has unknown TTS type "${ttsType}"; migrating to the default provider ${DEFAULT_TTS_PROVIDER}`)
     const dbObject = { ...fields, ttsProvider: mapped ?? DEFAULT_TTS_PROVIDER }
     return prisma.serverConfig.upsert({
       where: { serverID },
@@ -117,17 +120,17 @@ export async function importMongoDump(dumpPath: string): Promise<boolean> {
   try {
     await prisma.$transaction(upserts)
   } catch (error) {
-    logger.error('MongoDB dump migration failed; nothing was imported:', error)
+    logger().error('MongoDB dump migration failed; nothing was imported:', error)
     return false
   }
-  logger.info('MongoDB dump migration completed!')
+  logger().info('MongoDB dump migration completed!')
 
   try {
     await unlink(dumpPath)
-    logger.info(`Deleted ${dumpPath}`)
+    logger().info(`Deleted ${dumpPath}`)
     return true
   } catch (error) {
-    logger.error(`The dump was imported, but deleting ${dumpPath} failed; move it away yourself (running \`pnpm migrate\` again is safe):`, error)
+    logger().error(`The dump was imported, but deleting ${dumpPath} failed; move it away yourself (running \`pnpm migrate\` again is safe):`, error)
     return false
   }
 }
