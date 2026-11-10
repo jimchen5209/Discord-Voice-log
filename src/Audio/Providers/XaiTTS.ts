@@ -19,7 +19,7 @@ export class XaiTTS implements TTSProvider {
   }
 
   public unavailableReason() {
-    return this.apiKey() || exists(XAI_TOKEN_FILE) ? undefined : 'xaiTTS.apiKey is not set in config.json and there is no xAI login (run `pnpm xai:login`)'
+    return this.apiKey() || exists(XAI_TOKEN_FILE) ? undefined : 'tts.providers.xaiTTS.apiKey is not set in config.json and there is no xAI login (run `pnpm xai:login`)'
   }
 
   public async synthesize(text: string, lang: string, voice: string, signal: AbortSignal): Promise<Uint8Array | null> {
@@ -43,7 +43,7 @@ export class XaiTTS implements TTSProvider {
       })
       if (!res.ok) {
         const detail = (await res.text()).replaceAll(token, '<redacted>').replace(/\s+/g, ' ').trim().slice(0, 300)
-        const hint = res.status === 403 && !apiKey ? '; the xAI login may not be allowed to use the API, set xaiTTS.apiKey instead' : ''
+        const hint = res.status === 403 && !apiKey ? '; the xAI login may not be allowed to use the API, set tts.providers.xaiTTS.apiKey instead' : ''
         this.logger.error(`xAI TTS API responded ${res.status}: ${detail || 'no error details'}${hint}`)
         return null
       }

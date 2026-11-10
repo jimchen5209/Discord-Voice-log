@@ -1,7 +1,8 @@
 import type { PrismaClient, ServerConfig as PrismaServerConfig } from '@prisma/client'
 import type { ILogObj, Logger } from 'tslog'
+import { GoogleCloudTTS } from '../Audio/Providers/GoogleCloudTTS'
 
-export const DEFAULT_TTS_PROVIDER = 'google-cloud'
+export const DEFAULT_TTS_PROVIDER = GoogleCloudTTS.id
 
 export interface IVoiceMessageTTS {
   enabled: boolean

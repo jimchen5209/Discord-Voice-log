@@ -8,7 +8,7 @@ import type { DbServerConfigManager, IServerConfig } from '../Db/ServerConfig'
 import type { Discord } from '../Discord/Discord'
 import type { Lang } from '../Shared/Lang'
 import { CacheRefresh } from './CacheRefresh'
-import { VoiceLogCommands } from './Commands'
+import { VoiceLogCommands } from './CommandHandlers/VoiceLogCommands'
 import { genVoiceLogEmbed } from './Embeds'
 import { parseMessage } from './MessageText'
 import { LogCommand } from './SlashCommands/Log'
@@ -101,27 +101,7 @@ export class VoiceLog {
     )
     this.enqueue(async () => {
       this.logger.info(`User ${member.username} (${member.id}) joined voice channel ${newChannel.name} (${newChannel.id}) in guild ${member.guild.name} (${member.guild.id})`)
-
-      const guildId = member.guild.id
-      const channelID = await this._voice.autoLeaveChannel(undefined, newChannel, guildId)
-      const voice = this._voice.getCurrentVoice(guildId)
-      const data = await this._serverConfig.get(guildId)
-
-      if (data) {
-        if (data.channelID !== '') {
-          this.client.createMessage(data.channelID, genVoiceLogEmbed(this.lang, member, data.lang, 'join', undefined, newChannel))
-        }
-      }
-
-      if (newChannel.id === channelID) {
-        if (voice) {
-          this.audio.announceMember(voice.playback, member, 'join')
-          this.continuousUser[guildId] = {
-            user: this.client.user.id,
-            timestamp: 0
-          }
-        }
-      }
+      await this.publishVoiceEvent(member, undefined, newChannel, 'join', [{ channel: newChannel, type: 'join' }])
     })
   }
 
@@ -132,25 +112,7 @@ export class VoiceLog {
     )
     this.enqueue(async () => {
       this.logger.info(`User ${member.username} (${member.id}) left voice channel ${oldChannel.name} (${oldChannel.id}) in guild ${member.guild.name} (${member.guild.id})`)
-
-      const guildId = member.guild.id
-      const channelID = await this._voice.autoLeaveChannel(oldChannel, undefined, guildId)
-      const voice = this._voice.getCurrentVoice(guildId)
-      const data = await this._serverConfig.get(guildId)
-      if (data) {
-        if (data.channelID !== '') {
-          this.client.createMessage(data.channelID, genVoiceLogEmbed(this.lang, member, data.lang, 'leave', oldChannel, undefined))
-        }
-      }
-      if (oldChannel.id === channelID) {
-        if (voice) {
-          this.audio.announceMember(voice.playback, member, 'left')
-          this.continuousUser[guildId] = {
-            user: this.client.user.id,
-            timestamp: 0
-          }
-        }
-      }
+      await this.publishVoiceEvent(member, oldChannel, undefined, 'leave', [{ channel: oldChannel, type: 'left' }])
     })
   }
 
@@ -167,36 +129,46 @@ export class VoiceLog {
       this.logger.info(
         `User ${member.username} (${member.id}) switched voice channel from ${oldChannel.name} (${oldChannel.id}) to ${newChannel.name} (${newChannel.id}) in guild ${member.guild.name} (${member.guild.id})`
       )
-
-      const guildId = member.guild.id
-      const channelID = await this._voice.autoLeaveChannel(oldChannel, newChannel, guildId)
-      const voice = this._voice.getCurrentVoice(guildId)
-      const data = await this._serverConfig.get(guildId)
-
-      if (data) {
-        if (data.channelID !== '') {
-          this.client.createMessage(data.channelID, genVoiceLogEmbed(this.lang, member, data.lang, 'move', oldChannel, newChannel))
-        }
-      }
-      if (oldChannel.id === channelID) {
-        if (voice) {
-          this.audio.announceMember(voice.playback, member, 'switched_out')
-          this.continuousUser[guildId] = {
-            user: this.client.user.id,
-            timestamp: 0
-          }
-        }
-      }
-      if (newChannel.id === channelID) {
-        if (voice) {
-          this.audio.announceMember(voice.playback, member, 'switched_in')
-          this.continuousUser[guildId] = {
-            user: this.client.user.id,
-            timestamp: 0
-          }
-        }
-      }
+      await this.publishVoiceEvent(member, oldChannel, newChannel, 'move', [
+        { channel: oldChannel, type: 'switched_out' },
+        { channel: newChannel, type: 'switched_in' }
+      ])
     })
+  }
+
+  private resetContinuousSpeaker(guildId: string) {
+    this.continuousUser[guildId] = {
+      user: this.client.user.id,
+      timestamp: 0
+    }
+  }
+
+  // Shared path of join, leave and switch. Each caller keeps its own log text and passes its event types.
+  private async publishVoiceEvent(
+    member: Member,
+    oldChannel: VoiceChannel | undefined,
+    newChannel: VoiceChannel | undefined,
+    embedType: string,
+    announcements: { channel: VoiceChannel; type: string }[]
+  ) {
+    const guildId = member.guild.id
+    const channelID = await this._voice.autoLeaveChannel(oldChannel, newChannel, guildId)
+    const voice = this._voice.getCurrentVoice(guildId)
+    const data = await this._serverConfig.get(guildId)
+
+    if (data) {
+      if (data.channelID !== '') {
+        this.client.createMessage(data.channelID, genVoiceLogEmbed(this.lang, member, data.lang, embedType, oldChannel, newChannel))
+      }
+    }
+    for (const announcement of announcements) {
+      if (announcement.channel.id === channelID) {
+        if (voice) {
+          this.audio.announceMember(voice.playback, member, announcement.type)
+          this.resetContinuousSpeaker(guildId)
+        }
+      }
+    }
   }
 
   private enqueue<T>(task: () => Promise<T>): Promise<T> {
