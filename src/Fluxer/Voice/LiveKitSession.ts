@@ -5,6 +5,8 @@
 import { EventEmitter } from 'node:events'
 import {
   AddTrackRequest,
+  DataPacket,
+  DataPacket_Kind,
   DisconnectReason,
   LeaveRequest,
   LeaveRequest_Action,
@@ -16,7 +18,8 @@ import {
   SignalTarget,
   TrackSource,
   TrackType,
-  TrickleRequest
+  TrickleRequest,
+  UserPacket
 } from '@livekit/protocol'
 import type { ILogObj, Logger } from 'tslog'
 import { MediaStream, MediaStreamTrack, RTCPeerConnection, RTCRtpCodecParameters, type RtpPacket } from 'werift'
@@ -30,6 +33,45 @@ type SignalCase = NonNullable<SignalResponse['message']['case']>
 type SignalValue<K extends SignalCase> = Extract<SignalResponse['message'], { case: K }>['value']
 
 export const ERR_SESSION_LOST = new Error('Voice session lost')
+
+// Fluxer clients only screen share in H264/VP9/VP8 while any participant has not said what it can decode.
+// The bot subscribes to nothing, so it claims every codec (payload types and priorities are the client's fixed table).
+const CODEC_ADVERTISEMENT = new DataPacket({
+  kind: DataPacket_Kind.RELIABLE,
+  value: {
+    case: 'user',
+    value: new UserPacket({
+      topic: 'fluxer.rtc.codec-negotiation.v1',
+      payload: Buffer.from(
+        JSON.stringify({
+          op: 1,
+          d: {
+            protocol: 'livekit',
+            data: { mode: 'livekit-sfu' },
+            codecs: [
+              // biome-ignore lint/style/useNamingConvention: Fluxer field names
+              { name: 'opus', type: 'audio', payload_type: 120, priority: 1000, encode: true, decode: true },
+              ...['AV1', 'H265', 'H264', 'VP9', 'VP8'].map((name, i) => ({
+                name,
+                type: 'video',
+                // biome-ignore lint/style/useNamingConvention: Fluxer field name
+                payload_type: [101, 105, 103, 109, 107][i],
+                // biome-ignore lint/style/useNamingConvention: Fluxer field name
+                rtx_payload_type: [102, 106, 104, 110, 108][i],
+                priority: 5000 - i * 1000,
+                encode: false,
+                decode: true
+              }))
+            ],
+            // biome-ignore lint/style/useNamingConvention: Fluxer field name
+            rtc_connection_id: null,
+            experiments: []
+          }
+        })
+      )
+    })
+  }
+}).toBinary()
 
 // LiveKit's websocket URL for an endpoint from Voice Server Update; the path is kept (self-hosted: e.g. /livekit)
 function parseEndpoint(endpoint: string) {
@@ -74,6 +116,7 @@ export class LiveKitSession extends EventEmitter {
   private ws: WebSocket | undefined
   private pub: RTCPeerConnection | undefined
   private sub: RTCPeerConnection | undefined
+  private data: ReturnType<RTCPeerConnection['createDataChannel']> | undefined
   private track = new MediaStreamTrack({ kind: 'audio' })
   private trackSid: string | undefined
   private identity: string | undefined
@@ -115,6 +158,8 @@ export class LiveKitSession extends EventEmitter {
 
     // One track for the whole session: listeners stay subscribed between announcements
     this.pub.addTrack(this.track, new MediaStream([this.track]))
+    this.data = this.pub.createDataChannel('_reliable')
+    this.data.onopen = () => this.advertiseCodecs()
     const cid = this.track.id
     const published = this.wait('trackPublished', (value) => value.cid === cid)
     this.send({
@@ -160,6 +205,11 @@ export class LiveKitSession extends EventEmitter {
     this.ws?.close()
     this.pub?.close().catch(() => undefined)
     this.sub?.close().catch(() => undefined)
+  }
+
+  // Data messages are not replayed to people who join later, so this is sent again on every participant update
+  private advertiseCodecs() {
+    if (this.data?.readyState === 'open') this.data.send(Buffer.from(CODEC_ADVERTISEMENT))
   }
 
   private markHeard() {
@@ -232,6 +282,7 @@ export class LiveKitSession extends EventEmitter {
         break
       }
       case 'update': {
+        this.advertiseCodecs()
         // A Fluxer server mute mutes the track and sets the server_mute attribute. Lifting it only removes the attribute:
         // the client unmutes its own track.
         const self = message.value.participants.find((participant) => participant.identity === this.identity)
