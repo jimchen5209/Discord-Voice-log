@@ -127,14 +127,19 @@ export class VoiceLogVoice {
     if (voice?.isReady()) {
       channelToCheck = oldChannel?.channelId === voice?.channelId ? oldChannel : newChannel?.channelId === voice?.channelId ? newChannel : undefined
     } else if (data) {
-      channelToCheck = oldChannel?.channelId === data.lastVoiceChannel ? oldChannel : newChannel?.channelId === data.lastVoiceChannel ? newChannel : undefined
+      // A connection that ended on its own (e.g. Fluxer reconnect failed) leaves only currentVoiceChannel set
+      const target = data.lastVoiceChannel || data.currentVoiceChannel
+      channelToCheck = oldChannel?.channelId === target ? oldChannel : newChannel?.channelId === target ? newChannel : undefined
     }
 
     if (!channelToCheck) return
 
     const humans = playback.humanCount(channelToCheck)
     // Unknown is not empty: never leave, or join, on a member list the bot cannot see
-    if (humans === undefined) return
+    if (humans === undefined) {
+      this.logger.debug(`Member list of ${channelToCheck.channelId} is unknown, not joining or leaving`)
+      return
+    }
 
     if (humans === 0) {
       if (voice) {
