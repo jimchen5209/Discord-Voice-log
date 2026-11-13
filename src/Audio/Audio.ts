@@ -15,10 +15,6 @@ const MOVED_TEXT = 'VoiceLog is moved to your channel.'
 
 export const MEMBER_EVENTS = ['join', 'left', 'switched_out', 'switched_in', 'connection_added', 'connection_removed']
 
-// A member event played as another when the member has nothing set for it (Fluxer: one more / one less connection in the channel)
-// biome-ignore lint/style/useNamingConvention: member config keys
-const FALLBACK_EVENTS: Record<string, string> = { connection_added: 'join', connection_removed: 'left' }
-
 export interface AudioOptions {
   // Provider, language and voice for the bot's own announcements
   systemProvider: string
@@ -114,8 +110,8 @@ export class Audio {
     return this.enqueue(queue, this.tts(this.systemRequest(MOVED_TEXT)))
   }
 
-  public announceMember(queue: PlaybackQueue, member: MemberView, type: string) {
-    const fallback = FALLBACK_EVENTS[type]
+  // fallback is played when the member has nothing set for type
+  public announceMember(queue: PlaybackQueue, member: MemberView, type: string, fallback?: string) {
     return this.enqueue(
       queue,
       this.resolveMember(member, type).then((asset) => asset ?? (fallback ? this.resolveMember(member, fallback) : undefined))
