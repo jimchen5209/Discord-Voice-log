@@ -48,7 +48,10 @@ If you are upgrading from an older version that used MongoDB, see the [MongoDB t
 <User ID>_left.wav --Left the channel
 <User ID>_switched_out.wav --Switched out from the channel
 <User ID>_switched_in.wav --Switched into the channel
+<User ID>_connection_added.wav --(Fluxer, optional) Opened another connection in a channel they are already in
+<User ID>_connection_removed.wav --(Fluxer, optional) Closed one connection but still has another in the channel
 ```
+`connection_added` / `connection_removed` (as files or as the json keys below) fall back to `join` / `left` when not set.
 or place `<User ID>.json` into `assets/discord/` folder with:
 ```json
 {

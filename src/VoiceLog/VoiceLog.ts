@@ -109,7 +109,7 @@ export class VoiceLog {
     )
     this.enqueue(async () => {
       this.logger.info(`User ${member.username} (${member.userId}) joined voice channel ${newChannel.name} (${newChannel.channelId}) in guild ${guildName} (${guildId})`)
-      await this.publishVoiceEvent(member, undefined, newChannel, 'join', [{ channel: newChannel, type: 'join' }], connection)
+      await this.publishVoiceEvent(member, undefined, newChannel, 'join', [{ channel: newChannel, type: connection?.othersInEntered ? 'connection_added' : 'join' }], connection)
     })
   }
 
@@ -120,7 +120,7 @@ export class VoiceLog {
     )
     this.enqueue(async () => {
       this.logger.info(`User ${member.username} (${member.userId}) left voice channel ${oldChannel.name} (${oldChannel.channelId}) in guild ${guildName} (${guildId})`)
-      await this.publishVoiceEvent(member, oldChannel, undefined, 'leave', [{ channel: oldChannel, type: 'left' }], connection)
+      await this.publishVoiceEvent(member, oldChannel, undefined, 'leave', [{ channel: oldChannel, type: connection?.othersInLeft ? 'connection_removed' : 'left' }], connection)
     })
   }
 
@@ -139,8 +139,8 @@ export class VoiceLog {
         newChannel,
         'move',
         [
-          { channel: oldChannel, type: 'switched_out' },
-          { channel: newChannel, type: 'switched_in' }
+          { channel: oldChannel, type: connection?.othersInLeft ? 'connection_removed' : 'switched_out' },
+          { channel: newChannel, type: connection?.othersInEntered ? 'connection_added' : 'switched_in' }
         ],
         connection
       )

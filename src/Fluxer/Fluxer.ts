@@ -244,7 +244,11 @@ export class Fluxer implements PlatformRuntime {
     if (!update) return
     const delta = this.tracker.apply(update)
     if (!delta) return
-    const change: ConnectionChange = { delta, connection: { id: delta.connectionId, mobile: state.is_mobile === true }, payload: state.member }
+    // Counted now, as the report can be held (see SWITCH_GRACE_MS) while other connections change
+    const others = (channelId: string | undefined) =>
+      channelId !== undefined && this.tracker.connectionsIn(delta.guildId, delta.userId, channelId) > (channelId === delta.entered ? 1 : 0)
+    const connection: ConnectionView = { id: delta.connectionId, mobile: state.is_mobile === true, othersInLeft: others(delta.left), othersInEntered: others(delta.entered) }
+    const change: ConnectionChange = { delta, connection, payload: state.member }
     // Connections of one session follow each other in a switch; without a session id, the connection stands alone
     const key = `${delta.guildId}:${delta.userId}:${state.session_id ?? `connection:${delta.connectionId}`}`
     const pending = this.pendingLeaves.get(key)
@@ -257,7 +261,7 @@ export class Fluxer implements PlatformRuntime {
         this.queuePresence(client, {
           ...change,
           delta: { ...delta, left: pending.change.delta.left },
-          connection: { ...change.connection, previousId: pending.change.connection.id }
+          connection: { ...change.connection, previousId: pending.change.connection.id, othersInLeft: pending.change.connection.othersInLeft }
         })
         return
       }

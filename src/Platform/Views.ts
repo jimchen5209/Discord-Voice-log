@@ -19,6 +19,9 @@ export interface ConnectionView {
   id: string
   mobile: boolean
   previousId?: string
+  // The member still has another connection in the channel it left / already had one in the channel it entered
+  othersInLeft?: boolean
+  othersInEntered?: boolean
 }
 
 // left only: leave, entered only: join, both: move. connection is set by platforms where a member

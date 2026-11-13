@@ -68,6 +68,11 @@ export class VoicePresenceTracker {
     return [...users]
   }
 
+  // How many connections the user has in the channel
+  public connectionsIn(guildId: string, userId: string, channelId: string): number {
+    return this.countChannels(guildId, userId).get(channelId) ?? 0
+  }
+
   // Connection ids the user has in the guild
   public connectionsOf(guildId: string, userId: string): string[] {
     return [...(this.guilds.get(guildId) ?? [])].filter(([, connection]) => connection.userId === userId).map(([id]) => id)
