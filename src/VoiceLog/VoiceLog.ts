@@ -109,7 +109,7 @@ export class VoiceLog {
     )
     this.enqueue(async () => {
       this.logger.info(`User ${member.username} (${member.userId}) joined voice channel ${newChannel.name} (${newChannel.channelId}) in guild ${guildName} (${guildId})`)
-      await this.publishVoiceEvent(member, undefined, newChannel, 'join', [{ channel: newChannel, type: connection?.othersInEntered ? 'connection_added' : 'join' }], connection)
+      await this.publishVoiceEvent(member, undefined, newChannel, 'join', [{ channel: newChannel, type: 'join' }], connection)
     })
   }
 
@@ -120,7 +120,7 @@ export class VoiceLog {
     )
     this.enqueue(async () => {
       this.logger.info(`User ${member.username} (${member.userId}) left voice channel ${oldChannel.name} (${oldChannel.channelId}) in guild ${guildName} (${guildId})`)
-      await this.publishVoiceEvent(member, oldChannel, undefined, 'leave', [{ channel: oldChannel, type: connection?.othersInLeft ? 'connection_removed' : 'left' }], connection)
+      await this.publishVoiceEvent(member, oldChannel, undefined, 'leave', [{ channel: oldChannel, type: 'left' }], connection)
     })
   }
 
@@ -139,8 +139,8 @@ export class VoiceLog {
         newChannel,
         'move',
         [
-          { channel: oldChannel, type: connection?.othersInLeft ? 'connection_removed' : 'switched_out' },
-          { channel: newChannel, type: connection?.othersInEntered ? 'connection_added' : 'switched_in' }
+          { channel: oldChannel, type: 'switched_out' },
+          { channel: newChannel, type: 'switched_in' }
         ],
         connection
       )
@@ -177,7 +177,11 @@ export class VoiceLog {
     for (const announcement of announcements) {
       if (announcement.channel.channelId === channelID) {
         if (voice) {
-          this.audio.announceMember(voice.playback, member, announcement.type)
+          // One more / one less connection of a member already in the channel; falls back to the event itself
+          const isOld = announcement.channel === oldChannel
+          const others = isOld ? connection?.othersInLeft : connection?.othersInEntered
+          if (others) this.audio.announceMember(voice.playback, member, isOld ? 'connection_removed' : 'connection_added', announcement.type)
+          else this.audio.announceMember(voice.playback, member, announcement.type)
           this.resetContinuousSpeaker(guild)
         }
       }
