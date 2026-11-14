@@ -17,9 +17,10 @@ import { FluxerVoicePlayback } from './Voice/Playback'
 const IGNORED_EVENTS = ['TYPING_START', 'MESSAGE_REACTION_ADD', 'MESSAGE_REACTION_REMOVE']
 
 // The Fluxer app switches channels by ending the connection and opening a new one in the same gateway session,
-// usually 1 to 2 seconds later. A leave is held this long, so a join from that session that follows is reported
-// as one move of that connection; a slower switch is a leave and a join.
-const SWITCH_GRACE_MS = 2000
+// 0.7 to 1.4 seconds later (measured). The leave carries nothing that tells it from a real leave, so it is held
+// this long; a join from that session that follows is reported as one move of that connection as soon as it
+// arrives. A slower switch is a leave and a join.
+const SWITCH_GRACE_MS = 1500
 
 // The voice state fields this runtime reads, as sent by the gateway
 interface WireVoiceState {
