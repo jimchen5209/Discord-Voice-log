@@ -52,6 +52,8 @@ interface ConnectionChange {
 interface PendingLeave {
   change: ConnectionChange
   timer: NodeJS.Timeout
+  // When the leave arrived, to log how long a switch took
+  at: number
 }
 
 type GuildMemberData = ConstructorParameters<typeof GuildMember>[1]
@@ -239,6 +241,9 @@ export class Fluxer implements PlatformRuntime {
   }
 
   private onVoiceState(client: Client, state: WireVoiceState) {
+    this.logger.debug(
+      `Raw voice state: guild ${state.guild_id ?? '-'} user ${state.user_id} session ${state.session_id ?? '-'} connection ${state.connection_id ?? '-'} channel ${state.channel_id ?? '-'} version ${state.version ?? '-'}${state.is_mobile ? ' mobile' : ''}`
+    )
     // Calls have no guild
     if (!state.guild_id) return
     const update = toUpdate(state.guild_id, state)
@@ -259,6 +264,10 @@ export class Fluxer implements PlatformRuntime {
       // A join into another channel completes a switch, reported with the connection id before and after;
       // anything else reports the held leave first
       if (delta.entered && !delta.left && delta.entered !== pending.change.delta.left) {
+        // Logged to tune SWITCH_GRACE_MS: how long the app took to switch
+        this.logger.debug(
+          `User ${delta.userId} session ${state.session_id ?? '-'} switched ${this.channelLabel(client, delta.guildId, pending.change.delta.left)} -> ${this.channelLabel(client, delta.guildId, delta.entered)} in ${Date.now() - pending.at} ms (connection ${pending.change.connection.id} -> ${delta.connectionId})`
+        )
         this.queuePresence(client, {
           ...change,
           delta: { ...delta, left: pending.change.delta.left },
@@ -271,12 +280,22 @@ export class Fluxer implements PlatformRuntime {
     if (delta.left && !delta.entered) {
       const timer = setTimeout(() => {
         this.pendingLeaves.delete(key)
+        this.logger.debug(`User ${delta.userId} session ${state.session_id ?? '-'} connection ${delta.connectionId}: no join within ${SWITCH_GRACE_MS} ms, reported as a leave`)
         this.queuePresence(client, change)
       }, SWITCH_GRACE_MS)
-      this.pendingLeaves.set(key, { change, timer })
+      this.pendingLeaves.set(key, { change, timer, at: Date.now() })
+      this.logger.debug(
+        `User ${delta.userId} session ${state.session_id ?? '-'} connection ${delta.connectionId} left ${this.channelLabel(client, delta.guildId, delta.left)}, held ${SWITCH_GRACE_MS} ms for a switch`
+      )
       return
     }
     this.queuePresence(client, change)
+  }
+
+  private channelLabel(client: Client, guildId: string, channelId: string | undefined) {
+    if (!channelId) return '-'
+    const name = toChannelView(client, fluxerGuild(this.scope, guildId), channelId)?.name ?? '?'
+    return `${name} (${channelId})`
   }
 
   private queuePresence(client: Client, change: ConnectionChange) {
