@@ -39,7 +39,7 @@
     "tslog": "^4.11.0"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.6.3",
+    "@biomejs/biome": "2.6.4",
     "@types/better-sqlite3": "^9.6.0",
     "@types/node": "^24.19.2",
     "@types/node-schedule": "^2.1.8",
