@@ -7,10 +7,10 @@ import { writeAtomic } from '../Shared/WriteAtomic'
 let _logger: Logger<ILogObj> | undefined
 const logger = () => (_logger ??= getApp().mainLogger.getSubLogger({ name: 'DataMigration' }))
 
-// Version of the app-side data format (assets/<id>.json). The database is versioned by Prisma's
-// migration history instead. Bump it only for a breaking change, at most once per PR, and add exactly
-// one step for the bump to ASSET_STEPS.
-export const DATA_VERSION = 2
+// Version of the app-side data format (the asset files and where they live, see assets/layout.ts). The
+// database is versioned by Prisma's migration history instead. Bump it only for a breaking change, at most
+// once per PR, and add exactly one step for the bump to ASSET_STEPS.
+export const DATA_VERSION = 3
 
 // data-version.json: the data version the app-side data was last migrated to
 const RECORD_FILE = 'data-version.json'

@@ -1,7 +1,9 @@
 import { existsSync as exists, readFileSync as readFile } from 'node:fs'
-import type { Member } from '@projectdysnomia/dysnomia'
+import { join } from 'node:path'
 import type { ILogObj, Logger } from 'tslog'
+import type { MemberView } from '../Platform/Views'
 import type { PluginManager } from '../Plugin/Core'
+import { memberAssetDir } from './AssetPaths'
 import type { AudioAsset } from './AudioAsset'
 import { AudioCache } from './AudioCache'
 import type { PlaybackQueue } from './PlaybackQueue'
@@ -11,7 +13,7 @@ import type { TTSProvider } from './TTSProvider'
 const READY_TEXT = 'VoiceLog is ready.'
 const MOVED_TEXT = 'VoiceLog is moved to your channel.'
 
-export const MEMBER_EVENTS = ['join', 'left', 'switched_out', 'switched_in']
+export const MEMBER_EVENTS = ['join', 'left', 'switched_out', 'switched_in', 'connection_added', 'connection_removed']
 
 export interface AudioOptions {
   // Provider, language and voice for the bot's own announcements
@@ -27,7 +29,7 @@ export interface TTSRequest {
   voice: string
 }
 
-// Contents of assets/<id>.json: provider / lang / voice plus one text per member event
+// Contents of <scope dir>/<id>.json (see AssetPaths): provider / lang / voice plus one text per member event
 export type MemberConfig = Record<string, unknown>
 
 // Entry point of the audio module: decide which audio file represents an announcement, then queue it.
@@ -108,8 +110,12 @@ export class Audio {
     return this.enqueue(queue, this.tts(this.systemRequest(MOVED_TEXT)))
   }
 
-  public announceMember(queue: PlaybackQueue, member: Member, type: string) {
-    return this.enqueue(queue, this.resolveMember(member, type))
+  // fallback is played when the member has nothing set for type
+  public announceMember(queue: PlaybackQueue, member: MemberView, type: string, fallback?: string) {
+    return this.enqueue(
+      queue,
+      this.resolveMember(member, type).then((asset) => asset ?? (fallback ? this.resolveMember(member, fallback) : undefined))
+    )
   }
 
   public speak(queue: PlaybackQueue, request: TTSRequest) {
@@ -131,19 +137,21 @@ export class Audio {
     return path !== null ? { path, format: this.provider(request.provider).format } : undefined
   }
 
-  // Priority: plugin overwrite, assets/<id>.json TTS, assets/<id>_<type>.wav
-  private async resolveMember(member: Member, type: string): Promise<AudioAsset | undefined> {
+  // Priority: plugin overwrite, <dir>/<id>.json TTS, <dir>/<id>_<type>.wav, where dir is the member's scope directory
+  private async resolveMember(member: MemberView, type: string): Promise<AudioAsset | undefined> {
     for (const voice of this.pluginManager.voiceOverwrites) {
       const overwrittenFile = await voice.playVoice(member, type)
       if (overwrittenFile) return { path: overwrittenFile, format: 'pcm' }
     }
 
-    const wav = `assets/${member.id}_${type}.wav`
+    const dir = memberAssetDir(member.scope)
+    const wav = join(dir, `${member.userId}_${type}.wav`)
     const wavAsset = (): AudioAsset | undefined => (exists(wav) ? { path: wav, format: undefined } : undefined)
 
-    if (!exists(`assets/${member.id}.json`)) return wavAsset()
+    const json = join(dir, `${member.userId}.json`)
+    if (!exists(json)) return wavAsset()
 
-    const config = this.readMemberConfig(`assets/${member.id}.json`)
+    const config = this.readMemberConfig(json)
     const request = config && this.memberRequest(config, type)
     if (!request) return wavAsset()
     // Google Cloud-only rule kept from before: its member TTS never falls back to the wav file

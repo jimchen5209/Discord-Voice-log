@@ -14,3 +14,4 @@ overrides:
 
 patchedDependencies:
   '@projectdysnomia/dysnomia': patches/@projectdysnomia__dysnomia.patch
+  '@fluxerjs/ws': patches/@fluxerjs__ws.patch

@@ -1,13 +1,13 @@
 import { type CommandContext, CommandOptionType, SlashCommand, type SlashCreator } from 'slash-create'
-import type { Audio } from '../../Audio/Audio'
+import { TTS_OPTION } from '../../Platform/Command'
 import type { Lang } from '../../Shared/Lang'
-import type { VoiceLog } from '../VoiceLog'
+import type { Command } from '../Command'
 import { genChoice } from './options'
 
 export class VoiceCommand extends SlashCommand {
-  private voiceLog: VoiceLog
+  private command: Command
 
-  constructor(creator: SlashCreator, voiceLog: VoiceLog, lang: Lang, audio: Audio) {
+  constructor(creator: SlashCreator, command: Command, lang: Lang, ttsProviderIds: string[]) {
     super(creator, {
       name: 'voice',
       description: 'VoiceLog voice option',
@@ -29,29 +29,29 @@ export class VoiceCommand extends SlashCommand {
           type: CommandOptionType.SUB_COMMAND,
           options: [
             {
-              name: 'enabled',
+              name: TTS_OPTION.enabled,
               description: 'Enable/Disable TTS',
               type: CommandOptionType.BOOLEAN
             },
             {
-              name: 'provider',
+              name: TTS_OPTION.provider,
               description: 'TTS provider',
               type: CommandOptionType.STRING,
-              choices: audio.providerIds().map((id) => ({ name: id, value: id }))
+              choices: ttsProviderIds.map((id) => ({ name: id, value: id }))
             },
             {
-              name: 'message_lang',
+              name: TTS_OPTION.messageLang,
               description: 'Message language for TTS parsing',
               type: CommandOptionType.STRING,
               choices: genChoice(lang)
             },
             {
-              name: 'voice_lang',
+              name: TTS_OPTION.voiceLang,
               description: 'Voice language code (e.g. en-US, zh-TW)',
               type: CommandOptionType.STRING
             },
             {
-              name: 'voice_name',
+              name: TTS_OPTION.voiceName,
               description: 'Voice name (e.g. en-US-Wavenet-A)',
               type: CommandOptionType.STRING
             }
@@ -59,18 +59,18 @@ export class VoiceCommand extends SlashCommand {
         }
       ]
     })
-    this.voiceLog = voiceLog
+    this.command = command
   }
 
   async run(ctx: CommandContext) {
     if (ctx.options.join) {
-      this.voiceLog.command.commandJoin(ctx)
+      this.command.dispatch('voice.join', ctx)
     }
     if (ctx.options.leave) {
-      this.voiceLog.command.commandLeave(ctx)
+      this.command.dispatch('voice.leave', ctx)
     }
     if (ctx.options.tts) {
-      this.voiceLog.command.commandSetTTS(ctx)
+      this.command.dispatch('voice.tts', ctx, ctx.options.tts)
     }
   }
 }

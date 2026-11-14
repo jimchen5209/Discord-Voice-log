@@ -2,6 +2,7 @@ import { readFileSync as readFile } from 'node:fs'
 import type { ILogObj, Logger } from 'tslog'
 import { getApp } from '../../App/App'
 import { DATA_VERSION, type UsableRecord } from '../record'
+import { LAYOUT_VERSION, layoutProblems } from './layout'
 import { ASSET_STEPS, ASSETS_DIR, assetConfigFiles } from './steps'
 
 let _logger: Logger<ILogObj> | undefined
@@ -9,10 +10,22 @@ const logger = () => (_logger ??= getApp().mainLogger.getSubLogger({ name: 'Data
 
 // Run by `pnpm migrate` before `prisma migrate deploy` (after readUsableRecord rejected a malformed
 // record or one newer than DATA_VERSION), so (unless skipInvalid) an invalid asset file that migrateData
-// would reject stops it before the database is touched. Only reads.
+// would reject, or a file that the move to the version 3 layout would overwrite, stops it before the
+// database is touched. Only reads.
 export function preflightData(record: UsableRecord, { skipInvalid = false } = {}): boolean {
-  if (skipInvalid || (record.kind === 'ok' && record.version === DATA_VERSION)) return true
-  const { invalid } = planAssets(assetConfigFiles(), record.kind === 'ok' ? record.version : 1, false)
+  const from = record.kind === 'ok' ? record.version : 1
+  if (from === DATA_VERSION) return true
+  if (from < LAYOUT_VERSION) {
+    const problems = layoutProblems()
+    if (problems.length > 0) {
+      logger().error(
+        `The assets cannot be moved into the per-platform directories: ${problems.join('; ')}; nothing was changed (the database was not migrated). Keep one of each and run \`pnpm migrate\` again`
+      )
+      return false
+    }
+  }
+  if (skipInvalid) return true
+  const { invalid } = planAssets(assetConfigFiles(from), from, false)
   if (invalid.length === 0) return true
   logInvalidAssets(invalid, 'nothing was changed (the database was not migrated)')
   return false

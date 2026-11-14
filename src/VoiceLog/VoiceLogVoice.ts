@@ -1,137 +1,159 @@
-import type { VoiceChannel } from '@projectdysnomia/dysnomia'
 import waitUntil from 'async-wait-until'
 import type { ILogObj, Logger } from 'tslog'
 import type { Audio } from '../Audio/Audio'
 import type { DbServerConfigManager } from '../Db/ServerConfig'
-import type { Discord } from '../Discord/Discord'
-import { DiscordVoice } from '../Discord/VoiceConnection'
+import { type GuildKey, guildKeyString } from '../Platform/Scope'
+import type { ChannelView } from '../Platform/Views'
+import type { VoicePlayback, VoiceSession } from '../Platform/VoicePlayback'
 import type { VoiceLog } from './VoiceLog'
 
 export class VoiceLogVoice {
-  private discord: Discord
-  private audios: { [key: string]: DiscordVoice } = {}
+  // Read when used: a platform knows whether it can play voice only once it has started.
+  // Undefined when it cannot: nothing joins, and nothing is ever connected
+  private voicePlayback: () => VoicePlayback | undefined
+  // Keyed by guildKeyString, so the same guild id on two platforms never shares a connection
+  private audios = new Map<string, { guild: GuildKey; voice: VoiceSession }>()
   private logger: Logger<ILogObj>
   private serverConfig: DbServerConfigManager
   private audio: Audio
 
-  constructor(voiceLog: VoiceLog, discord: Discord, audio: Audio) {
-    this.discord = discord
+  constructor(voiceLog: VoiceLog, playback: () => VoicePlayback | undefined, audio: Audio) {
+    this.voicePlayback = playback
     this.logger = voiceLog.logger.getSubLogger({ name: 'Voice' })
     this.serverConfig = voiceLog.serverConfig
     this.audio = audio
   }
 
-  public getCurrentVoice(guildId: string): DiscordVoice | undefined {
-    const voice = this.audios[guildId]
-    if (!voice) {
-      const botVoice = this.discord.client.voiceConnections.get(guildId)
-      if (botVoice?.ready) {
-        if (botVoice.channelID) this.audios[guildId] = new DiscordVoice(this.discord, botVoice.channelID, botVoice)
-        return this.audios[guildId]
-      }
-      return undefined
-    }
-    if (!voice.isReady()) {
-      this.destroy(guildId)
-      return undefined
-    }
-
-    return this.audios[guildId]
+  public get available() {
+    return this.playback !== undefined
   }
 
-  public async join(guildId: string, channelId: string, updateDatabase = false, playJoin = false): Promise<DiscordVoice | undefined> {
-    if (this.audios[guildId]) {
-      if (!this.audios[guildId].isReady() && !this.audios[guildId].init) {
-        this.destroy(guildId)
-      } else if (this.audios[guildId].channelId !== channelId) {
-        this.audios[guildId].switchChannel(channelId)
+  private get playback() {
+    return this.voicePlayback()
+  }
+
+  private session(guild: GuildKey): VoiceSession | undefined {
+    return this.audios.get(guildKeyString(guild))?.voice
+  }
+
+  public getCurrentVoice(guild: GuildKey): VoiceSession | undefined {
+    if (!this.playback) return undefined
+    const voice = this.session(guild)
+    if (!voice) {
+      const existing = this.playback.adoptExisting(guild)
+      if (existing) this.audios.set(guildKeyString(guild), { guild, voice: existing })
+      return existing
+    }
+    if (!voice.isReady()) {
+      this.destroy(guild)
+      return undefined
+    }
+
+    return voice
+  }
+
+  public async join(guild: GuildKey, channelId: string, updateDatabase = false, playJoin = false): Promise<VoiceSession | undefined> {
+    const playback = this.playback
+    if (!playback) return
+    const current = this.session(guild)
+    if (current) {
+      if (!current.isReady() && !current.init) {
+        this.destroy(guild)
+      } else if (current.channelId !== channelId) {
+        current.switchChannel(channelId)
 
         if (updateDatabase) {
-          this.serverConfig.updateLastVoiceChannel(guildId, '')
-          this.serverConfig.updateCurrentVoiceChannel(guildId, channelId)
+          this.serverConfig.updateLastVoiceChannel(guild, '')
+          this.serverConfig.updateCurrentVoiceChannel(guild, channelId)
         }
 
-        if (playJoin) this.audio.announceMoved(this.audios[guildId].playback)
-        return this.audios[guildId]
+        if (playJoin) this.audio.announceMoved(current.playback)
+        return current
       } else {
-        return this.audios[guildId]
+        return current
       }
     }
 
-    this.audios[guildId] = new DiscordVoice(this.discord, channelId)
+    this.audios.set(guildKeyString(guild), { guild, voice: playback.connect(guild, channelId) })
     try {
-      await waitUntil(() => this.audios[guildId]?.isReady())
+      await waitUntil(() => this.session(guild)?.isReady())
     } catch (error) {
       this.logger.error('Voice timed out:', error)
       return
     }
     if (updateDatabase) {
-      this.serverConfig.updateLastVoiceChannel(guildId, '')
-      this.serverConfig.updateCurrentVoiceChannel(guildId, channelId)
+      this.serverConfig.updateLastVoiceChannel(guild, '')
+      this.serverConfig.updateCurrentVoiceChannel(guild, channelId)
     }
 
-    if (playJoin) this.audio.announceReady(this.audios[guildId].playback)
+    // Destroyed while connecting
+    const voice = this.session(guild)
+    if (!voice) return
+    if (playJoin) this.audio.announceReady(voice.playback)
 
-    return this.audios[guildId]
+    return voice
   }
 
-  public async destroy(guildId: string, updateDatabase = false) {
-    this.audios[guildId].destroy()
-    delete this.audios[guildId]
+  public async destroy(guild: GuildKey, updateDatabase = false) {
+    this.session(guild)?.destroy()
+    this.audios.delete(guildKeyString(guild))
     if (updateDatabase) {
-      this.serverConfig.updateLastVoiceChannel(guildId, '')
-      this.serverConfig.updateCurrentVoiceChannel(guildId, '')
+      this.serverConfig.updateLastVoiceChannel(guild, '')
+      this.serverConfig.updateCurrentVoiceChannel(guild, '')
     }
   }
 
-  private async sleep(guildId: string, channelId: string) {
+  private async sleep(guild: GuildKey, channelId: string) {
     this.logger.info(`No user in ${channelId}, sleeping...`)
-    this.destroy(guildId)
-    this.serverConfig.updateLastVoiceChannel(guildId, channelId)
-    this.serverConfig.updateCurrentVoiceChannel(guildId, '')
+    this.destroy(guild)
+    this.serverConfig.updateLastVoiceChannel(guild, channelId)
+    this.serverConfig.updateCurrentVoiceChannel(guild, '')
   }
 
   public async end() {
-    for (const guildId in this.audios) {
-      this.destroy(guildId)
+    for (const { guild } of this.audios.values()) {
+      this.destroy(guild)
     }
   }
 
-  public async autoLeaveChannel(oldChannel: VoiceChannel | undefined, newChannel: VoiceChannel | undefined, guildId: string): Promise<string | undefined> {
-    let channelToCheck: VoiceChannel | undefined
+  public async autoLeaveChannel(oldChannel: ChannelView | undefined, newChannel: ChannelView | undefined, guild: GuildKey): Promise<string | undefined> {
+    const playback = this.playback
+    if (!playback) return
+    let channelToCheck: ChannelView | undefined
 
-    const voice = this.getCurrentVoice(guildId)
-    const data = await this.serverConfig.get(guildId)
+    const voice = this.getCurrentVoice(guild)
+    const data = await this.serverConfig.get(guild)
 
     if (voice?.isReady()) {
-      channelToCheck = oldChannel?.id === voice?.channelId ? oldChannel : newChannel?.id === voice?.channelId ? newChannel : undefined
+      channelToCheck = oldChannel?.channelId === voice?.channelId ? oldChannel : newChannel?.channelId === voice?.channelId ? newChannel : undefined
     } else if (data) {
-      channelToCheck = oldChannel?.id === data.lastVoiceChannel ? oldChannel : newChannel?.id === data.lastVoiceChannel ? newChannel : undefined
+      // A connection that ended on its own (e.g. Fluxer reconnect failed) leaves only currentVoiceChannel set
+      const target = data.lastVoiceChannel || data.currentVoiceChannel
+      channelToCheck = oldChannel?.channelId === target ? oldChannel : newChannel?.channelId === target ? newChannel : undefined
     }
 
     if (!channelToCheck) return
 
-    let noUser = true
+    const humans = playback.humanCount(channelToCheck)
+    // Unknown is not empty: never leave, or join, on a member list the bot cannot see
+    if (humans === undefined) {
+      this.logger.debug(`Member list of ${channelToCheck.channelId} is unknown, not joining or leaving`)
+      return
+    }
 
-    channelToCheck.voiceMembers?.forEach((user) => {
-      if (!user.bot) {
-        noUser = false
-      }
-    })
-
-    if (noUser) {
+    if (humans === 0) {
       if (voice) {
-        await this.sleep(guildId, channelToCheck.id)
+        await this.sleep(guild, channelToCheck.channelId)
       }
     } else {
-      let connection = await this.join(guildId, channelToCheck.id, true)
+      let connection = await this.join(guild, channelToCheck.channelId, true)
       for (let i = 0; i < 5; ++i) {
         if (!connection) {
           this.logger.warn(`Auto reconnect failed, retrying (${i + 1} / 5)...`)
-          await this.destroy(guildId)
-          connection = await this.join(guildId, channelToCheck.id, true)
+          await this.destroy(guild)
+          connection = await this.join(guild, channelToCheck.channelId, true)
         } else {
-          return channelToCheck.id
+          return channelToCheck.channelId
         }
       }
 

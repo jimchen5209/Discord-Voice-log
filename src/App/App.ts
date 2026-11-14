@@ -3,10 +3,11 @@ import { Audio } from '../Audio/Audio'
 import { GoogleCloudTTS } from '../Audio/Providers/GoogleCloudTTS'
 import { GoogleTranslateTTS } from '../Audio/Providers/GoogleTranslateTTS'
 import { XaiTTS } from '../Audio/Providers/XaiTTS'
+import { Config } from '../Config'
 import { PluginManager } from '../Plugin/Core'
-import { Config, loggerOptions } from '../Shared/Config'
 import { EXIT_NO_RESTART } from '../Shared/ExitCode'
 import { Lang } from '../Shared/Lang'
+import { loggerOptions } from '../Shared/Logger'
 
 export interface App {
   mainLogger: Logger<ILogObj>

@@ -1,7 +1,9 @@
 {
   "voice_log": {
     "joined": "Joined %s",
-    "left": "Left %s"
+    "left": "Left %s",
+    "connection_mobile": "Mobile",
+    "connection_desktop": "Desktop"
   },
   "command": {
     "not_in_channel": "You are not even in a voice channel",

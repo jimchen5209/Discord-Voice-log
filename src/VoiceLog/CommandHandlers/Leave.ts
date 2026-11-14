@@ -1,24 +1,20 @@
-import type { CommandContext } from 'slash-create'
+import type { CommandRequest } from '../../Platform/Command'
 import { genNotChangedMessage, genSuccessMessage } from '../Embeds'
-import { beginCommand, type CommandDeps } from './Guard'
+import { beginCommand, type CommandDeps, requireVoice } from './Guard'
 
-export async function commandLeave(deps: CommandDeps, context: CommandContext) {
-  const begun = await beginCommand(deps, context, 'manageMessages')
+export async function commandLeave(deps: CommandDeps, request: CommandRequest) {
+  const begun = await beginCommand(deps, request, 'manageMessages')
   if (!begun) return
-  const { member, data } = begun
-  const guildId = member.guild.id
+  if (!(await requireVoice(deps, request))) return
+  const { data } = begun
+  const guild = request.guild
 
-  const voice = deps.voiceLog.voice.getCurrentVoice(guildId)
+  const voice = deps.voiceLog.voice.getCurrentVoice(guild)
 
   if (voice) {
-    await deps.voiceLog.voice.destroy(guildId, true)
-    await context.send({
-      embeds: [genSuccessMessage(deps.lang.get(data.lang).display.command.leave_success)]
-    })
+    await deps.voiceLog.voice.destroy(guild, true)
+    await request.reply.send([genSuccessMessage(deps.lang.get(data.lang).display.command.leave_success)])
   } else {
-    await context.send({
-      embeds: [genNotChangedMessage(deps.lang.get(data.lang).display.command.bot_not_connected)],
-      ephemeral: true
-    })
+    await request.reply.send([genNotChangedMessage(deps.lang.get(data.lang).display.command.bot_not_connected)], { private: true })
   }
 }

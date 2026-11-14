@@ -1,11 +1,41 @@
-import type { Client, VoiceConnection } from '@projectdysnomia/dysnomia'
+import type { Client, VoiceChannel, VoiceConnection } from '@projectdysnomia/dysnomia'
 import { waitUntil } from 'async-wait-until'
 import type { ILogObj, Logger } from 'tslog'
 import type { AudioAsset } from '../Audio/AudioAsset'
 import { DEFAULT_PLAYBACK_TIMEOUT_MS, PlaybackQueue } from '../Audio/PlaybackQueue'
+import type { ChannelRef, GuildKey } from '../Platform/Scope'
+import type { VoicePlayback, VoiceSession } from '../Platform/VoicePlayback'
 import type { Discord } from './Discord'
 
-export class DiscordVoice {
+export class DiscordVoicePlayback implements VoicePlayback {
+  private discord: Discord
+
+  constructor(discord: Discord) {
+    this.discord = discord
+  }
+
+  public connect(_guild: GuildKey, channelId: string): VoiceSession {
+    return new DiscordVoice(this.discord, channelId)
+  }
+
+  public adoptExisting(guild: GuildKey): VoiceSession | undefined {
+    const botVoice = this.discord.client.voiceConnections.get(guild.guildId)
+    if (botVoice?.ready && botVoice.channelID) return new DiscordVoice(this.discord, botVoice.channelID, botVoice)
+    return undefined
+  }
+
+  // An uncached channel, or one without a member list, counts as empty
+  public humanCount(channel: ChannelRef): number {
+    const voiceChannel = this.discord.client.getChannel(channel.channelId) as VoiceChannel | undefined
+    let count = 0
+    voiceChannel?.voiceMembers?.forEach((member) => {
+      if (!member.bot) count++
+    })
+    return count
+  }
+}
+
+export class DiscordVoice implements VoiceSession {
   private _init = true
   private _channelId: string
   public readonly playback: PlaybackQueue
