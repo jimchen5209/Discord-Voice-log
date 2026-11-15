@@ -19,7 +19,8 @@ const IGNORED_EVENTS = ['TYPING_START', 'MESSAGE_REACTION_ADD', 'MESSAGE_REACTIO
 // The Fluxer app switches channels by ending the connection and opening a new one in the same gateway session,
 // 0.7 to 1.4 seconds later (measured). The leave carries nothing that tells it from a real leave, so it is held
 // this long; a join from that session that follows is reported as one move of that connection as soon as it
-// arrives. A slower switch is a leave and a join.
+// arrives. A slower switch is a leave and a join. Bots are not held: they do not use the app, and a bot that
+// leaves and joins again within the grace meant it.
 const SWITCH_GRACE_MS = 1500
 
 // The voice state fields this runtime reads, as sent by the gateway
@@ -37,8 +38,8 @@ interface WireVoiceState {
   // biome-ignore lint/style/useNamingConvention: Fluxer field name
   is_mobile?: boolean
   version?: number
-  // The participant's member object, with its user; only the fields resolveMember checks are listed
-  member?: { user?: { username?: string } } | null
+  // The participant's member object, with its user; only the fields this runtime checks are listed
+  member?: { user?: { username?: string; bot?: boolean } } | null
 }
 
 // A connection's change with what is needed to report it
@@ -277,7 +278,8 @@ export class Fluxer implements PlatformRuntime {
       }
       this.queuePresence(client, pending.change)
     }
-    if (delta.left && !delta.entered) {
+    const bot = state.member?.user?.bot ?? client.guilds.get(delta.guildId)?.members.get(delta.userId)?.user.bot
+    if (delta.left && !delta.entered && !bot) {
       const timer = setTimeout(() => {
         this.pendingLeaves.delete(key)
         this.logger.debug(`User ${delta.userId} session ${state.session_id ?? '-'} connection ${delta.connectionId}: no join within ${SWITCH_GRACE_MS} ms, reported as a leave`)
