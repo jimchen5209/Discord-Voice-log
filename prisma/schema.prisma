@@ -14,8 +14,6 @@ model ServerConfig {
   serverID            String
   lang                String   @default("en_US")
   channelID           String   @default("")
-  lastVoiceChannel    String   @default("")
-  currentVoiceChannel String   @default("")
   
   // TTS Settings
   ttsEnabled          Boolean  @default(false)
@@ -28,3 +26,17 @@ model ServerConfig {
   @@map("serverConfig")
 }
 
+
+// Voice channels the bot is in, or sleeps in, per guild. Discord has at most one per guild; Fluxer can have several.
+model VoiceChannel {
+  platform   String
+  instanceId String
+  // The guild id within the scope
+  serverID   String
+  channelID  String
+  // true: connected, reconnected on start; false: asleep, rejoined when someone enters
+  active     Boolean
+
+  @@id([platform, instanceId, serverID, channelID])
+  @@map("voiceChannel")
+}

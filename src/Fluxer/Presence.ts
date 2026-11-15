@@ -73,9 +73,11 @@ export class VoicePresenceTracker {
     return this.countChannels(guildId, userId).get(channelId) ?? 0
   }
 
-  // Connection ids the user has in the guild
-  public connectionsOf(guildId: string, userId: string): string[] {
-    return [...(this.guilds.get(guildId) ?? [])].filter(([, connection]) => connection.userId === userId).map(([id]) => id)
+  // Connections the user has in the guild, with the channel each one is in
+  public connectionsOf(guildId: string, userId: string): { connectionId: string; channelId: string }[] {
+    return [...(this.guilds.get(guildId) ?? [])]
+      .filter(([, connection]) => connection.userId === userId)
+      .map(([connectionId, connection]) => ({ connectionId, channelId: connection.channelId }))
   }
 
   // Undefined when the connection did not change channel: a duplicate, a stale update, a mute,

@@ -19,8 +19,6 @@ export interface IServerConfig {
   serverID: string
   lang: string
   channelID: string
-  lastVoiceChannel: string
-  currentVoiceChannel: string
   voiceMessageTTS: IVoiceMessageTTS
 }
 
@@ -41,6 +39,10 @@ function toServerConfig(data: PrismaServerConfig): IServerConfig {
 function whereOf(guild: GuildKey) {
   // biome-ignore lint/style/useNamingConvention: Prisma's name for the compound primary key
   return { platform_instanceId_serverID: { platform: guild.platform, instanceId: guild.instanceId, serverID: guild.guildId } }
+}
+
+function voiceWhereOf(guild: GuildKey) {
+  return { platform: guild.platform, instanceId: guild.instanceId, serverID: guild.guildId }
 }
 
 // For logs; Discord guilds keep the bare id they were logged with before
@@ -65,8 +67,6 @@ export class DbServerConfigManager {
     guild: GuildKey,
     channelID = '',
     lang = 'en_US',
-    lastVoiceChannel = '',
-    currentVoiceChannel = '',
     voiceMessageTTS: IVoiceMessageTTS = {
       enabled: false,
       messageLang: 'en_US',
@@ -81,8 +81,6 @@ export class DbServerConfigManager {
       ...whereOf(guild).platform_instanceId_serverID,
       channelID,
       lang,
-      lastVoiceChannel,
-      currentVoiceChannel,
       ttsEnabled: voiceMessageTTS.enabled,
       ttsMessageLang: voiceMessageTTS.messageLang,
       ttsProvider: voiceMessageTTS.provider,
@@ -121,18 +119,34 @@ export class DbServerConfigManager {
     return data
   }
 
-  // Guilds of the scope where the bot was in a voice channel; serverID is the guild id within the scope
-  public async getCurrentChannels(scope: PlatformScope) {
-    const configs = await this.prisma.serverConfig.findMany({
-      where: {
-        platform: scope.platform,
-        instanceId: scope.instanceId,
-        currentVoiceChannel: { not: '' }
-      }
-    })
-    this.logger.debug(`Found ${configs.length} active voice channel(s)`)
+  // Voice channels of the scope the bot was connected to, to reconnect on start
+  public async getActiveVoiceChannels(scope: PlatformScope) {
+    const rows = await this.prisma.voiceChannel.findMany({ where: { platform: scope.platform, instanceId: scope.instanceId, active: true } })
+    this.logger.debug(`Found ${rows.length} active voice channel(s)`)
+    return rows.map((row) => ({ guildId: row.serverID, channelId: row.channelID }))
+  }
 
-    return configs.map(toServerConfig)
+  // Voice channels of the guild the bot is in (active) or asleep in
+  public async getVoiceChannels(guild: GuildKey) {
+    const rows = await this.prisma.voiceChannel.findMany({ where: voiceWhereOf(guild) })
+    return rows.map((row) => row.channelID)
+  }
+
+  public async setVoiceChannel(guild: GuildKey, channelID: string, active: boolean) {
+    this.logger.debug(`Setting voice channel ${channelID} of ${labelOf(guild)}: ${active ? 'active' : 'asleep'}`)
+    const key = { ...voiceWhereOf(guild), channelID }
+    await this.prisma.voiceChannel.upsert({
+      // biome-ignore lint/style/useNamingConvention: Prisma's name for the compound primary key
+      where: { platform_instanceId_serverID_channelID: key },
+      update: { active },
+      create: { ...key, active }
+    })
+  }
+
+  // Without a channel, every voice channel of the guild; { not } keeps that one
+  public async removeVoiceChannel(guild: GuildKey, channelID?: string | { not: string }) {
+    this.logger.debug(`Removing voice channel ${JSON.stringify(channelID ?? 'all')} of ${labelOf(guild)}`)
+    await this.prisma.voiceChannel.deleteMany({ where: { ...voiceWhereOf(guild), channelID } })
   }
 
   public async updateChannel(guild: GuildKey, channelID: string) {
@@ -149,24 +163,6 @@ export class DbServerConfigManager {
     const result = await this.prisma.serverConfig.update({
       where: whereOf(guild),
       data: { lang }
-    })
-    return toServerConfig(result)
-  }
-
-  public async updateLastVoiceChannel(guild: GuildKey, lastVoiceChannel: string) {
-    this.logger.debug(`Updating lastVoiceChannel for ${labelOf(guild)}: ${lastVoiceChannel}`)
-    const result = await this.prisma.serverConfig.update({
-      where: whereOf(guild),
-      data: { lastVoiceChannel }
-    })
-    return toServerConfig(result)
-  }
-
-  public async updateCurrentVoiceChannel(guild: GuildKey, currentVoiceChannel: string) {
-    this.logger.debug(`Updating currentVoiceChannel for ${labelOf(guild)}: ${currentVoiceChannel}`)
-    const result = await this.prisma.serverConfig.update({
-      where: whereOf(guild),
-      data: { currentVoiceChannel }
     })
     return toServerConfig(result)
   }

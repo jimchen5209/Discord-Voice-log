@@ -12,6 +12,9 @@ export interface VoiceSession {
 }
 
 export interface VoicePlayback {
+  // True when the bot can be in several voice channels of one guild at once (one session per channel);
+  // false: one session per guild, moved with switchChannel
+  readonly multiChannel: boolean
   connect(guild: GuildKey, channelId: string): VoiceSession
   // A ready connection the platform already has in the guild
   adoptExisting(guild: GuildKey): VoiceSession | undefined

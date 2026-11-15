@@ -51,15 +51,15 @@ interface VoiceServerData {
 
 export interface VoiceManagerOptions {
   logger: Logger<ILogObj>
-  // Connection ids the bot has in the guild, as the gateway last said
-  ownConnections(guildId: string): string[]
+  // Connections the bot has in the guild, as the gateway last said
+  ownConnections(guildId: string): { connectionId: string; channelId: string }[]
 }
 
-// The gateway side of voice for one Fluxer client: one session per guild
+// The gateway side of voice for one Fluxer client: one session per voice channel, several per guild
 export class FluxerVoiceManager {
   private client: Client
   private options: VoiceManagerOptions
-  private sessions = new Map<string, FluxerVoice>()
+  private sessions = new Set<FluxerVoice>()
   private unsubscribe: (() => void)[] = []
 
   constructor(client: Client, options: VoiceManagerOptions) {
@@ -71,31 +71,51 @@ export class FluxerVoiceManager {
       }
     })
     this.listen(Events.VoiceServerUpdate, (data) => {
-      const session = data.guild_id ? this.sessions.get(data.guild_id) : undefined
+      if (!data.guild_id) return
+      const session = this.sessionOfGrant(data.guild_id, data.connection_id ?? undefined, data.channel_id ?? undefined)
       // Another connection of the bot, e.g. one left over from before a restart
-      if (!session || (session.connectionId && data.connection_id && data.connection_id !== session.connectionId)) return
-      session.onServer(data)
+      if (session) session.onServer(data)
     })
     this.listen(Events.VoiceStateUpdate, (state) => {
-      if (!state.guild_id || state.user_id !== client.user?.id) return
-      const session = this.sessions.get(state.guild_id)
+      if (!state.guild_id || state.user_id !== client.user?.id || state.channel_id !== null || !state.connection_id) return
       // Disconnected by a moderator, or the channel was deleted
-      if (session?.connectionId && state.connection_id === session.connectionId && state.channel_id === null) session.onRemoved()
+      for (const session of [...this.sessions]) if (session.connectionId === state.connection_id) session.onRemoved()
     })
   }
 
+  // The grant has no mutation id: it goes to the session of its connection, else to the one join waiting in its
+  // channel (one session per channel, so at most one waits there)
+  private sessionOfGrant(guildId: string, connectionId: string | undefined, channelId: string | undefined) {
+    const inGuild = [...this.sessions].filter((session) => session.guild.guildId === guildId)
+    const own = connectionId ? inGuild.find((session) => session.connectionId === connectionId) : undefined
+    if (own) return own
+    const waiting = inGuild.filter((session) => session.mutationId !== undefined && !session.connectionId && (!channelId || session.channelId === channelId))
+    return waiting.length === 1 ? waiting[0] : undefined
+  }
+
   public createSession(guild: GuildKey, channelId: string) {
-    this.sessions.get(guild.guildId)?.destroy()
-    // The bot is in voice once per guild: its other connections (e.g. from before a restart) are dropped
-    for (const connectionId of this.options.ownConnections(guild.guildId)) this.sendLeave(guild.guildId, connectionId)
+    const guildId = guild.guildId
+    for (const session of [...this.sessions]) if (session.guild.guildId === guildId && session.channelId === channelId) session.destroy()
+    const others = [...this.sessions].filter((session) => session.guild.guildId === guildId)
+    const kept = new Set(others.map((session) => session.connectionId))
+    const targeted = new Set(others.map((session) => session.channelId))
+    // Drops the bot's connections no session owns (e.g. from before a restart) in this channel or in one no session is going to
+    for (const own of this.options.ownConnections(guildId)) {
+      if (!kept.has(own.connectionId) && (own.channelId === channelId || !targeted.has(own.channelId))) this.sendLeave(guildId, own.connectionId)
+    }
     const session = new FluxerVoice(this, guild, channelId, this.options)
-    this.sessions.set(guild.guildId, session)
+    this.sessions.add(session)
     session.join()
     return session
   }
 
+  // Another session of the guild in the channel
+  public hasSessionIn(guildId: string, channelId: string, except: FluxerVoice) {
+    return [...this.sessions].some((session) => session !== except && session.guild.guildId === guildId && session.channelId === channelId)
+  }
+
   public release(session: FluxerVoice) {
-    if (this.sessions.get(session.guild.guildId) === session) this.sessions.delete(session.guild.guildId)
+    this.sessions.delete(session)
   }
 
   public sendJoin(guildId: string, channelId: string, mutationId: string) {
@@ -121,7 +141,7 @@ export class FluxerVoiceManager {
 
   // Ends every session; the client is not used afterwards
   public dispose() {
-    for (const session of [...this.sessions.values()]) session.destroy()
+    for (const session of [...this.sessions]) session.destroy()
     for (const unsubscribe of this.unsubscribe) unsubscribe()
     this.unsubscribe = []
   }
@@ -234,6 +254,11 @@ export class FluxerVoice implements VoiceSession {
     this.endpoint = data.endpoint
     this.token = data.token
     if (channelId !== this._channelId) {
+      // The bot already has a session there: that one stays, this connection leaves
+      if (this.manager.hasSessionIn(this.guild.guildId, channelId, this)) {
+        this.close(`moved to ${channelId}, a channel the bot is already in`)
+        return
+      }
       this.logger.warn(`Moved to ${channelId}`)
       this._channelId = channelId
       this.logger.settings.prefix = [`[${channelId}]`]

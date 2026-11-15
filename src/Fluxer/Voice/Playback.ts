@@ -8,6 +8,7 @@ import type { FluxerVoiceManager, VoiceManagerOptions } from './Connection'
 
 // Voice playback of one Fluxer instance. The LiveKit transport (werift) is loaded on the first join, not on import.
 export class FluxerVoicePlayback implements VoicePlayback {
+  public readonly multiChannel = true
   private client: Client
   private tracker: VoicePresenceTracker
   private options: Omit<VoiceManagerOptions, 'ownConnections'>

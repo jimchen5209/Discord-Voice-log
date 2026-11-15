@@ -3,7 +3,7 @@ import type { ILogObj, Logger } from 'tslog'
 import type { App } from '../App/App'
 import { memberAssetDir } from '../Audio/AssetPaths'
 import type { Audio } from '../Audio/Audio'
-import type { DbServerConfigManager, IServerConfig } from '../Db/ServerConfig'
+import type { DbServerConfigManager } from '../Db/ServerConfig'
 import type { PlatformRuntime } from '../Platform/Runtime'
 import { type GuildKey, guildKeyString } from '../Platform/Scope'
 import type { ChannelView, ConnectionView, MemberView, MessageView, VoicePresenceChange } from '../Platform/Views'
@@ -14,6 +14,10 @@ import { genVoiceLogEmbed } from './Embeds'
 import { parseMessage } from './MessageText'
 import { VoiceLogText } from './Text'
 import { VoiceLogVoice } from './VoiceLogVoice'
+
+function speakerKey(guild: GuildKey, channelId: string) {
+  return `${guildKeyString(guild)}:${channelId}`
+}
 
 export class VoiceLog {
   private _voice: VoiceLogVoice
@@ -30,7 +34,7 @@ export class VoiceLog {
   private queueTail: Promise<unknown> = Promise.resolve()
   // Tasks added but not started yet
   private queueLength = 0
-  // Keyed by guildKeyString
+  // Keyed by speakerKey: messages read in one voice channel are not continuous with another's
   private continuousUser: { [key: string]: { user: string; timestamp: number } } = {}
 
   constructor(platform: PlatformRuntime, serverConfig: DbServerConfigManager, cacheRefresh: CacheRefresh, app: App) {
@@ -55,15 +59,15 @@ export class VoiceLog {
 
   private async onMessage(message: MessageView) {
     const guild = message.scope
-    const guildKey = guildKeyString(guild)
+    const speaker = speakerKey(guild, message.channelId)
     const data = await this._serverConfig.get(guild)
 
     if (!data?.voiceMessageTTS.enabled) return
 
     this.enqueue(async () => {
-      const voice = this._voice.getCurrentVoice(guild)
-      if (voice?.channelId === message.channelId) {
-        const isContinuous = this.continuousUser[guildKey]?.user === message.authorId && message.timestamp - this.continuousUser[guildKey]?.timestamp < 5 * 1000
+      const voice = this._voice.voiceIn(guild, message.channelId)
+      if (voice) {
+        const isContinuous = this.continuousUser[speaker]?.user === message.authorId && message.timestamp - this.continuousUser[speaker]?.timestamp < 5 * 1000
         const text = parseMessage(this.textLogger, message, isContinuous, data.voiceMessageTTS.messageLang, this.lang)
 
         if (text === '') {
@@ -79,7 +83,7 @@ export class VoiceLog {
           return
         }
         this.audio.speak(voice.playback, { provider: tts.provider, text, lang: tts.voiceLang, voice: tts.voiceName })
-        this.continuousUser[guildKey] = {
+        this.continuousUser[speaker] = {
           user: message.authorId,
           timestamp: message.timestamp
         }
@@ -90,10 +94,11 @@ export class VoiceLog {
   private onVoicePresence(change: VoicePresenceChange) {
     const { member, guildName, left, entered, connection } = change
     if (member.userId === this.platform.selfUserId()) {
-      // The bot was moved: remember the new channel, as if it went to sleep there
+      // The bot was moved: remember the new channel, as if it went to sleep there, unless another session of the
+      // bot is in it (that one stays connected)
       if (left && entered) {
-        this._serverConfig.updateLastVoiceChannel(member.scope, entered.channelId)
-        this._serverConfig.updateCurrentVoiceChannel(member.scope, '')
+        this._serverConfig.removeVoiceChannel(member.scope, left.channelId)
+        if (!this._voice.voiceIn(member.scope, entered.channelId)) this._serverConfig.setVoiceChannel(member.scope, entered.channelId, false)
       }
       return
     }
@@ -147,8 +152,8 @@ export class VoiceLog {
     })
   }
 
-  private resetContinuousSpeaker(guild: GuildKey) {
-    this.continuousUser[guildKeyString(guild)] = {
+  private resetContinuousSpeaker(guild: GuildKey, channelId: string) {
+    this.continuousUser[speakerKey(guild, channelId)] = {
       user: this.platform.selfUserId(),
       timestamp: 0
     }
@@ -164,8 +169,7 @@ export class VoiceLog {
     connection?: ConnectionView
   ) {
     const guild = member.scope
-    const channelID = await this._voice.autoLeaveChannel(oldChannel, newChannel, guild)
-    const voice = this._voice.getCurrentVoice(guild)
+    const present = await this._voice.autoLeaveChannel(oldChannel, newChannel, guild)
     const data = await this._serverConfig.get(guild)
 
     if (data) {
@@ -175,14 +179,16 @@ export class VoiceLog {
       }
     }
     for (const announcement of announcements) {
-      if (announcement.channel.channelId === channelID) {
+      const channelId = announcement.channel.channelId
+      if (present.includes(channelId)) {
+        const voice = this._voice.voiceIn(guild, channelId)
         if (voice) {
           // One more / one less connection of a member already in the channel; falls back to the event itself
           const isOld = announcement.channel === oldChannel
           const others = isOld ? connection?.othersInLeft : connection?.othersInEntered
           if (others) this.audio.announceMember(voice.playback, member, isOld ? 'connection_removed' : 'connection_added', announcement.type)
           else this.audio.announceMember(voice.playback, member, announcement.type)
-          this.resetContinuousSpeaker(guild)
+          this.resetContinuousSpeaker(guild, channelId)
         }
       }
     }
@@ -223,11 +229,11 @@ export class VoiceLog {
     const assetDir = memberAssetDir(this.platform.scope)
     if (!exists(assetDir)) mkDir(assetDir, { recursive: true })
     if (!this._voice.available) return
-    const channels = await this._serverConfig.getCurrentChannels(this.platform.scope)
-    channels.forEach((element: IServerConfig) => {
-      this._logger.info(`Reconnecting to ${element.currentVoiceChannel}...`)
-      this._voice.join({ ...this.platform.scope, guildId: element.serverID }, element.currentVoiceChannel)
-    })
+    const channels = await this._serverConfig.getActiveVoiceChannels(this.platform.scope)
+    for (const { guildId, channelId } of channels) {
+      this._logger.info(`Reconnecting to ${channelId}...`)
+      this._voice.join({ ...this.platform.scope, guildId }, channelId)
+    }
   }
 
   public async end() {

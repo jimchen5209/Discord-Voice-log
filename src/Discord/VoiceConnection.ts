@@ -8,6 +8,7 @@ import type { VoicePlayback, VoiceSession } from '../Platform/VoicePlayback'
 import type { Discord } from './Discord'
 
 export class DiscordVoicePlayback implements VoicePlayback {
+  public readonly multiChannel = false
   private discord: Discord
 
   constructor(discord: Discord) {
