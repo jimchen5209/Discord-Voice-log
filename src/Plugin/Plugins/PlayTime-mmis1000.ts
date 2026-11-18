@@ -14,7 +14,7 @@ export class PlayTime_mmis1000 implements IVoiceOverwrite {
   public description = '11 點到了'
   typeVoiceOverwrite = true
 
-  public async playVoice(member: MemberView, type: string): Promise<string | undefined> {
+  public async playVoice(member: MemberView, type: string) {
     if (member.userId === TARGET_USER_IDS[member.scope.platform] && (type === 'switched_in' || type === 'join')) {
       const nowTime = new Date()
       if (nowTime.getHours() >= 2 && nowTime.getHours() < 18) return
@@ -27,8 +27,8 @@ export class PlayTime_mmis1000 implements IVoiceOverwrite {
       const text = this.timeString(11, timeInt)
 
       // Google Translate makes PCM, the format Audio expects from a voice overwrite
-      const file = await getApp().audio.synthesize({ provider: 'google-cloud', text, lang: 'cmn-TW', voice: 'cmn-TW-Wavenet-A' })
-      if (file) return file
+      const file = await getApp().audio.tts({ provider: 'google-cloud', text, lang: 'cmn-TW', voice: 'cmn-TW-Wavenet-A' })
+      return file
     }
   }
 
