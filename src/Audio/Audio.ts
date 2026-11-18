@@ -132,7 +132,7 @@ export class Audio {
     return { provider: this.options.systemProvider, text, lang: this.options.systemLang, voice: this.options.systemVoice }
   }
 
-  private async tts(request: TTSRequest): Promise<AudioAsset | undefined> {
+  public async tts(request: TTSRequest): Promise<AudioAsset | undefined> {
     const path = await this.synthesize(request)
     return path !== null ? { path, format: this.provider(request.provider).format } : undefined
   }
@@ -141,7 +141,7 @@ export class Audio {
   private async resolveMember(member: MemberView, type: string): Promise<AudioAsset | undefined> {
     for (const voice of this.pluginManager.voiceOverwrites) {
       const overwrittenFile = await voice.playVoice(member, type)
-      if (overwrittenFile) return { path: overwrittenFile, format: 'pcm' }
+      if (overwrittenFile) return overwrittenFile
     }
 
     const dir = memberAssetDir(member.scope)
