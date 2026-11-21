@@ -3,6 +3,7 @@ import { resolve } from 'node:path'
 import type { ILogObj, Logger } from 'tslog'
 import { getApp } from '../App/App'
 import { writeAtomic } from '../Shared/WriteAtomic'
+import { LAYOUT_VERSION, legacyMemberFiles, moveToDiscordDir, unmovedFiles } from './assets/layout'
 import { logInvalidAssets, planAssets, preflightData } from './assets/plan'
 import { ASSETS_DIR, assetConfigFiles } from './assets/steps'
 import { BACKUP_DIR, backup, RestoreError, restore } from './backup'
@@ -167,10 +168,11 @@ function logUnmappedTTSTypes() {
   }
 }
 
-// Run by `pnpm migrate` after `prisma migrate deploy`. Converts assets/<id>.json up to DATA_VERSION and
-// records the version only when every file was converted; otherwise the record is left as it was, so
-// running it again finishes the job. An asset file that is not a JSON object fails the run before
-// anything is converted, unless skipInvalid leaves such files as they are. Returns false on failure.
+// Run by `pnpm migrate` after `prisma migrate deploy`. Converts the asset files up to DATA_VERSION, then
+// (from before version 3) moves assets/<id>.json and .wav into assets/discord/, and records the version only
+// when every file was converted and moved; otherwise the record is left as it was, so running it again
+// finishes the job. An asset file that is not a JSON object fails the run before anything is converted,
+// unless skipInvalid leaves such files as they are. Returns false on failure.
 async function migrateData(record: UsableRecord, { skipInvalid = false } = {}): Promise<boolean> {
   const path = recordFilePath()
   if (record.kind === 'ok' && record.version === DATA_VERSION) {
@@ -178,15 +180,15 @@ async function migrateData(record: UsableRecord, { skipInvalid = false } = {}): 
     return true
   }
 
-  const files = assetConfigFiles()
-  if (record.kind === 'none' && files.length === 0) {
+  // No record but existing assets/<id>.json or .wav: the install predates data versions, so version 1
+  const from = record.kind === 'ok' ? record.version : 1
+  const files = assetConfigFiles(from)
+  if (record.kind === 'none' && files.length === 0 && legacyMemberFiles().length === 0) {
     await writeRecord(path, DATA_VERSION)
     logger().info(`Fresh install, data version ${DATA_VERSION} recorded in ${path}`)
     return true
   }
 
-  // No record but existing assets/<id>.json: the install predates data versions, so version 1
-  const from = record.kind === 'ok' ? record.version : 1
   logger().info(`Upgrading data from version ${from} to ${DATA_VERSION}`)
   const { pending, invalid } = planAssets(files, from, skipInvalid)
   if (invalid.length > 0 && !skipInvalid) {
@@ -208,9 +210,25 @@ async function migrateData(record: UsableRecord, { skipInvalid = false } = {}): 
     logger().error(`${failed} asset files could not be migrated; data version is still ${from}, run \`pnpm migrate\` again`)
     return false
   }
+  if (from < LAYOUT_VERSION && !moveAssets(from)) return false
 
   await writeRecord(path, DATA_VERSION)
   logger().info(`Data version ${DATA_VERSION} recorded in ${path}`)
+  return true
+}
+
+// The move to the version 3 layout (see assets/layout.ts), after the files were converted in place.
+// Returns false, after logging every file that was not moved, when any of them failed.
+function moveAssets(from: number) {
+  const { moved, failed } = moveToDiscordDir()
+  for (const file of moved) logger().info(`Moved ${ASSETS_DIR}/${file} to ${ASSETS_DIR}/discord/${file}`)
+  for (const { file, error } of failed) logger().error(`Failed to move ${file} into ${ASSETS_DIR}/discord/:`, error)
+  const left = unmovedFiles()
+  if (left.length > 0) logger().warn(`Left in ${ASSETS_DIR}/ (only .json and .wav files are moved): ${left.join(', ')}`)
+  if (failed.length > 0) {
+    logger().error(`${failed.length} asset files could not be moved; data version is still ${from}, run \`pnpm migrate\` again`)
+    return false
+  }
   return true
 }
 

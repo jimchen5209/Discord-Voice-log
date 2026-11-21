@@ -11,7 +11,7 @@
   ```
 5. Build with `pnpm build:prod`
 6. Run `node dist` the first time to generate `config.json`
-7. Fill `config.json` with your bot tokens and settings.
+7. Fill `config.json` with your bot tokens and settings. The Discord bot goes in `platform.discord` (`enabled: true` runs it). `platform.fluxer` lists Fluxer instances (official and self-hosted), each with a stable `id` that must never change once used; they are disabled by default. An enabled Fluxer instance is text only (join/leave log, and commands by mentioning the bot, e.g. `@VoiceLog help`); see [Fluxer](docs/UPGRADING.md#fluxer).
 8. Initialize the database and data with:
   ```bash
   pnpm migrate
@@ -42,14 +42,17 @@ If you are upgrading from an older version that used MongoDB, see the [MongoDB t
 
 ## Voice Activity Sound
 
- For the voice activity sound, put the following file into `assets/` folder:
+ For the voice activity sound, put the following file into `assets/discord/` folder (each platform has its own folder, so the same user ID on another platform is a different person):
 ```
 <User ID>_join.wav --Connected to the channel
 <User ID>_left.wav --Left the channel
 <User ID>_switched_out.wav --Switched out from the channel
 <User ID>_switched_in.wav --Switched into the channel
+<User ID>_connection_added.wav --(Fluxer, optional) Opened another connection in a channel they are already in
+<User ID>_connection_removed.wav --(Fluxer, optional) Closed one connection but still has another in the channel
 ```
-or place `<User ID>.json` into `assets/` folder with:
+`connection_added` / `connection_removed` (as files or as the json keys below) fall back to the event that caused them (`join` / `left`, or `switched_in` / `switched_out` when the connection moved) when not set.
+or place `<User ID>.json` into `assets/discord/` folder with:
 ```json
 {
   "provider": "google-translate",
@@ -94,7 +97,7 @@ The login reuses the Grok CLI client id and is not an officially supported third
 
 The login is saved to `xai-oauth.json` next to `config.json`; delete it to sign out.
 
-Files in the old format (`use_wave_tts` instead of `provider`) are converted by `pnpm migrate` when upgrading to [data version](docs/UPGRADING.md#data-version) 2; see the [TTS provider migration guide](docs/migration/TTS_PROVIDER_MIGRATION.md). Files added later must use `provider`; files without a usable `provider` are skipped with an error.
+Files in the old format (`use_wave_tts` instead of `provider`) are converted by `pnpm migrate` when upgrading to [data version](docs/UPGRADING.md#data-version) 2; see the [TTS provider migration guide](docs/migration/TTS_PROVIDER_MIGRATION.md). Files added later must use `provider`; files without a usable `provider` are skipped with an error. Upgrading to data version 3 moves the files from `assets/` into `assets/discord/`; files put directly into `assets/` after that are not read (the bot logs a warning at startup).
 
 Example:
 

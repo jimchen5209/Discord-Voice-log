@@ -1,43 +1,34 @@
-import type { Client, Message, PossiblyUncachedTextableChannel, TextableChannel } from '@projectdysnomia/dysnomia'
 import { vsprintf } from 'sprintf-js'
 import type { ILogObj, Logger } from 'tslog'
+import type { MessageView } from '../Platform/Views'
 import type { Lang } from '../Shared/Lang'
 
-export function parseMessage(
-  client: Client,
-  logger: Logger<ILogObj>,
-  message: Message<PossiblyUncachedTextableChannel>,
-  isContinuous: boolean,
-  lang: string,
-  i18n: Lang,
-  isForward = false
-): string {
-  if (message.member?.id === client.user.id) {
+export function parseMessage(logger: Logger<ILogObj>, message: MessageView, isContinuous: boolean, lang: string, i18n: Lang, isForward = false): string {
+  if (message.fromSelf) {
     logger.debug('Skipped message from self')
     return ''
   }
   let content = ''
-  const authorName = isForward ? '' : message.member?.nick || message.author.globalName || message.author.username
-  const guild = message.guildID ? client.guilds.get(message.guildID) : undefined
+  const authorName = isForward ? '' : message.authorName
 
-  if (message.poll !== undefined) {
+  if (message.hasPoll) {
     // Poll
     content = i18n.get(lang).display.voice_tts.attachment_poll
   }
 
-  if (message.attachments.size > 0) {
+  if (message.attachmentCount > 0) {
     // Attachments
-    if (message.attachments.size === 1) {
-      content = vsprintf(i18n.get(lang).display.voice_tts.attachment_single, [message.attachments.size])
+    if (message.attachmentCount === 1) {
+      content = vsprintf(i18n.get(lang).display.voice_tts.attachment_single, [message.attachmentCount])
     } else {
-      content = vsprintf(i18n.get(lang).display.voice_tts.attachment_multiple, [message.attachments.size])
+      content = vsprintf(i18n.get(lang).display.voice_tts.attachment_multiple, [message.attachmentCount])
     }
   }
 
-  if (message.stickerItems && message.stickerItems.length > 0) {
+  if (message.stickerNames.length > 0) {
     // Stickers
-    const stickers = message.stickerItems
-      .map((sticker) => vsprintf(i18n.get(lang).display.voice_tts.message_sticker, [sticker.name]))
+    const stickers = message.stickerNames
+      .map((name) => vsprintf(i18n.get(lang).display.voice_tts.message_sticker, [name]))
       .join(i18n.get(lang).display.voice_tts.multi_item_separator)
     if (content !== '') {
       if (message.content !== '') {
@@ -50,17 +41,13 @@ export function parseMessage(
     }
   }
 
-  if (message.messageSnapshots && message.messageSnapshots.length > 0) {
+  if (message.forwarded.length > 0) {
     // Forward
-    const forwardContent = message.messageSnapshots
-      .map((snapshot) => {
-        return parseMessage(client, logger, snapshot.message as unknown as Message<TextableChannel>, true, lang, i18n, true)
-      })
-      .join(i18n.get(lang).display.voice_tts.multi_item_separator)
-    if (message.messageSnapshots.length === 1) {
-      content = vsprintf(i18n.get(lang).display.voice_tts.forward_single, [message.messageSnapshots.length, forwardContent])
+    const forwardContent = message.forwarded.map((forwarded) => parseMessage(logger, forwarded, true, lang, i18n, true)).join(i18n.get(lang).display.voice_tts.multi_item_separator)
+    if (message.forwarded.length === 1) {
+      content = vsprintf(i18n.get(lang).display.voice_tts.forward_single, [message.forwarded.length, forwardContent])
     } else {
-      content = vsprintf(i18n.get(lang).display.voice_tts.forward_multiple, [message.messageSnapshots.length, forwardContent])
+      content = vsprintf(i18n.get(lang).display.voice_tts.forward_multiple, [message.forwarded.length, forwardContent])
     }
   }
 
@@ -85,44 +72,41 @@ export function parseMessage(
 
   if (message.channelMentions.length > 0) {
     // Mention Channel
-    for (const channelId of message.channelMentions) {
-      const channel = guild?.channels.get(channelId)
+    for (const channel of message.channelMentions) {
       let channelText = ''
-      if (channel) {
+      if (channel.name !== undefined) {
         channelText = vsprintf(i18n.get(lang).display.voice_tts.message_channel_mention, [channel.name])
       } else {
         channelText = i18n.get(lang).display.voice_tts.message_channel_mention_unknown
       }
-      content = content.replace(`<#${channelId}>`, channelText)
+      content = content.replace(`<#${channel.id}>`, channelText)
     }
   }
 
   if (message.roleMentions.length > 0) {
     // Mention Role
-    for (const roleId of message.roleMentions) {
-      logger.debug(`Role ID: ${roleId}`)
-      const role = guild?.roles.get(roleId)
+    for (const role of message.roleMentions) {
+      logger.debug(`Role ID: ${role.id}`)
       let roleText = ''
-      if (role) {
+      if (role.name !== undefined) {
         roleText = vsprintf(i18n.get(lang).display.voice_tts.message_role_mention, [role.name])
       } else {
         roleText = i18n.get(lang).display.voice_tts.message_role_mention_unknown
       }
-      content = content.replace(`<@&${roleId}>`, roleText)
+      content = content.replace(`<@&${role.id}>`, roleText)
     }
   }
 
-  if (message.mentions.length > 0) {
+  if (message.userMentions.length > 0) {
     // Mention User
-    for (const user of message.mentions) {
-      const member = guild?.members.get(user.id)
-      content = content.replace(`<@${user.id}>`, `@${member?.nick || user.globalName || user.username}`)
+    for (const user of message.userMentions) {
+      content = content.replace(`<@${user.id}>`, `@${user.name}`)
     }
   }
 
-  if (message.activity && message.activity.type === 6) {
+  if (message.streamRequest) {
     // Stream Request
-    content = vsprintf(i18n.get(lang).display.voice_tts.stream_request, [content, message.activity.name_override])
+    content = vsprintf(i18n.get(lang).display.voice_tts.stream_request, [content, message.streamRequest.name])
   }
 
   // Url

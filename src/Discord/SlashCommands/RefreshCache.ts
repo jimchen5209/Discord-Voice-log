@@ -1,19 +1,19 @@
 import { type CommandContext, SlashCommand, type SlashCreator } from 'slash-create'
-import type { VoiceLog } from '../VoiceLog'
+import type { Command } from '../Command'
 
 export class RefreshCacheCommand extends SlashCommand {
-  private voiceLog: VoiceLog
+  private command: Command
 
-  constructor(creator: SlashCreator, voiceLog: VoiceLog) {
+  constructor(creator: SlashCreator, command: Command) {
     super(creator, {
       name: 'refresh_cache',
       description: 'Download and cache all tts file (bot operator)',
       guildIDs: creator.client.guildIDs
     })
-    this.voiceLog = voiceLog
+    this.command = command
   }
 
   async run(ctx: CommandContext) {
-    this.voiceLog.command.commandRefreshCache(ctx)
+    this.command.dispatch('refresh_cache', ctx)
   }
 }

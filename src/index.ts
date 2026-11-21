@@ -1,7 +1,7 @@
 import { Status } from 'status-client'
 import { createApp } from './App/App'
-import { createBot } from './App/Bot'
-import { assertDiscordToken } from './Discord/Discord'
+import { checkPlatforms, createBot, startCacheJobs, startServices } from './App/Bot'
+import { unreadAssetFiles } from './Audio/AssetPaths'
 import { checkData, warnRemovedDumpEnv } from './Migration'
 import { EXIT_NO_RESTART } from './Shared/ExitCode'
 
@@ -12,20 +12,29 @@ const app = createApp()
 const logger = app.mainLogger
 logger.info('Starting...')
 if (app.config.debug) app.mainLogger.settings.minLevel = 0 // Silly
-assertDiscordToken(app.config)
+if (!checkPlatforms(app)) process.exit(EXIT_NO_RESTART)
 
 const status = new Status('VoiceLog')
 
 async function main() {
   warnRemovedDumpEnv()
   if (!(await checkData())) process.exit(EXIT_NO_RESTART)
+  const unread = unreadAssetFiles()
+  if (unread.length > 0) {
+    logger.warn(`These files are not read since data version 3: ${unread.join(', ')}. Discord member files belong in assets/discord/`)
+  }
 
   // Initialize SQLite
   // Since SQLite/Prisma is synchronous initialization for the client
   // (connection is lazy), we can start the bot immediately.
   bot = createBot(app)
 
-  bot.discord.start()
+  startCacheJobs(app, bot.cacheRefresh)
+  const running = await startServices(app, bot.services)
+  if (running.length === 0) {
+    logger.fatal('No platform could start')
+    process.exit(1)
+  }
   status.set_status()
 }
 
@@ -54,10 +63,12 @@ const stop = () => {
     process.exit(1)
   }, 60 * 1000)
 
-  const discordShutdown = (async () => {
-    await bot?.voiceLog.end()
-    await bot?.discord.stop()
-  })()
+  const platformShutdown = Promise.all(
+    (bot?.services ?? []).map(async ({ runtime, voiceLog }) => {
+      await voiceLog.end()
+      await runtime.stop()
+    })
+  )
 
   const dbShutdown = new Promise<void>((resolve) => {
     if (bot?.db) {
@@ -67,7 +78,7 @@ const stop = () => {
     }
   })
 
-  Promise.all([discordShutdown, dbShutdown]).then(() => {
+  Promise.all([platformShutdown, dbShutdown]).then(() => {
     clearTimeout(timeout)
     logger.info('All services shut down gracefully. Exiting.')
     process.exit(0)

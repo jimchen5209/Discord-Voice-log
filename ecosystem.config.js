@@ -5,6 +5,8 @@ module.exports = {
         // Options reference: https://pm2.keymetrics.io/docs/usage/application-declaration/
         // args: 'one two',
         instances: 1,
+        // Fork, not cluster (pm2's default once instances is set): in cluster mode every UDP bind goes through pm2, and Fluxer voice crashes on it (ERR_INTERNAL_ASSERTION in internal/cluster/child)
+        exec_mode: 'fork',
         autorestart: true,
         // The bot exits with 78 when it needs you before it can run: its data check failed (run `pnpm migrate`), or config.json was just created, migrated or is newer than this build (check it, then start the bot yourself). Restarting would only repeat that
         stop_exit_codes: [78],

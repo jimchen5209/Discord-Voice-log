@@ -91,7 +91,7 @@ export function preflightMongoDump(dumpPath: string): boolean {
   }
 }
 
-// Upserts every document by serverID in one transaction, so a failure writes nothing and running it again
+// Upserts every document by its Discord guild id in one transaction, so a failure writes nothing and running it again
 // is safe, then deletes the dump. Returns false on failure.
 export async function importMongoDump(dumpPath: string): Promise<boolean> {
   let rows: DumpRow[]
@@ -107,15 +107,34 @@ export async function importMongoDump(dumpPath: string): Promise<boolean> {
   const prisma = createPrisma(getApp().config.sqlite.databaseUrl)
 
   logger().info(`Found ${rows.length} documents in ${dumpPath}. Migrating to SQLite...`)
-  const upserts = rows.map(({ serverID, ttsType, ...fields }) => {
+  // The MongoDB era had only Discord, so every document is a Discord guild (fixed here like the
+  // platform_scope migration, not taken from the Discord adapter)
+  const scope = { platform: 'discord', instanceId: 'discord' }
+  const upserts = rows.flatMap(({ serverID, ttsType, lastVoiceChannel, currentVoiceChannel, ...fields }) => {
     const mapped = ttsType === undefined ? DEFAULT_TTS_PROVIDER : MONGO_TTS_PROVIDERS.get(ttsType)
     if (mapped === undefined) logger().warn(`Guild ${serverID} has unknown TTS type "${ttsType}"; migrating to the default provider ${DEFAULT_TTS_PROVIDER}`)
     const dbObject = { ...fields, ttsProvider: mapped ?? DEFAULT_TTS_PROVIDER }
-    return prisma.serverConfig.upsert({
-      where: { serverID },
-      update: dbObject,
-      create: { serverID, ...dbObject }
-    })
+    // The voice channels live in their own table, as the voice_channels migration moves them
+    const channels = [
+      { channelID: currentVoiceChannel, active: true },
+      { channelID: lastVoiceChannel, active: false }
+    ].filter(({ channelID }, index) => channelID !== '' && (index === 0 || channelID !== currentVoiceChannel))
+    return [
+      prisma.serverConfig.upsert({
+        // biome-ignore lint/style/useNamingConvention: Prisma's name for the compound primary key
+        where: { platform_instanceId_serverID: { ...scope, serverID } },
+        update: dbObject,
+        create: { ...scope, serverID, ...dbObject }
+      }),
+      ...channels.map(({ channelID, active }) =>
+        prisma.voiceChannel.upsert({
+          // biome-ignore lint/style/useNamingConvention: Prisma's name for the compound primary key
+          where: { platform_instanceId_serverID_channelID: { ...scope, serverID, channelID } },
+          update: { active },
+          create: { ...scope, serverID, channelID, active }
+        })
+      )
+    ]
   })
   try {
     await prisma.$transaction(upserts)
