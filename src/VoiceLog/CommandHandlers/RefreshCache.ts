@@ -1,9 +1,9 @@
-import type { CommandContext } from 'slash-create'
+import type { CommandRequest } from '../../Platform/Command'
 import { beginCommand, type CommandDeps } from './Guard'
 
-export async function commandRefreshCache(deps: CommandDeps, context: CommandContext) {
-  const begun = await beginCommand(deps, context, 'admin')
+export async function commandRefreshCache(deps: CommandDeps, request: CommandRequest) {
+  const begun = await beginCommand(deps, request, 'admin')
   if (!begun) return
 
-  deps.voiceLog.cacheRefresh.refreshCache(context)
+  deps.voiceLog.cacheRefresh.refreshCache(request.reply)
 }
